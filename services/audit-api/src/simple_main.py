@@ -488,6 +488,17 @@ def generate_realistic_audit_data_fallback(url: str):
         "security_score": random.randint(85, 100)
     }
     
+    # Generate metadata
+    metadata = {
+        "page_title": f"{domain} - Professional Services",
+        "meta_description": f"Discover professional services at {domain}. Quality solutions for your business needs.",
+        "h1_count": random.randint(1, 3),
+        "images_without_alt": random.randint(0, 2),
+        "internal_links": random.randint(5, 15),
+        "external_links": random.randint(2, 8),
+        "word_count": random.randint(200, 800)
+    }
+    
     return {
         "scores": {
             "overall": base_score,
@@ -499,7 +510,10 @@ def generate_realistic_audit_data_fallback(url: str):
         "top_fixes": top_fixes,
         "top_keywords": top_keywords,
         "on_page_keywords": on_page_keywords,
-        "technical_audit": technical_audit
+        "technical_audit": technical_audit,
+        "metadata": metadata,
+        "real_data": False,
+        "data_source": "Fallback Data"
     }
 
 @app.get("/")

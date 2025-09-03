@@ -26,11 +26,13 @@ import {
   Link
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { LoadingScreen } from '@/components/LoadingScreen'
 
 export default function HomePage() {
   const [url, setUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const router = useRouter()
 
   const validateUrl = (inputUrl: string): boolean => {
@@ -57,8 +59,20 @@ export default function HomePage() {
     }
 
     setIsLoading(true)
+    setLoadingProgress(0)
+    
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) return prev
+        return prev + Math.random() * 15
+      })
+    }, 500)
 
     try {
+      // Simulate realistic loading time (2-3 seconds for demo)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
       const response = await fetch('/api/audit/audits', {
         method: 'POST',
         headers: {
@@ -79,11 +93,17 @@ export default function HomePage() {
       }
 
       const audit = await response.json()
+      setLoadingProgress(100)
+      
+      // Small delay before redirect
+      await new Promise(resolve => setTimeout(resolve, 1000))
       router.push(`/a/${audit.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
+      clearInterval(progressInterval)
       setIsLoading(false)
+      setLoadingProgress(0)
     }
   }
 
@@ -149,6 +169,11 @@ export default function HomePage() {
     { number: "99.9%", label: "Uptime Guarantee" },
     { number: "24/7", label: "Support Available" }
   ]
+
+  // Show loading screen while fetching data
+  if (isLoading) {
+    return <LoadingScreen url={url} progress={loadingProgress} />
+  }
 
   return (
     <div className="min-h-screen bg-white">
