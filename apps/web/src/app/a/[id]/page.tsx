@@ -27,7 +27,8 @@ import {
   Calendar,
   Timer,
   Users,
-  FileText
+  FileText,
+  Settings
 } from 'lucide-react'
 import { ScoreGauge } from '@/components/ScoreGauge'
 import { RuleTable } from '@/components/RuleTable'
@@ -78,6 +79,63 @@ interface AuditResult {
     density: number
     position: string
   }>
+  technical_audit?: {
+    device_previews: {
+      desktop: {
+        responsive_score: number
+        viewport_width: string
+        viewport_height: string
+        lcp: number
+        fcp: number
+        cls: number
+        fid: number
+        tti: number
+        speed_index: number
+      }
+      tablet: {
+        responsive_score: number
+        viewport_width: string
+        viewport_height: string
+        lcp: number
+        fcp: number
+        cls: number
+        fid: number
+        tti: number
+        speed_index: number
+      }
+      mobile: {
+        responsive_score: number
+        viewport_width: string
+        viewport_height: string
+        lcp: number
+        fcp: number
+        cls: number
+        fid: number
+        tti: number
+        speed_index: number
+      }
+    }
+    core_web_vitals: {
+      lcp_score: number
+      fcp_score: number
+      cls_score: number
+      fid_score: number
+      tti_score: number
+    }
+    performance_metrics: {
+      total_page_size: number
+      total_requests: number
+      image_optimization: number
+      css_optimization: number
+      js_optimization: number
+      caching_score: number
+      compression_score: number
+      cdn_usage: boolean
+    }
+    accessibility_score: number
+    seo_technical_score: number
+    security_score: number
+  }
   metadata?: {
     page_title?: string
     meta_description?: string
@@ -375,11 +433,11 @@ export default function AuditDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
                                 <div className="mb-4">
-                  <ScoreGauge
-                    title="Overall Score"
-                    score={audit.scores.overall}
-                    color="primary"
-                  />
+              <ScoreGauge
+                title="Overall Score"
+                score={audit.scores.overall}
+                color="primary"
+              />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Overall Performance</h3>
                 <p className="text-sm text-gray-600 mt-2">
@@ -391,11 +449,11 @@ export default function AuditDetailPage() {
               
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
                                 <div className="mb-4">
-                  <ScoreGauge
-                    title="On-Page SEO"
-                    score={audit.scores.on_page}
-                    color="success"
-                  />
+              <ScoreGauge
+                title="On-Page SEO"
+                score={audit.scores.on_page}
+                color="success"
+              />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">On-Page SEO</h3>
                 <p className="text-sm text-gray-600 mt-2">
@@ -407,12 +465,12 @@ export default function AuditDetailPage() {
 
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
                 <div className="mb-4">
-                  <ScoreGauge
-                    title="Technical SEO"
-                    score={audit.scores.technical}
-                    color="warning"
-                  />
-                </div>
+              <ScoreGauge
+                title="Technical SEO"
+                score={audit.scores.technical}
+                color="warning"
+              />
+            </div>
                 <h3 className="text-lg font-semibold text-gray-900">Technical SEO</h3>
                 <p className="text-sm text-gray-600 mt-2">
                   {audit.scores.technical >= 80 ? 'Excellent' : 
@@ -428,7 +486,7 @@ export default function AuditDetailPage() {
                     score={audit.scores.content || 0}
                     color="error"
                   />
-                </div>
+            </div>
                 <h3 className="text-lg font-semibold text-gray-900">Content Quality</h3>
                 <p className="text-sm text-gray-600 mt-2">
                   {(audit.scores.content || 0) >= 80 ? 'Excellent' : 
@@ -706,6 +764,392 @@ export default function AuditDetailPage() {
                       <div className="text-sm text-gray-600">Avg Density</div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Technical Audit Section */}
+          {audit.technical_audit && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Technical Audit & Performance</h2>
+              
+              {/* Device Previews */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Device Responsiveness & Performance</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Desktop Preview */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                          <span className="text-sm font-medium text-gray-700 ml-2">Desktop</span>
+                        </div>
+                        <span className="text-sm text-gray-500">{audit.technical_audit.device_previews.desktop.viewport_width} × {audit.technical_audit.device_previews.desktop.viewport_height}</span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
+                        <div className="text-xs text-gray-500 mb-2">Website Preview</div>
+                        <div className="bg-white rounded border-2 border-dashed border-gray-300 h-32 flex items-center justify-center">
+                          <span className="text-gray-400 text-sm">Desktop View</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Responsiveness</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.responsive_score}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">LCP</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.lcp}s</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">FCP</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.fcp}s</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">CLS</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.cls}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tablet Preview */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                          <span className="text-sm font-medium text-gray-700 ml-2">Tablet</span>
+                        </div>
+                        <span className="text-sm text-gray-500">{audit.technical_audit.device_previews.tablet.viewport_width} × {audit.technical_audit.device_previews.tablet.viewport_height}</span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
+                        <div className="text-xs text-gray-500 mb-2">Website Preview</div>
+                        <div className="bg-white rounded border-2 border-dashed border-gray-300 h-32 flex items-center justify-center mx-auto" style={{width: '60%'}}>
+                          <span className="text-gray-400 text-sm">Tablet View</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Responsiveness</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.responsive_score}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">LCP</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.lcp}s</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">FCP</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.fcp}s</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">CLS</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.cls}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile Preview */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                          <span className="text-sm font-medium text-gray-700 ml-2">Mobile</span>
+                        </div>
+                        <span className="text-sm text-gray-500">{audit.technical_audit.device_previews.mobile.viewport_width} × {audit.technical_audit.device_previews.mobile.viewport_height}</span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
+                        <div className="text-xs text-gray-500 mb-2">Website Preview</div>
+                        <div className="bg-white rounded border-2 border-dashed border-gray-300 h-32 flex items-center justify-center mx-auto" style={{width: '40%'}}>
+                          <span className="text-gray-400 text-sm">Mobile View</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Responsiveness</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.responsive_score}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">LCP</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.lcp}s</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">FCP</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.fcp}s</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">CLS</span>
+                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.cls}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Core Web Vitals */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Core Web Vitals</h3>
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <div className="text-center">
+                      <div className="relative w-20 h-20 mx-auto mb-3">
+                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            className="text-gray-200"
+                          />
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray="219.8"
+                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.lcp_score * 2.198)}
+                            className={`${audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.lcp_score}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">LCP</div>
+                      <div className="text-xs text-gray-500">Largest Contentful Paint</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="relative w-20 h-20 mx-auto mb-3">
+                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            className="text-gray-200"
+                          />
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray="219.8"
+                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fcp_score * 2.198)}
+                            className={`${audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fcp_score}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">FCP</div>
+                      <div className="text-xs text-gray-500">First Contentful Paint</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="relative w-20 h-20 mx-auto mb-3">
+                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            className="text-gray-200"
+                          />
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray="219.8"
+                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.cls_score * 2.198)}
+                            className={`${audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.cls_score}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">CLS</div>
+                      <div className="text-xs text-gray-500">Cumulative Layout Shift</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="relative w-20 h-20 mx-auto mb-3">
+                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            className="text-gray-200"
+                          />
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray="219.8"
+                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fid_score * 2.198)}
+                            className={`${audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fid_score}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">FID</div>
+                      <div className="text-xs text-gray-500">First Input Delay</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="relative w-20 h-20 mx-auto mb-3">
+                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            className="text-gray-200"
+                          />
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="35"
+                            stroke="currentColor"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray="219.8"
+                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.tti_score * 2.198)}
+                            className={`${audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.tti_score}</span>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">TTI</div>
+                      <div className="text-xs text-gray-500">Time to Interactive</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Metrics */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Performance Metrics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <BarChart3 className="h-6 w-6 text-primary-600" />
+                      </div>
+                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.total_page_size} KB</span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">Total Page Size</div>
+                    <div className="text-xs text-gray-500 mt-1">All resources combined</div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
+                        <Zap className="h-6 w-6 text-success-600" />
+                      </div>
+                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.total_requests}</span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">Total Requests</div>
+                    <div className="text-xs text-gray-500 mt-1">HTTP requests made</div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
+                        <Settings className="h-6 w-6 text-warning-600" />
+                      </div>
+                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">Image Optimization</div>
+                    <div className="text-xs text-gray-500 mt-1">Compression & format</div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-info-100 rounded-lg flex items-center justify-center">
+                        <Shield className="h-6 w-6 text-info-600" />
+                      </div>
+                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">Caching Score</div>
+                    <div className="text-xs text-gray-500 mt-1">Browser caching</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Scores */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
+                  <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-success-600">{audit.technical_audit.accessibility_score}</span>
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900 mb-1">Accessibility Score</div>
+                  <div className="text-sm text-gray-600">WCAG compliance</div>
+                </div>
+                
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
+                  <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-primary-600">{audit.technical_audit.seo_technical_score}</span>
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900 mb-1">SEO Technical Score</div>
+                  <div className="text-sm text-gray-600">Technical SEO factors</div>
+                </div>
+                
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
+                  <div className="w-16 h-16 bg-info-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold text-info-600">{audit.technical_audit.security_score}</span>
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900 mb-1">Security Score</div>
+                  <div className="text-sm text-gray-600">HTTPS & security headers</div>
                 </div>
               </div>
             </div>

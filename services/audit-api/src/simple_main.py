@@ -189,6 +189,65 @@ def generate_realistic_audit_data(url: str):
     # Sort by frequency (most used to least used)
     on_page_keywords.sort(key=lambda x: x["frequency"], reverse=True)
     
+    # Generate technical audit data with device-specific metrics
+    technical_audit = {
+        "device_previews": {
+            "desktop": {
+                "responsive_score": random.randint(85, 98),
+                "viewport_width": "1920px",
+                "viewport_height": "1080px",
+                "lcp": round(random.uniform(1.2, 3.5), 2),  # Largest Contentful Paint
+                "fcp": round(random.uniform(0.8, 2.2), 2),  # First Contentful Paint
+                "cls": round(random.uniform(0.05, 0.25), 3),  # Cumulative Layout Shift
+                "fid": round(random.uniform(50, 200), 0),   # First Input Delay
+                "tti": round(random.uniform(2.5, 5.8), 2),  # Time to Interactive
+                "speed_index": round(random.uniform(1.8, 4.2), 2)
+            },
+            "tablet": {
+                "responsive_score": random.randint(75, 92),
+                "viewport_width": "768px",
+                "viewport_height": "1024px",
+                "lcp": round(random.uniform(1.8, 4.2), 2),
+                "fcp": round(random.uniform(1.2, 2.8), 2),
+                "cls": round(random.uniform(0.08, 0.35), 3),
+                "fid": round(random.uniform(80, 250), 0),
+                "tti": round(random.uniform(3.2, 6.5), 2),
+                "speed_index": round(random.uniform(2.5, 5.1), 2)
+            },
+            "mobile": {
+                "responsive_score": random.randint(65, 88),
+                "viewport_width": "375px",
+                "viewport_height": "667px",
+                "lcp": round(random.uniform(2.5, 5.8), 2),
+                "fcp": round(random.uniform(1.8, 3.5), 2),
+                "cls": round(random.uniform(0.12, 0.45), 3),
+                "fid": round(random.uniform(120, 350), 0),
+                "tti": round(random.uniform(4.2, 8.5), 2),
+                "speed_index": round(random.uniform(3.5, 6.8), 2)
+            }
+        },
+        "core_web_vitals": {
+            "lcp_score": random.randint(65, 95),
+            "fcp_score": random.randint(70, 98),
+            "cls_score": random.randint(60, 90),
+            "fid_score": random.randint(55, 85),
+            "tti_score": random.randint(50, 80)
+        },
+        "performance_metrics": {
+            "total_page_size": random.randint(800, 3500),  # KB
+            "total_requests": random.randint(25, 85),
+            "image_optimization": random.randint(70, 95),
+            "css_optimization": random.randint(75, 98),
+            "js_optimization": random.randint(65, 92),
+            "caching_score": random.randint(60, 90),
+            "compression_score": random.randint(70, 95),
+            "cdn_usage": random.choice([True, False])
+        },
+        "accessibility_score": random.randint(75, 95),
+        "seo_technical_score": random.randint(80, 98),
+        "security_score": random.randint(85, 100)
+    }
+    
     return {
         "scores": {
             "overall": base_score,
@@ -199,7 +258,8 @@ def generate_realistic_audit_data(url: str):
         "rules": rules,
         "top_fixes": top_fixes,
         "top_keywords": top_keywords,
-        "on_page_keywords": on_page_keywords
+        "on_page_keywords": on_page_keywords,
+        "technical_audit": technical_audit
     }
 
 @app.get("/")
