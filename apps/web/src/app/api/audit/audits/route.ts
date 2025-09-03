@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000'
+// Try multiple backend URLs in order of preference
+const BACKEND_URLS = [
+  process.env.BACKEND_URL,
+  process.env.RAILWAY_BACKEND_URL,
+  'https://riviso-production.up.railway.app', // Common Railway URL pattern
+  'http://localhost:8000' // Fallback for local development
+].filter(Boolean)
+
+const BACKEND_URL = BACKEND_URLS[0] || 'http://localhost:8000'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    
+    console.log(`Attempting to connect to backend: ${BACKEND_URL}`)
     
     const response = await fetch(`${BACKEND_URL}/audits`, {
       method: 'POST',
@@ -14,8 +24,11 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     })
 
+    console.log(`Backend response status: ${response.status}`)
+
     if (!response.ok) {
       const errorData = await response.json()
+      console.error('Backend error:', errorData)
       return NextResponse.json(
         { detail: errorData.detail || 'Failed to start audit' },
         { status: response.status }
@@ -26,8 +39,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)
+    console.error('Backend URL attempted:', BACKEND_URL)
     return NextResponse.json(
-      { detail: 'Internal server error' },
+      { detail: `Internal server error: ${error.message}` },
       { status: 500 }
     )
   }
