@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { UserRole, hasPermission, ROLE_DISPLAY_NAMES } from '@/lib/roles'
+import { UserRole, hasPermission, ROLE_DISPLAY_NAMES } from '../../lib/roles'
 import { Users, Shield, BarChart3, Settings, Crown, User, ChevronDown, LogOut, TrendingUp, DollarSign, Database, Globe, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'

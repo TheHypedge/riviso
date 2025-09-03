@@ -1,6 +1,6 @@
 'use client'
 
-import { UserRole, getUserPermissions, ROLE_DISPLAY_NAMES } from '@/lib/roles'
+import { UserRole, getUserPermissions, ROLE_DISPLAY_NAMES } from '../lib/roles'
 import { User, Calendar, BarChart3, Settings, LogOut, Crown, Zap, ChevronDown, Users, Shield, TrendingUp, FileText, DollarSign, Database, Globe } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
