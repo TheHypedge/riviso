@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 const BACKEND_URLS = [
   process.env.BACKEND_URL,
   process.env.RAILWAY_BACKEND_URL,
+  'https://riviso.onrender.com', // Render backend URL
   'https://riviso-production.up.railway.app', // Common Railway URL pattern
   'http://localhost:8000' // Fallback for local development
 ].filter(Boolean)
 
-const BACKEND_URL = BACKEND_URLS[0] || 'http://localhost:8000'
+const BACKEND_URL = BACKEND_URLS[0] || 'https://riviso.onrender.com'
 
 export async function GET(
   request: NextRequest,
