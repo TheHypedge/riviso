@@ -165,7 +165,7 @@ export default function HomePage() {
               <div className="ml-10 flex items-baseline space-x-4">
                 <a href="#features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
                 <a href="#services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
-                <a href="#pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
+                <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
                 <button className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
                   Start Free Audit
                 </button>
@@ -370,9 +370,9 @@ export default function HomePage() {
               Start Free Audit
               <ArrowRight className="h-5 w-5 ml-2" />
             </button>
-            <button className="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-primary-600 transition-colors duration-200">
+            <a href="/pricing" className="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-primary-600 transition-colors duration-200 inline-block text-center">
               View Pricing
-            </button>
+            </a>
           </div>
         </div>
       </section>
