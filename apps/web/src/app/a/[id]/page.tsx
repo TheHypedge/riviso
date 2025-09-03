@@ -1,8 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { Loader2, Download, RefreshCw, AlertCircle, Clock, CheckCircle, XCircle, AlertTriangle, Info, ExternalLink, Eye, BarChart3, Target, Zap, TrendingUp, Plus } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { 
+  Loader2, 
+  Download, 
+  RefreshCw, 
+  AlertCircle, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
+  Info, 
+  ExternalLink, 
+  Eye, 
+  BarChart3, 
+  Target, 
+  Zap, 
+  TrendingUp, 
+  Plus,
+  ArrowLeft,
+  Star,
+  Globe,
+  Shield,
+  Award,
+  Calendar,
+  Timer,
+  Users,
+  FileText
+} from 'lucide-react'
 import { ScoreGauge } from '@/components/ScoreGauge'
 import { RuleTable } from '@/components/RuleTable'
 import { TopFixes } from '@/components/TopFixes'
@@ -41,6 +67,11 @@ interface AuditResult {
     impact: 'high' | 'medium' | 'low'
     description: string
   }>
+  top_keywords?: Array<{
+    keyword: string
+    volume: number
+    difficulty: string
+  }>
   metadata?: {
     page_title?: string
     meta_description?: string
@@ -48,604 +79,545 @@ interface AuditResult {
     images_without_alt?: number
     internal_links?: number
     external_links?: number
+    word_count?: number
+    loading_time?: number
   }
-  top_keywords?: Array<{
-    rank: number
-    keyword: string
-    seo_clicks: number
-    search_volume?: number
-    difficulty?: number
-  }>
-  error_message?: string
-  error_details?: string
 }
 
 export default function AuditDetailPage() {
   const params = useParams()
-  const auditId = params.id as string
+  const router = useRouter()
   const [audit, setAudit] = useState<AuditResult | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
-  // Helper functions for statistics
-  const getRuleStats = () => {
-    if (!audit?.rules) return { total: 0, passed: 0, failed: 0, warnings: 0 }
-    
-    const total = audit.rules.length
-    const passed = audit.rules.filter(r => r.status === 'pass').length
-    const failed = audit.rules.filter(r => r.status === 'fail').length
-    const warnings = audit.rules.filter(r => r.status === 'warning').length
-    
-    return { total, passed, failed, warnings }
-  }
-
-  const getCategoryStats = () => {
-    if (!audit?.rules) return {}
-    
-    const categories = audit.rules.reduce((acc, rule) => {
-      if (!acc[rule.category]) {
-        acc[rule.category] = { total: 0, passed: 0, failed: 0, score: 0 }
-      }
-      acc[rule.category].total++
-      if (rule.status === 'pass') acc[rule.category].passed++
-      if (rule.status === 'fail') acc[rule.category].failed++
-      acc[rule.category].score += rule.score
-      return acc
-    }, {} as Record<string, { total: number; passed: number; failed: number; score: number }>)
-
-    // Calculate average scores
-    Object.keys(categories).forEach(category => {
-      categories[category].score = Math.round(categories[category].score / categories[category].total)
-    })
-
-    return categories
-  }
-
-  const getAuditDuration = () => {
-    if (!audit?.started_at || !audit?.completed_at) return null
-    
-    const start = new Date(audit.started_at)
-    const end = new Date(audit.completed_at)
-    const duration = end.getTime() - start.getTime()
-    
-    if (duration < 1000) return `${duration}ms`
-    return `${Math.round(duration / 1000)}s`
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
+  const auditId = params.id as string
 
   const fetchAudit = async () => {
     try {
+      setRefreshing(true)
       const response = await fetch(`/api/audit/audits/${auditId}`)
+      
       if (!response.ok) {
         throw new Error('Failed to fetch audit')
       }
+      
       const data = await response.json()
       setAudit(data)
       setError('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      setLoading(false)
+      setRefreshing(false)
     }
   }
 
   useEffect(() => {
-    fetchAudit()
-    
-    // Poll for updates if audit is still running
-    const interval = setInterval(() => {
-      if (audit?.status === 'pending' || audit?.status === 'running') {
+    if (auditId) {
         fetchAudit()
       }
-    }, 2000)
-
-    return () => clearInterval(interval)
-  }, [auditId, audit?.status])
+  }, [auditId])
 
   const handleRefresh = () => {
-    setIsRefreshing(true)
     fetchAudit()
   }
 
   const handleExportPDF = () => {
-    window.print()
+    // TODO: Implement PDF export
+    console.log('Exporting PDF...')
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    )
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-success-600 bg-success-100'
+      case 'running': return 'text-warning-600 bg-warning-100'
+      case 'failed': return 'text-error-600 bg-error-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
   }
 
-  if (error) {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4" />
+      case 'running': return <Loader2 className="h-4 w-4 animate-spin" />
+      case 'failed': return <XCircle className="h-4 w-4" />
+      default: return <Clock className="h-4 w-4" />
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'Asia/Kolkata'
+    })
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white">
+        {/* Navigation */}
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <a href="/" className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">RIVISO</a>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="ml-10 flex items-baseline space-x-4">
+                  <a href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                  <a href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
+                  <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
+                  <a href="/" className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
+                    Start Free Audit
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-error-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Audit</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button onClick={handleRefresh} className="btn-primary">
-            Try Again
-          </button>
+            <Spinner />
+            <p className="mt-4 text-gray-600">Loading audit results...</p>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (!audit) {
+  if (error || !audit) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white">
+        {/* Navigation */}
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <a href="/" className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">RIVISO</a>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="ml-10 flex items-baseline space-x-4">
+                  <a href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                  <a href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
+                  <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
+                  <a href="/" className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
+                    Start Free Audit
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-error-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Audit Not Found</h2>
-          <p className="text-gray-600">The requested audit could not be found.</p>
+            <p className="text-gray-600 mb-4">{error || 'The requested audit could not be found.'}</p>
+            <button
+              onClick={() => router.push('/')}
+              className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Start New Audit
+            </button>
+          </div>
         </div>
       </div>
     )
   }
-
-  const isCompleted = audit.status === 'completed'
-  const isRunning = audit.status === 'running' || audit.status === 'pending'
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">RIVISO Analytics Report</h1>
-              <p className="text-gray-600 mt-1">{audit.url}</p>
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <a href="/" className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">RIVISO</a>
+              </div>
             </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="btn-outline"
-              >
-                {isRefreshing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                <span className="ml-2">Refresh</span>
-              </button>
-              {isCompleted && (
-                <button onClick={handleExportPDF} className="btn-primary">
-                  <Download className="h-4 w-4" />
-                  <span className="ml-2">Export PDF</span>
-                </button>
-              )}
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-4">
+                <a href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                <a href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
+                <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
+                <a href="/" className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
+                  Start Free Audit
+                </a>
+              </div>
             </div>
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${
-              isCompleted ? 'bg-success-500' : 
-              isRunning ? 'bg-warning-500 animate-pulse' : 
-              'bg-error-500'
-            }`} />
-            <span className="text-sm font-medium text-gray-700 capitalize">
-              {audit.status}
-            </span>
-            {isRunning && (
-              <span className="text-sm text-gray-500">
-                This may take a few minutes...
-              </span>
-            )}
           </div>
         </div>
+      </nav>
 
-        {isRunning ? (
-          <div className="text-center py-12">
-            <Spinner size="lg" />
-            <h2 className="text-xl font-semibold text-gray-900 mt-4">
-              RIVISO is Analyzing Your Website
-            </h2>
-            <p className="text-gray-600 mt-2">
-              We're crawling your site and running comprehensive SEO analytics and checks...
-            </p>
+      {/* Header Section */}
+      <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center mb-6">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors mr-6"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back to Home
+            </button>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">RIVISO Analytics Report</h1>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <Globe className="h-5 w-5 text-gray-500 mr-2" />
+                      <span className="text-lg font-medium text-gray-700">{audit.url}</span>
           </div>
-        ) : isCompleted ? (
-          <>
-            {/* Audit Summary */}
-            <div className="card p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                  <BarChart3 className="h-6 w-6 mr-2 text-primary-600" />
-                  Audit Summary
-                </h2>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {getAuditDuration()}
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)}`}>
+                      {getStatusIcon(audit.status)}
+                      <span className="ml-2 capitalize">{audit.status}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Target className="h-4 w-4 mr-1" />
-                    {formatDate(audit.created_at)}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={handleExportPDF}
+                    className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </button>
+                </div>
                   </div>
                 </div>
               </div>
               
+          {/* Audit Info Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-600">{audit.scores.overall}</div>
-                  <div className="text-sm text-gray-500">Overall Score</div>
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center">
+                <Calendar className="h-8 w-8 text-primary-600 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-600">Audit Date</p>
+                  <p className="text-lg font-semibold text-gray-900">{formatDate(audit.created_at)}</p>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-success-600">{audit.scores.on_page}</div>
-                  <div className="text-sm text-gray-500">On-Page SEO</div>
+              </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-warning-600">{audit.scores.technical}</div>
-                  <div className="text-sm text-gray-500">Technical SEO</div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center">
+                <Timer className="h-8 w-8 text-success-600 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-600">Analysis Time</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {audit.completed_at && audit.started_at 
+                      ? `${Math.round((new Date(audit.completed_at).getTime() - new Date(audit.started_at).getTime()) / 1000)}s`
+                      : 'N/A'
+                    }
+                  </p>
                 </div>
-                {audit.scores.content && (
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-info-600">{audit.scores.content}</div>
-                    <div className="text-sm text-gray-500">Content Quality</div>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Rule Statistics */}
-            <div className="card p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Zap className="h-5 w-5 mr-2 text-primary-600" />
-                Rule Statistics
-              </h3>
-              {(() => {
-                const stats = getRuleStats()
-                const categoryStats = getCategoryStats()
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center">
+                <FileText className="h-8 w-8 text-warning-600 mr-3" />
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Overall Performance</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center justify-between p-3 bg-success-50 rounded-lg">
-                          <div className="flex items-center">
-                            <CheckCircle className="h-5 w-5 text-success-600 mr-2" />
-                            <span className="text-sm font-medium text-gray-700">Passed</span>
-                          </div>
-                          <span className="text-lg font-bold text-success-600">{stats.passed}</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-error-50 rounded-lg">
-                          <div className="flex items-center">
-                            <XCircle className="h-5 w-5 text-error-600 mr-2" />
-                            <span className="text-sm font-medium text-gray-700">Failed</span>
-                          </div>
-                          <span className="text-lg font-bold text-error-600">{stats.failed}</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-warning-50 rounded-lg">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-5 w-5 text-warning-600 mr-2" />
-                            <span className="text-sm font-medium text-gray-700">Warnings</span>
-                          </div>
-                          <span className="text-lg font-bold text-warning-600">{stats.warnings}</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center">
-                            <Info className="h-5 w-5 text-gray-600 mr-2" />
-                            <span className="text-sm font-medium text-gray-700">Total</span>
-                          </div>
-                          <span className="text-lg font-bold text-gray-600">{stats.total}</span>
+                  <p className="text-sm text-gray-600">Rules Checked</p>
+                  <p className="text-lg font-semibold text-gray-900">{audit.rules.length}</p>
                         </div>
                       </div>
                     </div>
                     
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center">
+                <Shield className="h-8 w-8 text-info-600 mr-3" />
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Category Breakdown</h4>
-                      <div className="space-y-3">
-                        {Object.entries(categoryStats).map(([category, stats]) => (
-                          <div key={category} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div>
-                              <div className="text-sm font-medium text-gray-700 capitalize">
-                                {category.replace('_', ' ')}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {stats.passed}/{stats.total} passed
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-gray-900">{stats.score}</div>
-                              <div className="text-xs text-gray-500">avg score</div>
+                  <p className="text-sm text-gray-600">Security Score</p>
+                  <p className="text-lg font-semibold text-gray-900">{audit.scores.technical}</p>
                             </div>
                           </div>
-                        ))}
                       </div>
                     </div>
                   </div>
-                )
-              })()}
+      </section>
+
+      {/* Main Content */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Score Overview */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Audit Summary</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                                <div className="mb-4">
+                  <ScoreGauge
+                    title="Overall Score"
+                    score={audit.scores.overall}
+                    color="primary"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Overall Performance</h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  {audit.scores.overall >= 80 ? 'Excellent' : 
+                   audit.scores.overall >= 60 ? 'Good' : 
+                   audit.scores.overall >= 40 ? 'Fair' : 'Needs Improvement'}
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                                <div className="mb-4">
+                  <ScoreGauge
+                    title="On-Page SEO"
+                    score={audit.scores.on_page}
+                    color="success"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">On-Page SEO</h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  {audit.scores.on_page >= 80 ? 'Excellent' : 
+                   audit.scores.on_page >= 60 ? 'Good' : 
+                   audit.scores.on_page >= 40 ? 'Fair' : 'Needs Improvement'}
+                </p>
             </div>
 
-            {/* Scores Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <ScoreGauge
-                title="Overall Score"
-                score={audit.scores.overall}
-                color="primary"
-              />
-              <ScoreGauge
-                title="On-Page SEO"
-                score={audit.scores.on_page}
-                color="success"
-              />
-              <ScoreGauge
-                title="Technical SEO"
-                score={audit.scores.technical}
-                color="warning"
-              />
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                <div className="mb-4">
+                  <ScoreGauge
+                    title="Technical SEO"
+                    score={audit.scores.technical}
+                    color="warning"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Technical SEO</h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  {audit.scores.technical >= 80 ? 'Excellent' : 
+                   audit.scores.technical >= 60 ? 'Good' : 
+                   audit.scores.technical >= 40 ? 'Fair' : 'Needs Improvement'}
+                </p>
             </div>
 
-            {/* Top Fixes */}
-            <div className="mb-8">
-              <TopFixes fixes={audit.top_fixes} />
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                                <div className="mb-4">
+                  <ScoreGauge
+                    title="Content Quality"
+                    score={audit.scores.content || 0}
+                    color="error"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Content Quality</h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  {(audit.scores.content || 0) >= 80 ? 'Excellent' : 
+                   (audit.scores.content || 0) >= 60 ? 'Good' : 
+                   (audit.scores.content || 0) >= 40 ? 'Fair' : 'Needs Improvement'}
+                </p>
+              </div>
             </div>
+                      </div>
 
-            {/* Top Keywords */}
-            {audit.top_keywords && audit.top_keywords.length > 0 && (
-              <div className="card p-6 mb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-primary-600" />
-                    Top Keywords
-                  </h3>
-                  <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                    VIEW ALL ORGANIC KEYWORDS →
-                  </button>
+          {/* Rule Statistics */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Rule Statistics</h2>
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-full mx-auto mb-3">
+                    <CheckCircle className="h-6 w-6 text-success-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {audit.rules.filter(rule => rule.status === 'pass').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Passed</div>
                 </div>
                 
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-12 h-12 bg-error-100 rounded-full mx-auto mb-3">
+                    <XCircle className="h-6 w-6 text-error-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {audit.rules.filter(rule => rule.status === 'fail').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Failed</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-full mx-auto mb-3">
+                    <AlertTriangle className="h-6 w-6 text-warning-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {audit.rules.filter(rule => rule.status === 'warning').length}
+                  </div>
+                  <div className="text-sm text-gray-600">Warnings</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-full mx-auto mb-3">
+                    <Info className="h-6 w-6 text-info-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{audit.rules.length}</div>
+                  <div className="text-sm text-gray-600">Total</div>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {['on_page', 'technical', 'content'].map(category => {
+                    const categoryRules = audit.rules.filter(rule => rule.category === category)
+                    const passedCount = categoryRules.filter(rule => rule.status === 'pass').length
+                    const avgScore = categoryRules.length > 0 
+                      ? Math.round(categoryRules.reduce((sum, rule) => sum + rule.score, 0) / categoryRules.length)
+                      : 0
+                    
+                    return (
+                      <div key={category} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900 capitalize">{category.replace('_', ' ')}</h4>
+                          <span className="text-sm text-gray-600">{passedCount}/{categoryRules.length} passed</span>
+                        </div>
+                        <div className="text-2xl font-bold text-primary-600">{avgScore}</div>
+                        <div className="text-sm text-gray-600">avg score</div>
+                      </div>
+                    )
+                  })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          {/* Top Fixes */}
+          {audit.top_fixes && audit.top_fixes.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Fixes</h2>
+              <TopFixes fixes={audit.top_fixes} />
+                </div>
+          )}
+
+          {/* Top Keywords */}
+          {audit.top_keywords && audit.top_keywords.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Targeting Keywords</h2>
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Keyword Opportunities</h3>
+                  <p className="text-sm text-gray-600">High-value keywords for your domain</p>
+                </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Rank</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Organic Keywords</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">SEO Clicks</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Search Volume</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Difficulty</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Actions</th>
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Volume</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opportunity</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {audit.top_keywords.slice(0, 10).map((keyword, index) => (
-                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-900 font-medium">
-                            {keyword.rank}
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {audit.top_keywords.map((keyword, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Target className="h-4 w-4 text-primary-600 mr-2" />
+                              <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
+                </div>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-900">
-                            {keyword.keyword}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-900">{keyword.volume.toLocaleString()}</span>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-900">
-                            {keyword.seo_clicks}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              keyword.difficulty === 'low' ? 'bg-success-100 text-success-800' :
+                              keyword.difficulty === 'medium' ? 'bg-warning-100 text-warning-800' :
+                              'bg-error-100 text-error-800'
+                            }`}>
+                              {keyword.difficulty}
+                            </span>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-900">
-                            {keyword.search_volume ? keyword.search_volume.toLocaleString() : 'N/A'}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-900">
-                            {keyword.difficulty ? `${keyword.difficulty}%` : 'N/A'}
-                          </td>
-                          <td className="py-3 px-4">
-                            <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
-                              <Plus className="h-3 w-3 mr-1" />
-                              ADD
-                            </button>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`text-sm font-medium ${
+                              keyword.difficulty === 'low' ? 'text-success-600' :
+                              keyword.difficulty === 'medium' ? 'text-warning-600' :
+                              'text-error-600'
+                            }`}>
+                              {keyword.difficulty === 'low' ? 'High' :
+                               keyword.difficulty === 'medium' ? 'Medium' : 'Low'}
+                            </span>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                
-                {audit.top_keywords.length > 10 && (
-                  <div className="mt-4 text-center">
-                    <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                      VIEW ALL ORGANIC KEYWORDS →
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Rules Table */}
-            <div className="mb-8">
-              <RuleTable rules={audit.rules} />
-            </div>
-
-            {/* Detailed Rule Analysis */}
-            <div className="card p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Eye className="h-5 w-5 mr-2 text-primary-600" />
-                Detailed Rule Analysis
-              </h3>
-              <div className="space-y-4">
-                {audit.rules.map((rule) => (
-                  <div key={rule.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center">
-                        {rule.status === 'pass' && <CheckCircle className="h-5 w-5 text-success-600 mr-2" />}
-                        {rule.status === 'fail' && <XCircle className="h-5 w-5 text-error-600 mr-2" />}
-                        {rule.status === 'warning' && <AlertTriangle className="h-5 w-5 text-warning-600 mr-2" />}
-                        <div>
-                          <h4 className="text-sm font-semibold text-gray-900">{rule.name}</h4>
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
-                            <span className="capitalize">{rule.category}</span>
-                            <span>•</span>
-                            <span>Weight: {rule.weight || 'N/A'}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-lg font-bold ${
-                          rule.score >= 80 ? 'text-success-600' : 
-                          rule.score >= 60 ? 'text-warning-600' : 'text-error-600'
-                        }`}>
-                          {rule.score}
-                        </div>
-                        <div className="text-xs text-gray-500">score</div>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2">{rule.message}</p>
-                    {rule.evidence && (
-                      <div className="bg-gray-50 rounded p-3">
-                        <div className="text-xs font-medium text-gray-500 mb-1">Evidence:</div>
-                        <div className="text-sm text-gray-700 font-mono">{rule.evidence}</div>
-                      </div>
-                    )}
-                  </div>
-                ))}
               </div>
             </div>
+          )}
 
-            {/* Audit Configuration */}
-            {audit.options && (
-              <div className="card p-6 mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Info className="h-5 w-5 mr-2 text-primary-600" />
-                  Audit Configuration
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Audit Settings</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Include Sitemap</span>
-                        <span className={`text-sm font-medium ${
-                          audit.options.include_sitemap ? 'text-success-600' : 'text-gray-500'
-                        }`}>
-                          {audit.options.include_sitemap ? 'Yes' : 'No'}
-                        </span>
-                      </div>
-                      {audit.options.max_sitemap_urls && (
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Max Sitemap URLs</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {audit.options.max_sitemap_urls}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Audit Timeline</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Started</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {audit.started_at ? formatDate(audit.started_at) : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Completed</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {audit.completed_at ? formatDate(audit.completed_at) : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Duration</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {getAuditDuration() || 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Performance Insights */}
-            <div className="card p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <BarChart3 className="h-5 w-5 mr-2 text-primary-600" />
-                Performance Insights
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-primary-50 rounded-lg">
-                  <div className="text-2xl font-bold text-primary-600 mb-1">
-                    {Math.round((getRuleStats().passed / getRuleStats().total) * 100)}%
-                  </div>
-                  <div className="text-sm text-gray-600">Success Rate</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {getRuleStats().passed} of {getRuleStats().total} checks passed
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-warning-50 rounded-lg">
-                  <div className="text-2xl font-bold text-warning-600 mb-1">
-                    {audit.top_fixes.length}
-                  </div>
-                  <div className="text-sm text-gray-600">Priority Fixes</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {audit.top_fixes.filter(f => f.impact === 'high').length} high impact
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-success-50 rounded-lg">
-                  <div className="text-2xl font-bold text-success-600 mb-1">
-                    {audit.scores.overall}
-                  </div>
-                  <div className="text-sm text-gray-600">Overall Grade</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {audit.scores.overall >= 90 ? 'Excellent' : 
-                     audit.scores.overall >= 80 ? 'Good' : 
-                     audit.scores.overall >= 70 ? 'Fair' : 'Needs Improvement'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Metadata */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Page Analysis
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Page Title</dt>
-                  <dd className="text-sm text-gray-900 truncate">
-                    {audit.metadata?.page_title || 'Not found'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Meta Description</dt>
-                  <dd className="text-sm text-gray-900 truncate">
-                    {audit.metadata?.meta_description || 'Not found'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">H1 Tags</dt>
-                  <dd className="text-sm text-gray-900">
-                    {audit.metadata?.h1_count || 'N/A'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Images without Alt</dt>
-                  <dd className="text-sm text-gray-900">
-                    {audit.metadata?.images_without_alt || 'N/A'}
-                  </dd>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-error-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Audit Failed
-            </h2>
-            <p className="text-gray-600">
-              There was an error processing your audit. Please try again.
-            </p>
+          {/* Detailed Rules */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Analysis</h2>
+            <RuleTable rules={audit.rules} />
           </div>
-        )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <h3 className="text-2xl font-bold mb-4">RIVISO</h3>
+              <p className="text-gray-400 mb-6 max-w-md">
+                India's leading all-in-one SEO platform. Transform your website's search performance 
+                with comprehensive analytics and actionable insights.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Services</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="/services" className="hover:text-white transition-colors">Website Audit</a></li>
+                <li><a href="/services" className="hover:text-white transition-colors">Competitor Analysis</a></li>
+                <li><a href="/services" className="hover:text-white transition-colors">Keyword Research</a></li>
+                <li><a href="/services" className="hover:text-white transition-colors">On-Page SEO</a></li>
+                <li><a href="/services" className="hover:text-white transition-colors">DA/PA Analysis</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="/refund-cancellation" className="hover:text-white transition-colors">Refund Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 RIVISO. All rights reserved. Made with ❤️ in India.</p>
+          </div>
       </div>
+      </footer>
     </div>
   )
 }
