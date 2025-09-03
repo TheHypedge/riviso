@@ -27,6 +27,8 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { LoadingScreen } from '@/components/LoadingScreen'
+import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
 
 export default function HomePage() {
   const [url, setUrl] = useState('')
@@ -34,6 +36,7 @@ export default function HomePage() {
   const [error, setError] = useState('')
   const [loadingProgress, setLoadingProgress] = useState(0)
   const router = useRouter()
+  const { user, isAuthenticated, logout } = useAuth()
 
   const normalizeUrl = (inputUrl: string): string => {
     let url = inputUrl.trim()
@@ -202,12 +205,40 @@ export default function HomePage() {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <a href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
-                <a href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
-                <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
-                <button className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
-                  Start Free Audit
-                </button>
+                <Link href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</Link>
+                <Link href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</Link>
+                <Link href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</Link>
+                
+                {isAuthenticated ? (
+                  <div className="flex items-center space-x-4">
+                    <Link href="/dashboard" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">
+                      Dashboard
+                    </Link>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-primary-600">
+                          {user?.firstName?.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="text-sm text-gray-700">{user?.firstName}</span>
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-3">
+                    <Link href="/login" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">
+                      Sign In
+                    </Link>
+                    <Link href="/signup" className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>
