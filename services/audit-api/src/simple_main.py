@@ -42,22 +42,51 @@ async def create_audit(request: dict):
         "url": request.get("url", ""),
         "status": "completed",
         "created_at": "2024-01-01T00:00:00Z",
-        "results": {
-            "overall_score": 85,
-            "on_page_score": 80,
-            "technical_score": 90,
-            "content_score": 85,
-            "top_fixes": [
-                "Add meta description",
-                "Optimize images",
-                "Improve page speed"
-            ],
-            "top_keywords": [
-                {"keyword": "seo optimization", "volume": 1000, "difficulty": "medium"},
-                {"keyword": "website analysis", "volume": 500, "difficulty": "low"},
-                {"keyword": "search ranking", "volume": 800, "difficulty": "high"}
-            ]
-        }
+        "scores": {
+            "overall": 85,
+            "on_page": 80,
+            "technical": 90,
+            "content": 85
+        },
+        "rules": [
+            {
+                "id": "meta_description",
+                "name": "Meta Description",
+                "category": "on_page",
+                "status": "fail",
+                "score": 0,
+                "message": "Missing meta description",
+                "weight": 10
+            },
+            {
+                "id": "page_title",
+                "name": "Page Title",
+                "category": "on_page", 
+                "status": "pass",
+                "score": 100,
+                "message": "Page title is present",
+                "weight": 15
+            }
+        ],
+        "top_fixes": [
+            {
+                "rule_id": "meta_description",
+                "title": "Add Meta Description",
+                "impact": "high",
+                "description": "Add a compelling meta description to improve click-through rates"
+            },
+            {
+                "rule_id": "image_alt",
+                "title": "Optimize Images",
+                "impact": "medium", 
+                "description": "Add alt text to images for better accessibility"
+            }
+        ],
+        "top_keywords": [
+            {"keyword": "seo optimization", "volume": 1000, "difficulty": "medium"},
+            {"keyword": "website analysis", "volume": 500, "difficulty": "low"},
+            {"keyword": "search ranking", "volume": 800, "difficulty": "high"}
+        ]
     }
 
 @app.get("/audits/")
@@ -76,22 +105,51 @@ async def get_audit(audit_id: str):
         "url": "https://example.com",
         "status": "completed",
         "created_at": "2024-01-01T00:00:00Z",
-        "results": {
-            "overall_score": 85,
-            "on_page_score": 80,
-            "technical_score": 90,
-            "content_score": 85,
-            "top_fixes": [
-                "Add meta description",
-                "Optimize images",
-                "Improve page speed"
-            ],
-            "top_keywords": [
-                {"keyword": "seo optimization", "volume": 1000, "difficulty": "medium"},
-                {"keyword": "website analysis", "volume": 500, "difficulty": "low"},
-                {"keyword": "search ranking", "volume": 800, "difficulty": "high"}
-            ]
-        }
+        "scores": {
+            "overall": 85,
+            "on_page": 80,
+            "technical": 90,
+            "content": 85
+        },
+        "rules": [
+            {
+                "id": "meta_description",
+                "name": "Meta Description",
+                "category": "on_page",
+                "status": "fail",
+                "score": 0,
+                "message": "Missing meta description",
+                "weight": 10
+            },
+            {
+                "id": "page_title",
+                "name": "Page Title",
+                "category": "on_page", 
+                "status": "pass",
+                "score": 100,
+                "message": "Page title is present",
+                "weight": 15
+            }
+        ],
+        "top_fixes": [
+            {
+                "rule_id": "meta_description",
+                "title": "Add Meta Description",
+                "impact": "high",
+                "description": "Add a compelling meta description to improve click-through rates"
+            },
+            {
+                "rule_id": "image_alt",
+                "title": "Optimize Images",
+                "impact": "medium", 
+                "description": "Add alt text to images for better accessibility"
+            }
+        ],
+        "top_keywords": [
+            {"keyword": "seo optimization", "volume": 1000, "difficulty": "medium"},
+            {"keyword": "website analysis", "volume": 500, "difficulty": "low"},
+            {"keyword": "search ranking", "volume": 800, "difficulty": "high"}
+        ]
     }
 
 if __name__ == "__main__":
