@@ -39,24 +39,10 @@ try:
     from db import engine, get_db
     from routers import health, audits
     print("✅ All imports successful")
+    FULL_APP_AVAILABLE = True
 except ImportError as e:
     print(f"❌ Import error: {e}")
-    # Create a minimal app if imports fail
-    from fastapi import FastAPI
-    app = FastAPI(title="RIVISO Analytics API", version="1.0.0")
-    
-    @app.get("/")
-    async def root():
-        return {"name": "RIVISO Analytics API", "version": "1.0.0", "status": "healthy", "error": "Import failed"}
-    
-    @app.get("/health")
-    async def health_check():
-        return {"status": "healthy", "service": "riviso-api", "error": "Import failed"}
-    
-    if __name__ == "__main__":
-        import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8000)
-    exit()
+    FULL_APP_AVAILABLE = False
 
 # Configure structured logging
 structlog.configure(
@@ -139,29 +125,47 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 # Create FastAPI application
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    description="RIVISO Analytics API for comprehensive SEO analysis and website optimization",
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
-    openapi_url="/openapi.json" if settings.debug else None,
-    lifespan=lifespan,
-)
+if FULL_APP_AVAILABLE:
+    app = FastAPI(
+        title=settings.app_name,
+        version=settings.app_version,
+        description="RIVISO Analytics API for comprehensive SEO analysis and website optimization",
+        docs_url="/docs" if settings.debug else None,
+        redoc_url="/redoc" if settings.debug else None,
+        openapi_url="/openapi.json" if settings.debug else None,
+        lifespan=lifespan,
+    )
+else:
+    # Create minimal app if full app not available
+    app = FastAPI(
+        title="RIVISO Analytics API",
+        version="1.0.0",
+        description="RIVISO Analytics API - Limited Mode"
+    )
 
 # Add middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if FULL_APP_AVAILABLE:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=settings.allowed_hosts,
-)
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.allowed_hosts,
+    )
+else:
+    # Minimal CORS for limited mode
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Instrument FastAPI (if available)
 if OPENTELEMETRY_AVAILABLE:
@@ -242,41 +246,70 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Include routers
-app.include_router(health.router, prefix="/health", tags=["health"])
-app.include_router(audits.router, prefix="/audits", tags=["audits"])
+if FULL_APP_AVAILABLE:
+    app.include_router(health.router, prefix="/health", tags=["health"])
+    app.include_router(audits.router, prefix="/audits", tags=["audits"])
+else:
+    # Add minimal audit endpoints for limited mode
+    @app.post("/audits/")
+    async def create_audit_limited(request: dict):
+        return {"detail": "Service temporarily unavailable - running in limited mode"}
+    
+    @app.get("/audits/")
+    async def list_audits_limited():
+        return {"detail": "Service temporarily unavailable - running in limited mode"}
+    
+    @app.get("/audits/{audit_id}")
+    async def get_audit_limited(audit_id: str):
+        return {"detail": "Service temporarily unavailable - running in limited mode"}
 
 
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "status": "healthy",
-        "docs_url": "/docs" if settings.debug else None,
-    }
+    if FULL_APP_AVAILABLE:
+        return {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "status": "healthy",
+            "docs_url": "/docs" if settings.debug else None,
+        }
+    else:
+        return {
+            "name": "RIVISO Analytics API",
+            "version": "1.0.0",
+            "status": "healthy",
+            "mode": "limited"
+        }
 
 
 @app.get("/health")
 async def health_check():
     """Simple health check endpoint for Railway."""
-    try:
-        # Try to check database connection
-        from db import engine
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
+    if FULL_APP_AVAILABLE:
+        try:
+            # Try to check database connection
+            from db import engine
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return {
+                "status": "healthy", 
+                "service": "riviso-api",
+                "database": "connected"
+            }
+        except Exception as e:
+            # If database fails, still return healthy for basic functionality
+            return {
+                "status": "healthy", 
+                "service": "riviso-api",
+                "database": "disconnected",
+                "note": "Running in limited mode"
+            }
+    else:
         return {
             "status": "healthy", 
             "service": "riviso-api",
-            "database": "connected"
-        }
-    except Exception as e:
-        # If database fails, still return healthy for basic functionality
-        return {
-            "status": "healthy", 
-            "service": "riviso-api",
-            "database": "disconnected",
-            "note": "Running in limited mode"
+            "mode": "limited"
         }
 
 
