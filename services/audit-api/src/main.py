@@ -13,15 +13,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
-from opentelemetry import trace
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+# Optional imports for monitoring (don't fail if not available)
+try:
+    from opentelemetry import trace
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    OPENTELEMETRY_AVAILABLE = True
+except ImportError:
+    OPENTELEMETRY_AVAILABLE = False
+
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
 
 from config import Settings
 from db import engine, get_db
@@ -51,27 +61,33 @@ logger = structlog.get_logger(__name__)
 # Initialize settings
 settings = Settings()
 
-# Configure OpenTelemetry
-if settings.otel_service_name:
-    trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(__name__)
-    
-    if settings.otel_exporter_otlp_endpoint:
-        otlp_exporter = OTLPSpanExporter(endpoint=settings.otel_exporter_otlp_endpoint)
-        span_processor = BatchSpanProcessor(otlp_exporter)
-        trace.get_tracer_provider().add_span_processor(span_processor)
+# Configure OpenTelemetry (if available)
+if OPENTELEMETRY_AVAILABLE and settings.otel_service_name:
+    try:
+        trace.set_tracer_provider(TracerProvider())
+        tracer = trace.get_tracer(__name__)
+        
+        if settings.otel_exporter_otlp_endpoint:
+            otlp_exporter = OTLPSpanExporter(endpoint=settings.otel_exporter_otlp_endpoint)
+            span_processor = BatchSpanProcessor(otlp_exporter)
+            trace.get_tracer_provider().add_span_processor(span_processor)
+    except Exception as e:
+        logger.warning("OpenTelemetry configuration failed", error=str(e))
 
-# Configure Sentry
-if settings.sentry_dsn:
-    sentry_sdk.init(
-        dsn=settings.sentry_dsn,
-        integrations=[
-            FastApiIntegration(auto_enabling_instrumentations=False),
-            SqlalchemyIntegration(),
-        ],
-        traces_sample_rate=0.1,
-        environment=settings.environment,
-    )
+# Configure Sentry (if available)
+if SENTRY_AVAILABLE and settings.sentry_dsn:
+    try:
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            integrations=[
+                FastApiIntegration(auto_enabling_instrumentations=False),
+                SqlalchemyIntegration(),
+            ],
+            traces_sample_rate=0.1,
+            environment=settings.environment,
+        )
+    except Exception as e:
+        logger.warning("Sentry configuration failed", error=str(e))
 
 
 @asynccontextmanager
@@ -88,11 +104,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logger.warning("Database initialization failed, running in limited mode", error=str(e))
     
-    # Instrument SQLAlchemy (only if engine is available)
-    try:
-        SQLAlchemyInstrumentor().instrument(engine=engine)
-    except Exception as e:
-        logger.warning("SQLAlchemy instrumentation failed", error=str(e))
+    # Instrument SQLAlchemy (only if available and engine is available)
+    if OPENTELEMETRY_AVAILABLE:
+        try:
+            SQLAlchemyInstrumentor().instrument(engine=engine)
+        except Exception as e:
+            logger.warning("SQLAlchemy instrumentation failed", error=str(e))
     
     yield
     
@@ -125,8 +142,12 @@ app.add_middleware(
     allowed_hosts=settings.allowed_hosts,
 )
 
-# Instrument FastAPI
-FastAPIInstrumentor.instrument_app(app)
+# Instrument FastAPI (if available)
+if OPENTELEMETRY_AVAILABLE:
+    try:
+        FastAPIInstrumentor.instrument_app(app)
+    except Exception as e:
+        logger.warning("FastAPI instrumentation failed", error=str(e))
 
 
 @app.middleware("http")
