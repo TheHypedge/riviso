@@ -158,13 +158,13 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-primary-600">RIVISO</h1>
+                <a href="/" className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">RIVISO</a>
               </div>
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <a href="#features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
-                <a href="#services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
+                <a href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                <a href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</a>
                 <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
                 <button className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
                   Start Free Audit
@@ -414,11 +414,12 @@ export default function HomePage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
+                <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="/services" className="hover:text-white transition-colors">Services</a></li>
+                <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="/refund-cancellation" className="hover:text-white transition-colors">Refund Policy</a></li>
               </ul>
             </div>
           </div>
