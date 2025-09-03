@@ -22,8 +22,7 @@ import {
   Search as SearchIcon,
   BarChart,
   FileText,
-  Settings,
-  Link
+  Settings
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { LoadingScreen } from '@/components/LoadingScreen'

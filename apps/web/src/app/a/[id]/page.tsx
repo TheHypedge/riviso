@@ -1101,13 +1101,13 @@ export default function AuditDetailPage() {
                     <div className="text-lg font-bold text-gray-900">
                       {audit.technical_audit.device_previews[activeDevice].fcp}s
                             </div>
-                                        <div className={`text-xs font-medium ${
+                    <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'text-success-600' : 
                       getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
                       {getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'Good' : 
                        getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 50 ? 'Needs Improvement' : 'Poor'}
-                    </div>
+                            </div>
                           </div>
 
                   {/* CLS */}
@@ -1268,7 +1268,7 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-                  </div>
+            </div>
 
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -1290,15 +1290,15 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-                  </div>
+            </div>
 
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
                         <Settings className="h-6 w-6 text-warning-600" />
-                      </div>
+                          </div>
                       <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
-                    </div>
+                        </div>
                     <div className="text-sm font-medium text-gray-700">Image Optimization</div>
                     <div className="text-xs text-gray-500 mt-1">Compression & format</div>
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -1312,15 +1312,15 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-                  </div>
-
+                      </div>
+                  
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-info-100 rounded-lg flex items-center justify-center">
                         <Shield className="h-6 w-6 text-info-600" />
-                      </div>
+                        </div>
                       <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
-                    </div>
+                      </div>
                     <div className="text-sm font-medium text-gray-700">Caching Score</div>
                     <div className="text-xs text-gray-500 mt-1">Browser caching</div>
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -1334,7 +1334,7 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-                  </div>
+                    </div>
                 </div>
               </div>
 
@@ -1477,97 +1477,97 @@ export default function AuditDetailPage() {
             return (
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Top Targeting Keywords</h2>
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Keyword Opportunities</h3>
-                    <p className="text-sm text-gray-600">High-value keywords for your domain</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Volume</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opportunity</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Keyword Opportunities</h3>
+                  <p className="text-sm text-gray-600">High-value keywords for your domain</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Search Volume</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opportunity</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
                         {displayKeywords.map((keyword: any, index: number) => (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <Target className="h-4 w-4 text-primary-600 mr-2" />
-                                <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Target className="h-4 w-4 text-primary-600 mr-2" />
+                              <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
                                 {keyword.trend === 'rising' && (
                                   <TrendingUp className="h-3 w-3 text-success-500 ml-1" />
                                 )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <span className="text-sm font-bold text-gray-900">{keyword.volume.toLocaleString()}</span>
                                 <span className="ml-1 text-xs text-gray-500">/month</span>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center space-x-2">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  keyword.difficulty === 'low' ? 'bg-success-100 text-success-800' :
-                                  keyword.difficulty === 'medium' ? 'bg-warning-100 text-warning-800' :
-                                  'bg-error-100 text-error-800'
-                                }`}>
-                                  {keyword.difficulty}
-                                </span>
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              keyword.difficulty === 'low' ? 'bg-success-100 text-success-800' :
+                              keyword.difficulty === 'medium' ? 'bg-warning-100 text-warning-800' :
+                              'bg-error-100 text-error-800'
+                            }`}>
+                              {keyword.difficulty}
+                            </span>
                                 <span className="text-xs text-gray-500">({keyword.competition}%)</span>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center space-x-2">
-                                <span className={`text-sm font-medium ${
+                        <span className={`text-sm font-medium ${
                                   keyword.opportunity === 'high' ? 'text-success-600' :
                                   keyword.opportunity === 'medium' ? 'text-warning-600' :
-                                  'text-error-600'
-                                }`}>
+                              'text-error-600'
+                        }`}>
                                   {keyword.opportunity === 'high' ? 'High' :
                                    keyword.opportunity === 'medium' ? 'Medium' : 'Low'}
-                                </span>
+                        </span>
                                 <span className="text-xs text-gray-500">₹{keyword.cpc}</span>
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                      </div>
                 
                   {/* Pro Overlay for additional keywords */}
                   {totalKeywords > 3 && (
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white/95 flex items-center justify-center">
-                      <div className="text-center bg-white rounded-xl shadow-2xl p-8 border border-gray-200 max-w-md mx-4">
-                        <div className="mb-4">
-                          <div className="w-16 h-16 bg-gradient-to-r from-primary-600 to-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Star className="h-8 w-8 text-white" />
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">View Full Insights with PRO</h3>
-                          <p className="text-gray-600 mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white/95 flex items-center justify-center">
+                    <div className="text-center bg-white rounded-xl shadow-2xl p-8 border border-gray-200 max-w-md mx-4">
+                      <div className="mb-4">
+                        <div className="w-16 h-16 bg-gradient-to-r from-primary-600 to-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Star className="h-8 w-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">View Full Insights with PRO</h3>
+                        <p className="text-gray-600 mb-6">
                             Unlock all {totalKeywords} keyword opportunities with detailed analytics, 
-                            competitor insights, and advanced SEO recommendations.
-                          </p>
-                        </div>
-                        <div className="space-y-3">
-                          <button className="w-full bg-gradient-to-r from-primary-600 to-secondary-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-primary-700 hover:to-secondary-600 transition-all duration-200 transform hover:scale-105">
-                            Get PRO Access
-                          </button>
-                          <p className="text-xs text-gray-500">
-                            Starting from ₹799/month • Cancel anytime
-                          </p>
-                        </div>
+                          competitor insights, and advanced SEO recommendations.
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <button className="w-full bg-gradient-to-r from-primary-600 to-secondary-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-primary-700 hover:to-secondary-600 transition-all duration-200 transform hover:scale-105">
+                          Get PRO Access
+                        </button>
+                        <p className="text-xs text-gray-500">
+                          Starting from ₹799/month • Cancel anytime
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
             )
           })()}
 
@@ -1579,8 +1579,8 @@ export default function AuditDetailPage() {
             return (
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">On-Page Keywords Analysis</h2>
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                                  <div className="px-6 py-4 border-b border-gray-200">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Keywords Found on Page</h3>
                   <p className="text-sm text-gray-600">
                     Keywords extracted from {audit.url} ordered by frequency (most to least used)
@@ -1592,36 +1592,36 @@ export default function AuditDetailPage() {
                     )}
                   </p>
                 </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Density (%)</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Positions Found</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Density (%)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Positions Found</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
                         {onPageKeywords.map((keyword: any, index: number) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                                  index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                                  index === 1 ? 'bg-gray-100 text-gray-800' :
-                                  index === 2 ? 'bg-orange-100 text-orange-800' :
-                                  'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {index + 1}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <Target className="h-4 w-4 text-primary-600 mr-2" />
-                                <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                                index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                                index === 1 ? 'bg-gray-100 text-gray-800' :
+                                index === 2 ? 'bg-orange-100 text-orange-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {index + 1}
+                        </span>
+                      </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Target className="h-4 w-4 text-primary-600 mr-2" />
+                              <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
                                 <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                   keyword.importance === 'high' ? 'bg-success-100 text-success-800' :
                                   keyword.importance === 'medium' ? 'bg-warning-100 text-warning-800' :
@@ -1629,38 +1629,38 @@ export default function AuditDetailPage() {
                                 }`}>
                                   {keyword.importance}
                                 </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <span className="text-sm font-bold text-gray-900">{keyword.frequency}</span>
-                                <span className="ml-1 text-xs text-gray-500">times</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className="text-sm font-bold text-gray-900">{keyword.frequency}</span>
+                              <span className="ml-1 text-xs text-gray-500">times</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center space-x-2">
-                                <span className={`text-sm font-medium ${
-                                  keyword.density >= 3.0 ? 'text-error-600' :
-                                  keyword.density >= 2.0 ? 'text-warning-600' :
-                                  keyword.density >= 1.0 ? 'text-success-600' :
-                                  'text-gray-600'
-                                }`}>
-                                  {keyword.density}%
-                                </span>
+                              <span className={`text-sm font-medium ${
+                                keyword.density >= 3.0 ? 'text-error-600' :
+                                keyword.density >= 2.0 ? 'text-warning-600' :
+                                keyword.density >= 1.0 ? 'text-success-600' :
+                                'text-gray-600'
+                              }`}>
+                                {keyword.density}%
+                              </span>
                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  keyword.density >= 3.0 ? 'bg-error-100 text-error-800' :
-                                  keyword.density >= 2.0 ? 'bg-warning-100 text-warning-800' :
-                                  keyword.density >= 1.0 ? 'bg-success-100 text-success-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {keyword.density >= 3.0 ? 'High' :
-                                   keyword.density >= 2.0 ? 'Medium' :
-                                   keyword.density >= 1.0 ? 'Good' : 'Low'}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex flex-wrap gap-1">
+                                keyword.density >= 3.0 ? 'bg-error-100 text-error-800' :
+                                keyword.density >= 2.0 ? 'bg-warning-100 text-warning-800' :
+                                keyword.density >= 1.0 ? 'bg-success-100 text-success-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {keyword.density >= 3.0 ? 'High' :
+                                 keyword.density >= 2.0 ? 'Medium' :
+                                 keyword.density >= 1.0 ? 'Good' : 'Low'}
+                        </span>
+                      </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1">
                                 {keyword.position.split(', ').map((pos: string, posIndex: number) => (
                                   <span key={posIndex} className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                                     pos === 'title' || pos === 'h1' ? 'bg-success-100 text-success-800' :
@@ -1668,46 +1668,46 @@ export default function AuditDetailPage() {
                                     pos === 'meta' ? 'bg-info-100 text-info-800' :
                                     'bg-blue-100 text-blue-800'
                                   }`}>
-                                    {pos}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                                  {pos}
+                        </span>
+                              ))}
+                      </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                    </div>
                 
-                  {/* Analysis Summary */}
+                {/* Analysis Summary */}
                   <div className="px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 md:gap-4">
-                      <div className="text-center">
+                    <div className="text-center">
                         <div className="text-2xl font-bold text-gray-900">{onPageKeywords.length}</div>
-                        <div className="text-sm text-gray-600">Total Keywords</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-sm text-gray-600">Total Keywords</div>
+                  </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
                           {onPageKeywords.reduce((sum: number, kw: any) => sum + kw.frequency, 0)}
-                        </div>
-                        <div className="text-sm text-gray-600">Total Occurrences</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-sm text-gray-600">Total Occurrences</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
                           {Math.round(onPageKeywords.reduce((sum: number, kw: any) => sum + kw.density, 0) / onPageKeywords.length * 10) / 10}%
-                        </div>
-                        <div className="text-sm text-gray-600">Avg Density</div>
                       </div>
-                      <div className="text-center">
+                      <div className="text-sm text-gray-600">Avg Density</div>
+                    </div>
+                    <div className="text-center">
                         <div className="text-2xl font-bold text-gray-900">
                           {Math.round(onPageKeywords.reduce((sum: number, kw: any) => sum + kw.seo_score, 0) / onPageKeywords.length)}
                         </div>
                         <div className="text-sm text-gray-600">Avg SEO Score</div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+                        </div>
+                      </div>
+                    </div>
             )
           })()}
 
