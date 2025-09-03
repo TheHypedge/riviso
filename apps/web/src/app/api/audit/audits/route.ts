@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`Attempting to connect to backend: ${BACKEND_URL}`)
     
-    const response = await fetch(`${BACKEND_URL}/audits`, {
+    const response = await fetch(`${BACKEND_URL}/audits/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const queryString = searchParams.toString()
     
-    const response = await fetch(`${BACKEND_URL}/audits${queryString ? `?${queryString}` : ''}`, {
+    const response = await fetch(`${BACKEND_URL}/audits/${queryString ? `?${queryString}` : ''}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
