@@ -32,7 +32,7 @@ async def health_check():
 
 @app.post("/audits/")
 async def create_audit(request: dict):
-    """Create a new audit - simplified version."""
+    """Create a new audit - simplified version with fixed response format."""
     import uuid
     audit_id = str(uuid.uuid4())
     
