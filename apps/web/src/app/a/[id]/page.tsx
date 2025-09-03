@@ -852,13 +852,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].fcp_score * 2.198)}
-                          className={`${audit.technical_audit.device_previews[activeDevice].fcp_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].fcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) * 2.198)}
+                          className={`${getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'text-success-500' : getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].fcp_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice)}</span>
                               </div>
                               </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">FCP</div>
@@ -866,13 +866,13 @@ export default function AuditDetailPage() {
                     <div className="text-lg font-bold text-gray-900">
                       {audit.technical_audit.device_previews[activeDevice].fcp}s
                             </div>
-                    <div className={`text-xs font-medium ${
-                      audit.technical_audit.device_previews[activeDevice].fcp_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.device_previews[activeDevice].fcp_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                                        <div className={`text-xs font-medium ${
+                      getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'text-success-600' : 
+                      getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.device_previews[activeDevice].fcp_score >= 90 ? 'Good' : 
-                       audit.technical_audit.device_previews[activeDevice].fcp_score >= 50 ? 'Needs Improvement' : 'Poor'}
-                            </div>
+                      {getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'Good' : 
+                       getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 50 ? 'Needs Improvement' : 'Poor'}
+                    </div>
                           </div>
 
                   {/* CLS */}
@@ -896,13 +896,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].cls_score * 2.198)}
-                          className={`${audit.technical_audit.device_previews[activeDevice].cls_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].cls_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) * 2.198)}
+                          className={`${getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 90 ? 'text-success-500' : getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].cls_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice)}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">CLS</div>
@@ -911,11 +911,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].cls}
                   </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.device_previews[activeDevice].cls_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.device_previews[activeDevice].cls_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 90 ? 'text-success-600' : 
+                      getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.device_previews[activeDevice].cls_score >= 90 ? 'Good' : 
-                       audit.technical_audit.device_previews[activeDevice].cls_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 90 ? 'Good' : 
+                       getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 50 ? 'Needs Improvement' : 'Poor'}
                     </div>
             </div>
 
@@ -940,13 +940,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].fid_score * 2.198)}
-                          className={`${audit.technical_audit.device_previews[activeDevice].fid_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].fid_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) * 2.198)}
+                          className={`${getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 90 ? 'text-success-500' : getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].fid_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice)}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">FID</div>
@@ -955,11 +955,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].fid}ms
                     </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.device_previews[activeDevice].fid_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.device_previews[activeDevice].fid_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 90 ? 'text-success-600' : 
+                      getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.device_previews[activeDevice].fid_score >= 90 ? 'Good' : 
-                       audit.technical_audit.device_previews[activeDevice].fid_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 90 ? 'Good' : 
+                       getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 50 ? 'Needs Improvement' : 'Poor'}
                     </div>
                   </div>
 
@@ -984,13 +984,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].tti_score * 2.198)}
-                          className={`${audit.technical_audit.device_previews[activeDevice].tti_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].tti_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) * 2.198)}
+                          className={`${getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 90 ? 'text-success-500' : getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].tti_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice)}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">TTI</div>
@@ -999,11 +999,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].tti}s
                     </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.device_previews[activeDevice].tti_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.device_previews[activeDevice].tti_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 90 ? 'text-success-600' : 
+                      getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.device_previews[activeDevice].tti_score >= 90 ? 'Good' : 
-                       audit.technical_audit.device_previews[activeDevice].tti_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 90 ? 'Good' : 
+                       getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 50 ? 'Needs Improvement' : 'Poor'}
                     </div>
                   </div>
                 </div>
