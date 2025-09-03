@@ -203,6 +203,12 @@ async def root():
     }
 
 
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint for Railway."""
+    return {"status": "healthy", "service": "riviso-api"}
+
+
 if __name__ == "__main__":
     import time
     import uvicorn

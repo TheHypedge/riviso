@@ -16,7 +16,7 @@ logger = structlog.get_logger(__name__)
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 async def health_check() -> Dict[str, Any]:
     """
     Basic health check endpoint.
