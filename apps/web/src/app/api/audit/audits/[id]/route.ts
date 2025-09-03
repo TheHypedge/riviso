@@ -26,14 +26,35 @@ export async function GET(
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch (jsonError) {
+        const errorText = await response.text()
+        console.error('Backend returned non-JSON error:', errorText)
+        return NextResponse.json(
+          { detail: `Backend error: ${response.status} ${response.statusText}` },
+          { status: response.status }
+        )
+      }
       return NextResponse.json(
         { detail: errorData.detail || 'Failed to fetch audit' },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      console.error('Failed to parse backend response as JSON:', jsonError)
+      const responseText = await response.text()
+      console.error('Backend response text:', responseText)
+      return NextResponse.json(
+        { detail: 'Backend returned invalid JSON response' },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)

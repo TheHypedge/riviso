@@ -28,7 +28,18 @@ export async function POST(request: NextRequest) {
     console.log(`Backend response status: ${response.status}`)
 
     if (!response.ok) {
-      const errorData = await response.json()
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch (jsonError) {
+        // If response is not JSON (e.g., HTML error page), get text
+        const errorText = await response.text()
+        console.error('Backend returned non-JSON error:', errorText)
+        return NextResponse.json(
+          { detail: `Backend error: ${response.status} ${response.statusText}` },
+          { status: response.status }
+        )
+      }
       console.error('Backend error:', errorData)
       return NextResponse.json(
         { detail: errorData.detail || 'Failed to start audit' },
@@ -36,7 +47,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      console.error('Failed to parse backend response as JSON:', jsonError)
+      const responseText = await response.text()
+      console.error('Backend response text:', responseText)
+      return NextResponse.json(
+        { detail: 'Backend returned invalid JSON response' },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)
@@ -62,14 +84,35 @@ export async function GET(request: NextRequest) {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
+      let errorData
+      try {
+        errorData = await response.json()
+      } catch (jsonError) {
+        const errorText = await response.text()
+        console.error('Backend returned non-JSON error:', errorText)
+        return NextResponse.json(
+          { detail: `Backend error: ${response.status} ${response.statusText}` },
+          { status: response.status }
+        )
+      }
       return NextResponse.json(
         { detail: errorData.detail || 'Failed to fetch audits' },
         { status: response.status }
       )
     }
 
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      console.error('Failed to parse backend response as JSON:', jsonError)
+      const responseText = await response.text()
+      console.error('Backend response text:', responseText)
+      return NextResponse.json(
+        { detail: 'Backend returned invalid JSON response' },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)
