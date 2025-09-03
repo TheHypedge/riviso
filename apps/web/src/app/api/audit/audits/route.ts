@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { audits } from '../../auth/audits'
 
 // Try multiple backend URLs in order of preference
 const BACKEND_URLS = [
@@ -14,6 +15,7 @@ const BACKEND_URL = BACKEND_URLS[0] || 'https://riviso.onrender.com'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const { url, userId, device = 'mobile' } = body
     
     console.log(`Attempting to connect to backend: ${BACKEND_URL}`)
     
@@ -59,6 +61,21 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Track audit in local storage if user is logged in
+    if (userId && url) {
+      const newAudit = {
+        id: data.id || Date.now().toString(),
+        userId,
+        url,
+        status: 'pending' as const,
+        createdAt: new Date().toISOString(),
+        device
+      }
+      audits.push(newAudit)
+      console.log('Audit tracked locally for user:', userId)
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)

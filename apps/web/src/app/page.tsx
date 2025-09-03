@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { 
   Search, 
   Loader2, 
@@ -22,7 +22,10 @@ import {
   Search as SearchIcon,
   BarChart,
   FileText,
-  Settings
+  Settings,
+  ChevronDown,
+  User,
+  LogOut
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { LoadingScreen } from '@/components/LoadingScreen'
@@ -34,8 +37,24 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [loadingProgress, setLoadingProgress] = useState(0)
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
   const router = useRouter()
   const { user, isAuthenticated, logout } = useAuth()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const normalizeUrl = (inputUrl: string): string => {
     let url = inputUrl.trim()
@@ -213,20 +232,54 @@ export default function HomePage() {
                     <Link href="/dashboard" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">
                       Dashboard
                     </Link>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-primary-600">
-                          {user?.firstName?.charAt(0)}
-                        </span>
-                      </div>
-                      <span className="text-sm text-gray-700">{user?.firstName}</span>
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        onClick={() => setShowUserDropdown(!showUserDropdown)}
+                        className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
+                      >
+                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-primary-600">
+                            {user?.firstName?.charAt(0)}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium">{user?.firstName}</span>
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                      
+                      {showUserDropdown && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                          <div className="py-1">
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => setShowUserDropdown(false)}
+                            >
+                              <User className="h-4 w-4 mr-3" />
+                              Dashboard
+                            </Link>
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => setShowUserDropdown(false)}
+                            >
+                              <Settings className="h-4 w-4 mr-3" />
+                              Account Settings
+                            </Link>
+                            <hr className="my-1" />
+                            <button
+                              onClick={() => {
+                                logout()
+                                setShowUserDropdown(false)
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <LogOut className="h-4 w-4 mr-3" />
+                              Logout
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={logout}
-                      className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Logout
-                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-3">
