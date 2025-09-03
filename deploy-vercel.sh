@@ -1,0 +1,52 @@
+#!/bin/bash
+
+echo "🚀 RIVISO Deployment Script"
+echo "=========================="
+echo ""
+
+echo "📋 Deployment Checklist:"
+echo "1. ✅ Code pushed to GitHub: https://github.com/TheHypedge/riviso"
+echo "2. 🔄 Deploy frontend to Vercel"
+echo "3. 🔄 Deploy backend to Railway"
+echo "4. 🔄 Configure riviso.com domain"
+echo ""
+
+echo "🌐 Vercel Deployment Steps:"
+echo "1. Go to: https://vercel.com"
+echo "2. Sign up with GitHub"
+echo "3. Click 'New Project'"
+echo "4. Select 'riviso' repository"
+echo "5. Configure:"
+echo "   - Framework: Next.js"
+echo "   - Root Directory: apps/web"
+echo "   - Build Command: cd apps/web && npm run build"
+echo "   - Output Directory: apps/web/.next"
+echo "   - Install Command: npm install"
+echo ""
+
+echo "🔧 Environment Variables for Vercel:"
+echo "NEXT_PUBLIC_API_URL=https://your-railway-backend-url.railway.app"
+echo ""
+
+echo "🚂 Railway Deployment Steps:"
+echo "1. Go to: https://railway.app"
+echo "2. Sign up with GitHub"
+echo "3. Click 'New Project' > 'Deploy from GitHub repo'"
+echo "4. Select 'riviso' repository"
+echo "5. Set Root Directory: services/audit-api"
+echo "6. Add Environment Variables:"
+echo "   - DATABASE_URL=sqlite:///./seo_audit.db"
+echo "   - REDIS_URL=redis://localhost:6379"
+echo ""
+
+echo "🌍 Domain Configuration:"
+echo "1. In Vercel dashboard, go to your project"
+echo "2. Go to 'Settings' > 'Domains'"
+echo "3. Add 'riviso.com'"
+echo "4. Update your domain's DNS to point to Vercel"
+echo ""
+
+echo "📱 Your RIVISO platform will be live at: https://riviso.com"
+echo ""
+
+read -p "Press Enter to continue with deployment..."

@@ -73,7 +73,6 @@ export function ScoreGauge({ title, score, color }: ScoreGaugeProps) {
             trailColor: colors.trail,
             textColor: colors.text,
             textSize: '24px',
-            fontWeight: 'bold',
           })}
         />
       </div>
