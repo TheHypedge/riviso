@@ -6,14 +6,7 @@ const nextConfig = {
   env: {
     AUDIT_API_URL: process.env.AUDIT_API_URL || 'http://localhost:8000',
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/audit/:path*',
-        destination: `${process.env.AUDIT_API_URL || 'http://localhost:8000'}/:path*`,
-      },
-    ];
-  },
+  // Removed rewrites - using API routes instead
   // Production optimizations
   output: 'standalone',
   compress: true,
