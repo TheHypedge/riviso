@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { users } from '../users'
+import { userQueries } from '../../../../lib/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user
-    const user = users.find(u => u.email === email)
+    // Find user in database
+    const user = userQueries.findByEmail.get(email) as any
     if (!user) {
       return NextResponse.json(
         { message: 'Invalid email or password' },
@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    // Update last login
+    userQueries.updateLastLogin.run(new Date().toISOString(), user.id)
 
     // Generate JWT token
     const token = jwt.sign(

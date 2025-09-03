@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { audits } from '../../auth/audits'
+import { auditQueries } from '../../../../lib/database'
 
 // Try multiple backend URLs in order of preference
 const BACKEND_URLS = [
@@ -62,18 +62,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Track audit in local storage if user is logged in
+    // Track audit in database if user is logged in
     if (userId && url) {
-      const newAudit = {
-        id: data.id || Date.now().toString(),
+      const auditId = data.id || Date.now().toString()
+      const createdAt = new Date().toISOString()
+      
+      auditQueries.create.run(
+        auditId,
         userId,
         url,
-        status: 'pending' as const,
-        createdAt: new Date().toISOString(),
+        'pending',
+        createdAt,
         device
-      }
-      audits.push(newAudit)
-      console.log('Audit tracked locally for user:', userId)
+      )
+      console.log('Audit tracked in database for user:', userId)
     }
 
     return NextResponse.json(data)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { audits } from '../audits'
+import { auditQueries } from '../../../../lib/database'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,10 +14,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get audits for the specific user
-    const userAudits = audits.filter(audit => audit.userId === userId)
+    const userAudits = auditQueries.findByUserId.all(userId)
     
     // Sort by creation date (newest first)
-    userAudits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    userAudits.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     return NextResponse.json({
       audits: userAudits,
@@ -44,17 +44,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new audit
+    // Create new audit in database
+    const auditId = Date.now().toString()
+    const createdAt = new Date().toISOString()
+    
+    auditQueries.create.run(
+      auditId,
+      userId,
+      url,
+      'pending',
+      createdAt,
+      device
+    )
+
     const newAudit = {
-      id: Date.now().toString(),
+      id: auditId,
       userId,
       url,
       status: 'pending' as const,
-      createdAt: new Date().toISOString(),
+      createdAt,
       device
     }
-
-    audits.push(newAudit)
 
     return NextResponse.json({
       message: 'Audit created successfully',
@@ -82,24 +92,29 @@ export async function PUT(request: NextRequest) {
     }
 
     // Find and update the audit
-    const auditIndex = audits.findIndex(audit => audit.id === auditId && audit.userId === userId)
+    const audit = auditQueries.findById.get(auditId) as any
     
-    if (auditIndex === -1) {
+    if (!audit || audit.userId !== userId) {
       return NextResponse.json(
         { message: 'Audit not found' },
         { status: 404 }
       )
     }
 
-    audits[auditIndex] = {
-      ...audits[auditIndex],
-      status: status as 'completed' | 'failed',
-      completedAt: completedAt || new Date().toISOString()
-    }
+    auditQueries.updateStatus.run(
+      status,
+      completedAt || new Date().toISOString(),
+      null, // score (can be updated later)
+      auditId
+    )
 
     return NextResponse.json({
       message: 'Audit status updated successfully',
-      audit: audits[auditIndex]
+      audit: {
+        ...audit,
+        status: status as 'completed' | 'failed',
+        completedAt: completedAt || new Date().toISOString()
+      }
     })
 
   } catch (error) {

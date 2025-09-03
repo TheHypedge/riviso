@@ -19,13 +19,17 @@
   },
   "devDependencies": {
     "@turbo/gen": "^1.10.12",
-    "turbo": "^1.10.12",
     "prettier": "^3.0.3",
+    "turbo": "^1.10.12",
     "typescript": "^5.2.2"
   },
   "packageManager": "pnpm@8.10.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.2.0"
   }
 }

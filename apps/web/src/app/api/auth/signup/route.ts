@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { sendWelcomeEmail } from '../emailService'
-import { users } from '../users'
+import { userQueries } from '../../../../lib/database'
 import { UserRole } from '../../../../lib/roles'
 
 export async function POST(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = users.find(user => user.email === email)
+    const existingUser = userQueries.findByEmail.get(email)
     if (existingUser) {
       return NextResponse.json(
         { message: 'User with this email already exists' },
@@ -40,21 +40,35 @@ export async function POST(request: NextRequest) {
     // Determine user role - make iamakhileshsoni@gmail.com SUPER_ADMIN
     const userRole = email === 'iamakhileshsoni@gmail.com' ? UserRole.SUPER_ADMIN : UserRole.USER
     
-    // Create user
-    const newUser = {
-      id: Date.now().toString(),
+    // Create user in database
+    const userId = Date.now().toString()
+    const createdAt = new Date().toISOString()
+    
+    userQueries.create.run(
+      userId,
       firstName,
       lastName,
       email,
-      password: hashedPassword,
-      createdAt: new Date().toISOString(),
-      plan: 'free',
+      hashedPassword,
+      userRole,
+      'free',
+      0,
+      5,
+      createdAt
+    )
+
+    // Create user object for response
+    const newUser = {
+      id: userId,
+      firstName,
+      lastName,
+      email,
+      createdAt,
+      plan: 'free' as const,
       auditsUsed: 0,
       auditsLimit: 5,
       role: userRole
     }
-
-    users.push(newUser)
 
     // Send welcome email
     try {
@@ -79,8 +93,8 @@ export async function POST(request: NextRequest) {
       { expiresIn: '7d' }
     )
 
-    // Return user data (without password)
-    const { password: _, ...userWithoutPassword } = newUser
+    // Return user data (password is not included in newUser object)
+    const userWithoutPassword = newUser
 
     return NextResponse.json({
       message: 'Account created successfully. Welcome email sent!',
