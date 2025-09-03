@@ -160,6 +160,7 @@ export default function AuditDetailPage() {
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [activeDevice, setActiveDevice] = useState<'mobile' | 'desktop'>('mobile')
+  const [expandedMetric, setExpandedMetric] = useState<string | null>(null)
 
   const auditId = params.id as string
 
@@ -194,8 +195,73 @@ export default function AuditDetailPage() {
   }
 
   const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    console.log('Exporting PDF...')
+    if (!audit) return
+    
+    // Create a new window with the report content for printing
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>RIVISO Analytics Report - ${audit.url}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .section { margin-bottom: 30px; }
+              .metric { display: inline-block; margin: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+              .score { font-size: 24px; font-weight: bold; }
+              .good { color: green; }
+              .warning { color: orange; }
+              .poor { color: red; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>RIVISO Analytics Report</h1>
+              <p>Website: ${audit.url}</p>
+              <p>Generated: ${formatDate(audit.created_at)}</p>
+            </div>
+            <div class="section">
+              <h2>Audit Summary</h2>
+              <div class="metric">
+                <div class="score">Overall Score: ${audit.scores.overall}</div>
+              </div>
+              <div class="metric">
+                <div class="score">On-Page SEO: ${audit.scores.on_page}</div>
+              </div>
+              <div class="metric">
+                <div class="score">Technical SEO: ${audit.scores.technical}</div>
+              </div>
+              <div class="metric">
+                <div class="score">Content Quality: ${audit.scores.content || 0}</div>
+              </div>
+            </div>
+            ${audit.technical_audit ? `
+            <div class="section">
+              <h2>Performance Analysis</h2>
+              <div class="metric">
+                <div class="score">LCP: ${audit.technical_audit.device_previews.mobile.lcp}s</div>
+              </div>
+              <div class="metric">
+                <div class="score">FCP: ${audit.technical_audit.device_previews.mobile.fcp}s</div>
+              </div>
+              <div class="metric">
+                <div class="score">CLS: ${audit.technical_audit.device_previews.mobile.cls}</div>
+              </div>
+              <div class="metric">
+                <div class="score">FID: ${audit.technical_audit.device_previews.mobile.fid}ms</div>
+              </div>
+              <div class="metric">
+                <div class="score">TTI: ${audit.technical_audit.device_previews.mobile.tti}s</div>
+              </div>
+            </div>
+            ` : ''}
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.print()
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -245,6 +311,76 @@ export default function AuditDetailPage() {
       }
     }
     return 'N/A'
+  }
+
+  const getMetricRecommendations = (metric: string) => {
+    const recommendations = {
+      'total_page_size': {
+        title: 'Total Page Size',
+        tips: [
+          'Compress images using WebP or AVIF formats',
+          'Minify CSS and JavaScript files',
+          'Remove unused CSS and JavaScript',
+          'Use a CDN to serve static assets',
+          'Enable Gzip compression on your server'
+        ],
+        bestPractices: [
+          'Keep total page size under 1MB for optimal performance',
+          'Use lazy loading for images below the fold',
+          'Optimize fonts and use font-display: swap',
+          'Consider using critical CSS for above-the-fold content'
+        ]
+      },
+      'total_requests': {
+        title: 'Total Requests',
+        tips: [
+          'Combine multiple CSS files into one',
+          'Bundle JavaScript files together',
+          'Use CSS sprites for small icons',
+          'Implement HTTP/2 server push',
+          'Remove unnecessary third-party scripts'
+        ],
+        bestPractices: [
+          'Aim for fewer than 50 HTTP requests per page',
+          'Use resource hints like preload and prefetch',
+          'Implement service workers for caching',
+          'Consider using a bundler like Webpack or Vite'
+        ]
+      },
+      'image_optimization': {
+        title: 'Image Optimization',
+        tips: [
+          'Convert images to modern formats (WebP, AVIF)',
+          'Compress images without losing quality',
+          'Use appropriate image dimensions',
+          'Implement lazy loading for images',
+          'Add proper alt attributes for accessibility'
+        ],
+        bestPractices: [
+          'Use responsive images with srcset',
+          'Optimize images for different screen densities',
+          'Consider using a service like Cloudinary or ImageKit',
+          'Implement progressive JPEG loading'
+        ]
+      },
+      'caching_score': {
+        title: 'Caching Score',
+        tips: [
+          'Set proper Cache-Control headers',
+          'Use ETags for cache validation',
+          'Implement browser caching for static assets',
+          'Use a CDN with edge caching',
+          'Set up proper cache invalidation strategies'
+        ],
+        bestPractices: [
+          'Cache static assets for at least 1 year',
+          'Use versioning for cache busting',
+          'Implement service worker caching',
+          'Consider using HTTP/2 server push for critical resources'
+        ]
+      }
+    }
+    return recommendations[metric as keyof typeof recommendations] || null
   }
 
   if (loading) {
@@ -354,91 +490,66 @@ export default function AuditDetailPage() {
       {/* Header Section */}
       <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-center mb-6 space-y-4 lg:space-y-0">
+          {/* Back Button */}
+          <div className="mb-6">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors self-start"
+              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Home
             </button>
-            <div className="flex-1">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">RIVISO Analytics Report</h1>
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                    <div className="flex items-center">
-                      <Globe className="h-5 w-5 text-gray-500 mr-2" />
-                      <span className="text-base md:text-lg font-medium text-gray-700 break-all">{audit.url}</span>
-                    </div>
-                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)} self-start`}>
-                      {getStatusIcon(audit.status)}
-                      <span className="ml-2 capitalize">{audit.status}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                  <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </button>
-                  <button
-                    onClick={handleExportPDF}
-                    className="flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export PDF
-                  </button>
-                </div>
+          </div>
+
+          {/* Report Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">RIVISO Analytics Report</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="flex items-center justify-center">
+                <Globe className="h-5 w-5 text-gray-500 mr-2" />
+                <span className="text-lg font-medium text-gray-700 break-all">{audit.url}</span>
+              </div>
+              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)}`}>
+                {getStatusIcon(audit.status)}
+                <span className="ml-2 capitalize">{audit.status}</span>
               </div>
             </div>
           </div>
 
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3 mb-8">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center justify-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center justify-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </button>
+          </div>
+
           {/* Audit Info Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="flex justify-center">
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center">
                 <Calendar className="h-8 w-8 text-primary-600 mr-3" />
                 <div>
-                  <p className="text-sm text-gray-600">Audit Date</p>
+                  <p className="text-sm text-gray-600">Audit Date & Time</p>
                   <p className="text-lg font-semibold text-gray-900">{formatDate(audit.created_at)}</p>
                 </div>
           </div>
         </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center">
-                <Timer className="h-8 w-8 text-success-600 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600">Analysis Time</p>
-                  <p className="text-lg font-semibold text-gray-900">{getAnalysisTime()}</p>
-                </div>
-              </div>
-            </div>
+            
 
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-                  <div className="flex items-center">
-                <FileText className="h-8 w-8 text-warning-600 mr-3" />
-                    <div>
-                  <p className="text-sm text-gray-600">Rules Checked</p>
-                  <p className="text-lg font-semibold text-gray-900">{audit.rules.length}</p>
-                  </div>
-                      </div>
-                    </div>
-                    
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-                  <div className="flex items-center">
-                <Shield className="h-8 w-8 text-info-600 mr-3" />
-                    <div>
-                  <p className="text-sm text-gray-600">Security Score</p>
-                  <p className="text-lg font-semibold text-gray-900">{audit.scores.technical}</p>
-                  </div>
-                </div>
-              </div>
+
                     </div>
                   </div>
       </section>
@@ -523,18 +634,8 @@ export default function AuditDetailPage() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 space-y-2 sm:space-y-0">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900">Performance Analysis</h2>
-                {audit.real_data && audit.data_source && (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                      Real Data
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Source: {audit.data_source}
-                    </div>
-                  </div>
-                )}
-              </div>
+                
+                        </div>
               
               {/* Device View Selector */}
               <div className="mb-6 md:mb-8">
@@ -566,7 +667,7 @@ export default function AuditDetailPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+                        </div>
               
               {/* Core Web Vitals */}
               <div className="mb-6 md:mb-8">
@@ -650,7 +751,7 @@ export default function AuditDetailPage() {
                     <div className="text-xs text-gray-500 mb-2">First Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
                       {audit.technical_audit.device_previews[activeDevice].fcp}s
-                    </div>
+                            </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-success-600' : 
                       audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-warning-600' : 'text-error-600'
@@ -694,7 +795,7 @@ export default function AuditDetailPage() {
                     <div className="text-xs text-gray-500 mb-2">Cumulative Layout Shift</div>
                     <div className="text-lg font-bold text-gray-900">
                       {audit.technical_audit.device_previews[activeDevice].cls}
-                    </div>
+                  </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-success-600' : 
                       audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-warning-600' : 'text-error-600'
@@ -794,11 +895,14 @@ export default function AuditDetailPage() {
                 </div>
             </div>
 
-              {/* Performance Metrics */}
+                            {/* Performance Metrics */}
             <div className="mb-6 md:mb-8">
                 <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Performance Metrics</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                  <div 
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
+                    onClick={() => setExpandedMetric(expandedMetric === 'total_page_size' ? null : 'total_page_size')}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
                         <BarChart3 className="h-6 w-6 text-primary-600" />
@@ -807,9 +911,28 @@ export default function AuditDetailPage() {
                     </div>
                     <div className="text-sm font-medium text-gray-700">Total Page Size</div>
                     <div className="text-xs text-gray-500 mt-1">All resources combined</div>
-            </div>
-
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    {expandedMetric === 'total_page_size' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {getMetricRecommendations('total_page_size')?.tips.slice(0, 3).map((tip, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-primary-600 mr-1">•</span>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                        <button className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium">
+                          View all recommendations →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div 
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
+                    onClick={() => setExpandedMetric(expandedMetric === 'total_requests' ? null : 'total_requests')}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
                         <Zap className="h-6 w-6 text-success-600" />
@@ -818,29 +941,83 @@ export default function AuditDetailPage() {
                     </div>
                     <div className="text-sm font-medium text-gray-700">Total Requests</div>
                     <div className="text-xs text-gray-500 mt-1">HTTP requests made</div>
-            </div>
-
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    {expandedMetric === 'total_requests' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {getMetricRecommendations('total_requests')?.tips.slice(0, 3).map((tip, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-success-600 mr-1">•</span>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                        <button className="mt-2 text-xs text-success-600 hover:text-success-700 font-medium">
+                          View all recommendations →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div 
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
+                    onClick={() => setExpandedMetric(expandedMetric === 'image_optimization' ? null : 'image_optimization')}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
                         <Settings className="h-6 w-6 text-warning-600" />
-                          </div>
+                      </div>
                       <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
-                        </div>
+                    </div>
                     <div className="text-sm font-medium text-gray-700">Image Optimization</div>
                     <div className="text-xs text-gray-500 mt-1">Compression & format</div>
+                    {expandedMetric === 'image_optimization' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {getMetricRecommendations('image_optimization')?.tips.slice(0, 3).map((tip, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-warning-600 mr-1">•</span>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                        <button className="mt-2 text-xs text-warning-600 hover:text-warning-700 font-medium">
+                          View all recommendations →
+                        </button>
                       </div>
+                    )}
+                  </div>
                   
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                  <div 
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
+                    onClick={() => setExpandedMetric(expandedMetric === 'caching_score' ? null : 'caching_score')}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-info-100 rounded-lg flex items-center justify-center">
                         <Shield className="h-6 w-6 text-info-600" />
-                        </div>
-                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
                       </div>
+                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
+                    </div>
                     <div className="text-sm font-medium text-gray-700">Caching Score</div>
                     <div className="text-xs text-gray-500 mt-1">Browser caching</div>
-                    </div>
+                    {expandedMetric === 'caching_score' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {getMetricRecommendations('caching_score')?.tips.slice(0, 3).map((tip, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-info-600 mr-1">•</span>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                        <button className="mt-2 text-xs text-info-600 hover:text-info-700 font-medium">
+                          View all recommendations →
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -873,75 +1050,7 @@ export default function AuditDetailPage() {
                       </div>
                     )}
 
-          {/* Rule Statistics */}
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Rule Statistics</h2>
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-6">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-full mx-auto mb-3">
-                    <CheckCircle className="h-6 w-6 text-success-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {audit.rules.filter(rule => rule.status === 'pass').length}
-              </div>
-                  <div className="text-sm text-gray-600">Passed</div>
-            </div>
 
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-error-100 rounded-full mx-auto mb-3">
-                    <XCircle className="h-6 w-6 text-error-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {audit.rules.filter(rule => rule.status === 'fail').length}
-                  </div>
-                  <div className="text-sm text-gray-600">Failed</div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-warning-100 rounded-full mx-auto mb-3">
-                    <AlertTriangle className="h-6 w-6 text-warning-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    {audit.rules.filter(rule => rule.status === 'warning').length}
-                  </div>
-                  <div className="text-sm text-gray-600">Warnings</div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-12 h-12 bg-info-100 rounded-full mx-auto mb-3">
-                    <Info className="h-6 w-6 text-info-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{audit.rules.length}</div>
-                  <div className="text-sm text-gray-600">Total</div>
-                </div>
-              </div>
-              
-              <div className="border-t border-gray-200 pt-4 md:pt-6">
-                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Category Breakdown</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                  {['on_page', 'technical', 'content'].map(category => {
-                    const categoryRules = audit.rules.filter(rule => rule.category === category)
-                    const passedCount = categoryRules.filter(rule => rule.status === 'pass').length
-                    const avgScore = categoryRules.length > 0 
-                      ? Math.round(categoryRules.reduce((sum, rule) => sum + rule.score, 0) / categoryRules.length)
-                      : 0
-                    
-                    return (
-                      <div key={category} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900 capitalize">{category.replace('_', ' ')}</h4>
-                          <span className="text-sm text-gray-600">{passedCount}/{categoryRules.length} passed</span>
-                        </div>
-                        <div className="text-2xl font-bold text-primary-600">{avgScore}</div>
-                        <div className="text-sm text-gray-600">avg score</div>
-                      </div>
-                    )
-                  })}
-                  </div>
-                </div>
-              </div>
-            </div>
 
           {/* Top Fixes */}
           {audit.top_fixes && audit.top_fixes.length > 0 && (

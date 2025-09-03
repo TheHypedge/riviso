@@ -56,11 +56,20 @@ interface LoadingScreenProps {
 export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
   const [currentFactIndex, setCurrentFactIndex] = useState(0)
   const [dots, setDots] = useState('')
+  const [currentStep, setCurrentStep] = useState(0)
+
+  const analysisSteps = [
+    { name: "Initializing Analysis", icon: Search, color: "text-blue-600" },
+    { name: "Fetching Page Data", icon: Globe, color: "text-green-600" },
+    { name: "Testing Performance", icon: Zap, color: "text-orange-600" },
+    { name: "Analyzing SEO", icon: BarChart3, color: "text-purple-600" },
+    { name: "Generating Report", icon: Target, color: "text-indigo-600" }
+  ]
 
   useEffect(() => {
     const factInterval = setInterval(() => {
       setCurrentFactIndex((prev) => (prev + 1) % seoFacts.length)
-    }, 3000)
+    }, 4000)
 
     const dotsInterval = setInterval(() => {
       setDots((prev) => {
@@ -69,14 +78,25 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
       })
     }, 500)
 
+    // Update current step based on progress
+    const stepInterval = setInterval(() => {
+      setCurrentStep((prev) => {
+        if (progress >= 100) return analysisSteps.length - 1
+        return Math.min(Math.floor((progress / 100) * analysisSteps.length), analysisSteps.length - 1)
+      })
+    }, 100)
+
     return () => {
       clearInterval(factInterval)
       clearInterval(dotsInterval)
+      clearInterval(stepInterval)
     }
-  }, [])
+  }, [progress])
 
   const currentFact = seoFacts[currentFactIndex]
   const IconComponent = currentFact.icon
+  const currentStepData = analysisSteps[currentStep]
+  const StepIcon = currentStepData.icon
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center p-4">
@@ -101,25 +121,25 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-gray-700">Analysis Progress</span>
             <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-primary-600 to-secondary-500 h-3 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
+              className="bg-gradient-to-r from-primary-600 to-secondary-500 h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${Math.min(progress, 100)}%` }}
             ></div>
           </div>
         </div>
 
         {/* Current Analysis Step */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center px-6 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
-            <Loader2 className="h-5 w-5 text-primary-600 mr-3 animate-spin" />
+            <StepIcon className={`h-5 w-5 mr-3 ${currentStepData.color} ${progress < 100 ? 'animate-pulse' : ''}`} />
             <span className="text-lg font-medium text-gray-900">
-              Fetching real performance data{dots}
+              {currentStepData.name}{dots}
             </span>
           </div>
         </div>
@@ -169,9 +189,12 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            This may take 30-60 seconds as we fetch real data from Google's servers
+            {progress < 100 
+              ? "Analyzing your website with real-time data from multiple sources"
+              : "Finalizing your comprehensive SEO report..."
+            }
           </p>
         </div>
       </div>

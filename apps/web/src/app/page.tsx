@@ -35,9 +35,21 @@ export default function HomePage() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const router = useRouter()
 
+  const normalizeUrl = (inputUrl: string): string => {
+    let url = inputUrl.trim()
+    
+    // If it doesn't start with http:// or https://, add https://
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url
+    }
+    
+    return url
+  }
+
   const validateUrl = (inputUrl: string): boolean => {
     try {
-      const urlObj = new URL(inputUrl)
+      const normalizedUrl = normalizeUrl(inputUrl)
+      const urlObj = new URL(normalizedUrl)
       return ['http:', 'https:'].includes(urlObj.protocol)
     } catch {
       return false
@@ -53,21 +65,23 @@ export default function HomePage() {
       return
     }
 
+    const normalizedUrl = normalizeUrl(url)
+    
     if (!validateUrl(url)) {
-      setError('Please enter a valid URL (including http:// or https://)')
+      setError('Please enter a valid domain (e.g., example.com)')
       return
     }
 
     setIsLoading(true)
     setLoadingProgress(0)
     
-    // Simulate progress updates
+    // More realistic progress updates
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (prev >= 90) return prev
-        return prev + Math.random() * 15
+        if (prev >= 85) return prev
+        return prev + Math.random() * 12
       })
-    }, 500)
+    }, 300)
 
     try {
       // Simulate realistic loading time (2-3 seconds for demo)
@@ -79,7 +93,7 @@ export default function HomePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: url.trim(),
+          url: normalizedUrl,
           options: {
             include_sitemap: true,
             max_sitemap_urls: 5,
@@ -241,7 +255,7 @@ export default function HomePage() {
                       type="url"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
-                      placeholder="Enter your website URL"
+                      placeholder="Enter your domain (e.g., example.com)"
                       className="w-full pl-12 pr-4 py-4 border-0 bg-gray-50/50 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-300 text-lg placeholder-gray-400"
                       disabled={isLoading}
                     />
