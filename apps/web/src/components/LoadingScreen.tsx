@@ -6,7 +6,7 @@ import { Loader2, TrendingUp, Target, Zap, Globe, Users, BarChart3, Search } fro
 const seoFacts = [
   {
     icon: TrendingUp,
-    title: "Page Speed Impact",
+    title: "Website Speed Impact",
     fact: "A 1-second delay in page load time can result in a 7% reduction in conversions.",
     color: "text-blue-600"
   },

@@ -39,7 +39,7 @@ export default function ServicesPage() {
         "On-page SEO analysis with 50+ checkpoints",
         "Technical SEO audit including Core Web Vitals",
         "Mobile optimization assessment",
-        "Page speed analysis and optimization tips",
+        "Website speed analysis and optimization tips",
         "Meta tags and structured data review",
         "Internal linking structure analysis",
         "Image optimization recommendations",

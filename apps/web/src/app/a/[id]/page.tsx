@@ -28,7 +28,9 @@ import {
   Timer,
   Users,
   FileText,
-  Settings
+  Settings,
+  Smartphone,
+  Monitor
 } from 'lucide-react'
 import { ScoreGauge } from '@/components/ScoreGauge'
 import { RuleTable } from '@/components/RuleTable'
@@ -157,6 +159,7 @@ export default function AuditDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const [activeDevice, setActiveDevice] = useState<'mobile' | 'desktop'>('mobile')
 
   const auditId = params.id as string
 
@@ -223,6 +226,25 @@ export default function AuditDetailPage() {
       second: '2-digit',
       timeZone: 'Asia/Kolkata'
     })
+  }
+
+  const getAnalysisTime = () => {
+    if (audit?.completed_at && audit?.started_at) {
+      const startTime = new Date(audit.started_at).getTime()
+      const endTime = new Date(audit.completed_at).getTime()
+      const duration = endTime - startTime
+      
+      if (duration < 1000) {
+        return `${duration}ms`
+      } else if (duration < 60000) {
+        return `${Math.round(duration / 1000)}s`
+      } else {
+        const minutes = Math.floor(duration / 60000)
+        const seconds = Math.round((duration % 60000) / 1000)
+        return `${minutes}m ${seconds}s`
+      }
+    }
+    return 'N/A'
   }
 
   if (loading) {
@@ -330,54 +352,54 @@ export default function AuditDetailPage() {
       </nav>
 
       {/* Header Section */}
-      <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12">
+      <section className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center mb-6 space-y-4 lg:space-y-0">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors mr-6"
+              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors self-start"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Home
             </button>
             <div className="flex-1">
-              <div className="flex items-center justify-between">
-            <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">RIVISO Analytics Report</h1>
-                  <div className="flex items-center space-x-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">RIVISO Analytics Report</h1>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                     <div className="flex items-center">
                       <Globe className="h-5 w-5 text-gray-500 mr-2" />
-                      <span className="text-lg font-medium text-gray-700">{audit.url}</span>
-            </div>
-                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)}`}>
+                      <span className="text-base md:text-lg font-medium text-gray-700 break-all">{audit.url}</span>
+                    </div>
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)} self-start`}>
                       {getStatusIcon(audit.status)}
                       <span className="ml-2 capitalize">{audit.status}</span>
-                  </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-              <button
-                onClick={handleRefresh}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                  <button
+                    onClick={handleRefresh}
                     disabled={refreshing}
-                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                     Refresh
-              </button>
+                  </button>
                   <button
                     onClick={handleExportPDF}
-                    className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    className="flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Export PDF
-                </button>
+                  </button>
                 </div>
-                  </div>
+              </div>
             </div>
           </div>
 
           {/* Audit Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center">
                 <Calendar className="h-8 w-8 text-primary-600 mr-3" />
@@ -393,13 +415,8 @@ export default function AuditDetailPage() {
                 <Timer className="h-8 w-8 text-success-600 mr-3" />
                 <div>
                   <p className="text-sm text-gray-600">Analysis Time</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {audit.completed_at && audit.started_at 
-                      ? `${Math.round((new Date(audit.completed_at).getTime() - new Date(audit.started_at).getTime()) / 1000)}s`
-                      : 'N/A'
-                    }
-            </p>
-          </div>
+                  <p className="text-lg font-semibold text-gray-900">{getAnalysisTime()}</p>
+                </div>
               </div>
             </div>
 
@@ -427,302 +444,14 @@ export default function AuditDetailPage() {
       </section>
 
       {/* Main Content */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Core Web Vitals Section - NEW */}
-          {audit.technical_audit && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold text-gray-900">Core Web Vitals & Performance</h2>
-                {audit.real_data && audit.data_source && (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                      Real Data
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Source: {audit.data_source}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Core Web Vitals Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                {/* LCP */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg border border-blue-200 p-6 text-center">
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        className="text-gray-200"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray="219.8"
-                        strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.lcp_score * 2.198)}
-                        className={`${audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-green-500' : audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.lcp_score}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">LCP</div>
-                  <div className="text-xs text-gray-500 mb-2">Largest Contentful Paint</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {audit.technical_audit.device_previews.mobile.lcp}s
-                  </div>
-                  <div className={`text-xs font-medium ${
-                    audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-green-600' : 
-                    audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'Good' : 
-                     audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'Needs Improvement' : 'Poor'}
-                  </div>
-                </div>
+      <section className="py-8 md:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 md:space-y-12">
 
-                {/* FCP */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg border border-green-200 p-6 text-center">
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        className="text-gray-200"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray="219.8"
-                        strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fcp_score * 2.198)}
-                        className={`${audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-green-500' : audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fcp_score}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">FCP</div>
-                  <div className="text-xs text-gray-500 mb-2">First Contentful Paint</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {audit.technical_audit.device_previews.mobile.fcp}s
-                  </div>
-                  <div className={`text-xs font-medium ${
-                    audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-green-600' : 
-                    audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'Good' : 
-                     audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'Needs Improvement' : 'Poor'}
-                  </div>
-                </div>
-
-                {/* CLS */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg border border-purple-200 p-6 text-center">
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        className="text-gray-200"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray="219.8"
-                        strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.cls_score * 2.198)}
-                        className={`${audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-green-500' : audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.cls_score}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">CLS</div>
-                  <div className="text-xs text-gray-500 mb-2">Cumulative Layout Shift</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {audit.technical_audit.device_previews.mobile.cls}
-                  </div>
-                  <div className={`text-xs font-medium ${
-                    audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-green-600' : 
-                    audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'Good' : 
-                     audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'Needs Improvement' : 'Poor'}
-                  </div>
-                </div>
-
-                {/* FID */}
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg border border-orange-200 p-6 text-center">
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        className="text-gray-200"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray="219.8"
-                        strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fid_score * 2.198)}
-                        className={`${audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-green-500' : audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fid_score}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">FID</div>
-                  <div className="text-xs text-gray-500 mb-2">First Input Delay</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {audit.technical_audit.device_previews.mobile.fid}ms
-                  </div>
-                  <div className={`text-xs font-medium ${
-                    audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-green-600' : 
-                    audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'Good' : 
-                     audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'Needs Improvement' : 'Poor'}
-                  </div>
-                </div>
-
-                {/* TTI */}
-                <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl shadow-lg border border-pink-200 p-6 text-center">
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        className="text-gray-200"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="35"
-                        stroke="currentColor"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray="219.8"
-                        strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.tti_score * 2.198)}
-                        className={`${audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-green-500' : audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.tti_score}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">TTI</div>
-                  <div className="text-xs text-gray-500 mb-2">Time to Interactive</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {audit.technical_audit.device_previews.mobile.tti}s
-                  </div>
-                  <div className={`text-xs font-medium ${
-                    audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-green-600' : 
-                    audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'Good' : 
-                     audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'Needs Improvement' : 'Poor'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Performance Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <BarChart3 className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.total_page_size} KB</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">Total Page Size</div>
-                  <div className="text-xs text-gray-500 mt-1">All resources combined</div>
-                </div>
-                
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Zap className="h-6 w-6 text-green-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.total_requests}</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">Total Requests</div>
-                  <div className="text-xs text-gray-500 mt-1">HTTP requests made</div>
-                </div>
-                
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <Settings className="h-6 w-6 text-yellow-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">Image Optimization</div>
-                  <div className="text-xs text-gray-500 mt-1">Compression & format</div>
-                </div>
-                
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Shield className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-700">Caching Score</div>
-                  <div className="text-xs text-gray-500 mt-1">Browser caching</div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Score Overview */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Audit Summary</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Audit Summary</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
                                 <div className="mb-4">
               <ScoreGauge
@@ -789,28 +518,60 @@ export default function AuditDetailPage() {
                           </div>
                         </div>
 
-          {/* PageSpeed Insights Section */}
+          {/* Performance Analysis Section */}
           {audit.technical_audit && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">PageSpeed Insights Analysis</h2>
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 space-y-2 sm:space-y-0">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Performance Analysis</h2>
                 {audit.real_data && audit.data_source && (
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                       <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                       Real Data
-                          </div>
+                    </div>
                     <div className="text-sm text-gray-500">
                       Source: {audit.data_source}
-                        </div>
-                          </div>
+                    </div>
+                  </div>
                 )}
-                        </div>
+              </div>
+              
+              {/* Device View Selector */}
+              <div className="mb-6 md:mb-8">
+                <div className="flex items-center justify-center mb-4 md:mb-6">
+                  <div className="bg-gray-100 rounded-lg p-1 flex w-full max-w-xs">
+                    <button
+                      onClick={() => setActiveDevice('mobile')}
+                      className={`flex items-center justify-center flex-1 px-3 md:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeDevice === 'mobile'
+                          ? 'bg-white text-primary-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Smartphone className="h-4 w-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Mobile</span>
+                      <span className="sm:hidden">M</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveDevice('desktop')}
+                      className={`flex items-center justify-center flex-1 px-3 md:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeDevice === 'desktop'
+                          ? 'bg-white text-primary-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Monitor className="h-4 w-4 mr-1 md:mr-2" />
+                      <span className="hidden sm:inline">Desktop</span>
+                      <span className="sm:hidden">D</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
               
               {/* Core Web Vitals */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Core Web Vitals</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Core Web Vitals</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
                   {/* LCP */}
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
                     <div className="relative w-20 h-20 mx-auto mb-4">
@@ -844,7 +605,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">LCP</div>
                     <div className="text-xs text-gray-500 mb-2">Largest Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews.mobile.lcp}s
+                      {audit.technical_audit.device_previews[activeDevice].lcp}s
                     </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-success-600' : 
@@ -888,8 +649,8 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">FCP</div>
                     <div className="text-xs text-gray-500 mb-2">First Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews.mobile.fcp}s
-                            </div>
+                      {audit.technical_audit.device_previews[activeDevice].fcp}s
+                    </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-success-600' : 
                       audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-warning-600' : 'text-error-600'
@@ -932,8 +693,8 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">CLS</div>
                     <div className="text-xs text-gray-500 mb-2">Cumulative Layout Shift</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews.mobile.cls}
-                  </div>
+                      {audit.technical_audit.device_previews[activeDevice].cls}
+                    </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-success-600' : 
                       audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-warning-600' : 'text-error-600'
@@ -976,7 +737,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">FID</div>
                     <div className="text-xs text-gray-500 mb-2">First Input Delay</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews.mobile.fid}ms
+                      {audit.technical_audit.device_previews[activeDevice].fid}ms
                     </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-success-600' : 
@@ -1020,7 +781,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">TTI</div>
                     <div className="text-xs text-gray-500 mb-2">Time to Interactive</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews.mobile.tti}s
+                      {audit.technical_audit.device_previews[activeDevice].tti}s
                     </div>
                     <div className={`text-xs font-medium ${
                       audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-success-600' : 
@@ -1034,9 +795,9 @@ export default function AuditDetailPage() {
             </div>
 
               {/* Performance Metrics */}
-            <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Performance Metrics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Performance Metrics</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
@@ -1084,7 +845,7 @@ export default function AuditDetailPage() {
               </div>
 
               {/* Additional Scores */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
                   <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl font-bold text-success-600">{audit.technical_audit.accessibility_score}</span>
@@ -1113,10 +874,10 @@ export default function AuditDetailPage() {
                     )}
 
           {/* Rule Statistics */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Rule Statistics</h2>
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Rule Statistics</h2>
+            <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-6">
                 <div className="text-center">
                   <div className="flex items-center justify-center w-12 h-12 bg-success-100 rounded-full mx-auto mb-3">
                     <CheckCircle className="h-6 w-6 text-success-600" />
@@ -1156,9 +917,9 @@ export default function AuditDetailPage() {
                 </div>
               </div>
               
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border-t border-gray-200 pt-4 md:pt-6">
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Category Breakdown</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {['on_page', 'technical', 'content'].map(category => {
                     const categoryRules = audit.rules.filter(rule => rule.category === category)
                     const passedCount = categoryRules.filter(rule => rule.status === 'pass').length
@@ -1184,16 +945,16 @@ export default function AuditDetailPage() {
 
           {/* Top Fixes */}
           {audit.top_fixes && audit.top_fixes.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Fixes</h2>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Top Fixes</h2>
               <TopFixes fixes={audit.top_fixes} />
                 </div>
           )}
 
                     {/* Top Keywords */}
           {audit.top_keywords && audit.top_keywords.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Targeting Keywords</h2>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Top Targeting Keywords</h2>
               <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Keyword Opportunities</h3>
@@ -1277,8 +1038,8 @@ export default function AuditDetailPage() {
 
           {/* On-Page Keywords Analysis */}
           {audit.on_page_keywords && audit.on_page_keywords.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">On-Page Keywords Analysis</h2>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">On-Page Keywords Analysis</h2>
               <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Keywords Found on Page</h3>
@@ -1360,8 +1121,8 @@ export default function AuditDetailPage() {
                     </div>
                 
                 {/* Analysis Summary */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-gray-900">{audit.on_page_keywords.length}</div>
                       <div className="text-sm text-gray-600">Total Keywords</div>
@@ -1384,417 +1145,23 @@ export default function AuditDetailPage() {
               </div>
             )}
 
-          {/* Technical Audit Section */}
-          {audit.technical_audit && (
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Technical Audit & Performance</h2>
-                {audit.real_data && audit.data_source && (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                      Real Data
-                  </div>
-                    <div className="text-sm text-gray-500">
-                      Source: {audit.data_source}
-                  </div>
-                </div>
-                )}
-                  </div>
-              
-              {/* Device Previews */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Device Responsiveness & Performance</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Desktop Preview */}
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                          <span className="text-sm font-medium text-gray-700 ml-2">Desktop</span>
-                  </div>
-                        <span className="text-sm text-gray-500">{audit.technical_audit.device_previews.desktop.viewport_width} × {audit.technical_audit.device_previews.desktop.viewport_height}</span>
-                </div>
-                  </div>
-                    <div className="p-6">
-                      <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
-                        <div className="text-xs text-gray-500 mb-2">Website Preview</div>
-                        <div className="bg-white rounded border-2 border-dashed border-gray-300 h-32 flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">Desktop View</span>
-                  </div>
-                </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Responsiveness</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.responsive_score}%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">LCP</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.lcp}s</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">FCP</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.fcp}s</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">CLS</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.desktop.cls}</span>
-                        </div>
-                      </div>
-              </div>
-            </div>
 
-                  {/* Tablet Preview */}
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                          <span className="text-sm font-medium text-gray-700 ml-2">Tablet</span>
-                </div>
-                        <span className="text-sm text-gray-500">{audit.technical_audit.device_previews.tablet.viewport_width} × {audit.technical_audit.device_previews.tablet.viewport_height}</span>
-                </div>
-                </div>
-                    <div className="p-6">
-                      <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
-                        <div className="text-xs text-gray-500 mb-2">Website Preview</div>
-                        <div className="bg-white rounded border-2 border-dashed border-gray-300 h-32 flex items-center justify-center mx-auto" style={{width: '60%'}}>
-                          <span className="text-gray-400 text-sm">Tablet View</span>
-                </div>
-              </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Responsiveness</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.responsive_score}%</span>
-            </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">LCP</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.lcp}s</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">FCP</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.fcp}s</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">CLS</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.tablet.cls}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Mobile Preview */}
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                          <span className="text-sm font-medium text-gray-700 ml-2">Mobile</span>
-                        </div>
-                        <span className="text-sm text-gray-500">{audit.technical_audit.device_previews.mobile.viewport_width} × {audit.technical_audit.device_previews.mobile.viewport_height}</span>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
-                        <div className="text-xs text-gray-500 mb-2">Website Preview</div>
-                        <div className="bg-white rounded border-2 border-dashed border-gray-300 h-32 flex items-center justify-center mx-auto" style={{width: '40%'}}>
-                          <span className="text-gray-400 text-sm">Mobile View</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Responsiveness</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.responsive_score}%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">LCP</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.lcp}s</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">FCP</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.fcp}s</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">CLS</span>
-                          <span className="text-sm font-semibold text-gray-900">{audit.technical_audit.device_previews.mobile.cls}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Core Web Vitals */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Core Web Vitals</h3>
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                    <div className="text-center">
-                      <div className="relative w-20 h-20 mx-auto mb-3">
-                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            className="text-gray-200"
-                          />
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            strokeDasharray="219.8"
-                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.lcp_score * 2.198)}
-                            className={`${audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.lcp_score}</span>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700">LCP</div>
-                      <div className="text-xs text-gray-500">Largest Contentful Paint</div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="relative w-20 h-20 mx-auto mb-3">
-                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            className="text-gray-200"
-                          />
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            strokeDasharray="219.8"
-                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fcp_score * 2.198)}
-                            className={`${audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fcp_score}</span>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700">FCP</div>
-                      <div className="text-xs text-gray-500">First Contentful Paint</div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="relative w-20 h-20 mx-auto mb-3">
-                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            className="text-gray-200"
-                          />
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            strokeDasharray="219.8"
-                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.cls_score * 2.198)}
-                            className={`${audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.cls_score}</span>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700">CLS</div>
-                      <div className="text-xs text-gray-500">Cumulative Layout Shift</div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="relative w-20 h-20 mx-auto mb-3">
-                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            className="text-gray-200"
-                          />
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            strokeDasharray="219.8"
-                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fid_score * 2.198)}
-                            className={`${audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fid_score}</span>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700">FID</div>
-                      <div className="text-xs text-gray-500">First Input Delay</div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <div className="relative w-20 h-20 mx-auto mb-3">
-                        <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            className="text-gray-200"
-                          />
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="35"
-                            stroke="currentColor"
-                            strokeWidth="6"
-                            fill="none"
-                            strokeDasharray="219.8"
-                            strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.tti_score * 2.198)}
-                            className={`${audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.tti_score}</span>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700">TTI</div>
-                      <div className="text-xs text-gray-500">Time to Interactive</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Performance Metrics */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Performance Metrics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <BarChart3 className="h-6 w-6 text-primary-600" />
-                      </div>
-                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.total_page_size} KB</span>
-                    </div>
-                    <div className="text-sm font-medium text-gray-700">Total Page Size</div>
-                    <div className="text-xs text-gray-500 mt-1">All resources combined</div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
-                        <Zap className="h-6 w-6 text-success-600" />
-                      </div>
-                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.total_requests}</span>
-                    </div>
-                    <div className="text-sm font-medium text-gray-700">Total Requests</div>
-                    <div className="text-xs text-gray-500 mt-1">HTTP requests made</div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
-                        <Settings className="h-6 w-6 text-warning-600" />
-                      </div>
-                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
-                    </div>
-                    <div className="text-sm font-medium text-gray-700">Image Optimization</div>
-                    <div className="text-xs text-gray-500 mt-1">Compression & format</div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-info-100 rounded-lg flex items-center justify-center">
-                        <Shield className="h-6 w-6 text-info-600" />
-                      </div>
-                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
-                    </div>
-                    <div className="text-sm font-medium text-gray-700">Caching Score</div>
-                    <div className="text-xs text-gray-500 mt-1">Browser caching</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Scores */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
-                  <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-success-600">{audit.technical_audit.accessibility_score}</span>
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900 mb-1">Accessibility Score</div>
-                  <div className="text-sm text-gray-600">WCAG compliance</div>
-                </div>
-                
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
-                  <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-primary-600">{audit.technical_audit.seo_technical_score}</span>
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900 mb-1">SEO Technical Score</div>
-                  <div className="text-sm text-gray-600">Technical SEO factors</div>
-                </div>
-                
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
-                  <div className="w-16 h-16 bg-info-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-info-600">{audit.technical_audit.security_score}</span>
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900 mb-1">Security Score</div>
-                  <div className="text-sm text-gray-600">HTTPS & security headers</div>
-                </div>
-              </div>
-          </div>
-        )}
 
           {/* Detailed Rules */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Analysis</h2>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Detailed Analysis</h2>
             <RuleTable rules={audit.rules} />
       </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16">
+      <footer className="bg-gray-900 text-white py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             <div className="col-span-1 md:col-span-2">
               <h3 className="text-2xl font-bold mb-4">RIVISO</h3>
               <p className="text-gray-400 mb-6 max-w-md">
