@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { sendWelcomeEmail } from '@/lib/emailService'
 
 // Mock database - in production, use a real database
 const users: any[] = []
@@ -52,6 +53,19 @@ export async function POST(request: NextRequest) {
 
     users.push(newUser)
 
+    // Send welcome email
+    try {
+      await sendWelcomeEmail({
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email
+      })
+      console.log('Welcome email sent successfully to:', newUser.email)
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError)
+      // Don't fail the signup if email fails
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       { 
@@ -66,7 +80,7 @@ export async function POST(request: NextRequest) {
     const { password: _, ...userWithoutPassword } = newUser
 
     return NextResponse.json({
-      message: 'Account created successfully',
+      message: 'Account created successfully. Welcome email sent!',
       user: userWithoutPassword,
       token
     }, { status: 201 })

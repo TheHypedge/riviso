@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,25 +23,13 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        
-        // Redirect to dashboard or home
-        router.push('/')
+      const success = await login(formData.email, formData.password)
+      
+      if (success) {
+        // Redirect to dashboard after successful login
+        router.push('/dashboard')
       } else {
-        setError(data.message || 'Login failed')
+        setError('Invalid email or password')
       }
     } catch (error) {
       setError('An error occurred. Please try again.')

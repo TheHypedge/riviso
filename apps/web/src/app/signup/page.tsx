@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Loader2, Check } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ export default function SignUpPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
+  const { signup } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,29 +48,21 @@ export default function SignUpPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password
-        }),
+      const success = await signup({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password
       })
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (success) {
         setSuccess(true)
-        // Auto login after successful signup
+        // Redirect to dashboard after successful signup
         setTimeout(() => {
-          router.push('/login?message=Account created successfully! Please sign in.')
+          router.push('/dashboard')
         }, 2000)
       } else {
-        setError(data.message || 'Sign up failed')
+        setError('Sign up failed. Please try again.')
       }
     } catch (error) {
       setError('An error occurred. Please try again.')
