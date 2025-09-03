@@ -12,5 +12,5 @@ echo "Environment: $ENVIRONMENT"
 echo "Database URL: $DATABASE_URL"
 
 # Start the application with uvicorn (lighter for Railway free tier)
-# Use simplified version first to test deployment
-exec uvicorn src.simple_main:app --host 0.0.0.0 --port $PORT
+# Use full application with audit functionality
+exec uvicorn src.main:app --host 0.0.0.0 --port $PORT

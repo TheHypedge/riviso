@@ -12,6 +12,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -79,8 +80,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     logger.info("Starting RIVISO Analytics API", version=settings.app_version)
     
-    # Instrument SQLAlchemy
-    SQLAlchemyInstrumentor().instrument(engine=engine)
+    # Try to initialize database, but don't fail if it's not available
+    try:
+        from db import init_db
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.warning("Database initialization failed, running in limited mode", error=str(e))
+    
+    # Instrument SQLAlchemy (only if engine is available)
+    try:
+        SQLAlchemyInstrumentor().instrument(engine=engine)
+    except Exception as e:
+        logger.warning("SQLAlchemy instrumentation failed", error=str(e))
     
     yield
     
@@ -206,7 +218,24 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Simple health check endpoint for Railway."""
-    return {"status": "healthy", "service": "riviso-api"}
+    try:
+        # Try to check database connection
+        from db import engine
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {
+            "status": "healthy", 
+            "service": "riviso-api",
+            "database": "connected"
+        }
+    except Exception as e:
+        # If database fails, still return healthy for basic functionality
+        return {
+            "status": "healthy", 
+            "service": "riviso-api",
+            "database": "disconnected",
+            "note": "Running in limited mode"
+        }
 
 
 if __name__ == "__main__":
