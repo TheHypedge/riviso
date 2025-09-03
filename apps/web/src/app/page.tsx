@@ -364,7 +364,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              onClick={() => document.querySelector('input[type="url"]')?.focus()}
+              onClick={() => (document.querySelector('input[type="url"]') as HTMLInputElement)?.focus()}
               className="bg-white text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
             >
               Start Free Audit
