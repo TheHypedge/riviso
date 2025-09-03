@@ -160,7 +160,8 @@ export default function AuditDetailPage() {
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [activeDevice, setActiveDevice] = useState<'mobile' | 'desktop'>('mobile')
-  const [expandedMetric, setExpandedMetric] = useState<string | null>(null)
+  const [expandedFix, setExpandedFix] = useState<number | null>(null)
+
 
   const auditId = params.id as string
 
@@ -383,6 +384,119 @@ export default function AuditDetailPage() {
     return recommendations[metric as keyof typeof recommendations] || null
   }
 
+  const getCoreWebVitalScore = (metric: string, value: number, device: 'mobile' | 'desktop') => {
+    // Core Web Vitals thresholds
+    const thresholds = {
+      lcp: { good: device === 'mobile' ? 2.5 : 2.5, poor: device === 'mobile' ? 4.0 : 4.0 },
+      fcp: { good: device === 'mobile' ? 1.8 : 1.8, poor: device === 'mobile' ? 3.0 : 3.0 },
+      cls: { good: 0.1, poor: 0.25 },
+      fid: { good: 100, poor: 300 },
+      tti: { good: device === 'mobile' ? 3.8 : 3.8, poor: device === 'mobile' ? 7.3 : 7.3 }
+    }
+    
+    const threshold = thresholds[metric as keyof typeof thresholds]
+    if (!threshold) return 0
+    
+    if (value <= threshold.good) return 100
+    if (value <= threshold.poor) return 50
+    return 0
+  }
+
+  const getFixRecommendations = (fix: any) => {
+    const recommendations = {
+      'meta_description': {
+        title: 'Meta Description',
+        currentIssue: 'Missing or inadequate meta description',
+        recommendations: [
+          'Write a compelling meta description between 150-160 characters',
+          'Include your primary keyword naturally',
+          'Make it actionable and click-worthy',
+          'Avoid duplicate meta descriptions across pages',
+          'Test different descriptions to see what works best'
+        ],
+        implementation: [
+          'Add <meta name="description" content="Your description here"> to your HTML head',
+          'Use your CMS or SEO plugin to set meta descriptions',
+          'Ensure each page has a unique meta description'
+        ]
+      },
+      'page_title': {
+        title: 'Page Title',
+        currentIssue: 'Page title could be optimized',
+        recommendations: [
+          'Keep titles between 50-60 characters',
+          'Include your primary keyword near the beginning',
+          'Make titles unique for each page',
+          'Use action words to make titles compelling',
+          'Avoid keyword stuffing'
+        ],
+        implementation: [
+          'Update your <title> tag in the HTML head',
+          'Use your CMS title field for optimization',
+          'Consider using title templates for consistency'
+        ]
+      },
+      'page_speed': {
+        title: 'Page Speed',
+        currentIssue: 'Page loading speed needs improvement',
+        recommendations: [
+          'Optimize images and use modern formats (WebP, AVIF)',
+          'Minify CSS, JavaScript, and HTML files',
+          'Enable browser caching and compression',
+          'Use a Content Delivery Network (CDN)',
+          'Remove unused CSS and JavaScript'
+        ],
+        implementation: [
+          'Use tools like GTmetrix or PageSpeed Insights to identify issues',
+          'Implement lazy loading for images',
+          'Consider using a performance optimization plugin',
+          'Optimize your hosting and server configuration'
+        ]
+      },
+      'content_quality': {
+        title: 'Content Quality',
+        currentIssue: 'Content quality needs improvement',
+        recommendations: [
+          'Create comprehensive, valuable content',
+          'Use proper heading structure (H1, H2, H3)',
+          'Include relevant keywords naturally',
+          'Add internal and external links',
+          'Ensure content is original and well-written'
+        ],
+        implementation: [
+          'Aim for at least 300 words per page',
+          'Use bullet points and subheadings for readability',
+          'Include multimedia content (images, videos)',
+          'Regularly update and refresh your content'
+        ]
+      }
+    }
+    
+    // Try to match based on fix title or description
+    const fixKey = Object.keys(recommendations).find(key => 
+      fix.title?.toLowerCase().includes(key.replace('_', ' ')) ||
+      fix.description?.toLowerCase().includes(key.replace('_', ' '))
+    )
+    
+    return fixKey ? recommendations[fixKey as keyof typeof recommendations] : {
+      title: fix.title || 'SEO Fix',
+      currentIssue: fix.description || 'Issue needs to be addressed',
+      recommendations: [
+        'Review the specific issue mentioned above',
+        'Research best practices for this SEO factor',
+        'Implement the recommended changes',
+        'Test and monitor the improvements',
+        'Consider consulting with an SEO expert'
+      ],
+      implementation: [
+        'Identify the root cause of the issue',
+        'Plan your implementation strategy',
+        'Make the necessary changes',
+        'Verify the fix is working correctly'
+      ]
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -506,33 +620,33 @@ export default function AuditDetailPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">RIVISO Analytics Report</h1>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center justify-center">
-                <Globe className="h-5 w-5 text-gray-500 mr-2" />
+                      <Globe className="h-5 w-5 text-gray-500 mr-2" />
                 <span className="text-lg font-medium text-gray-700 break-all">{audit.url}</span>
-              </div>
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)}`}>
-                {getStatusIcon(audit.status)}
-                <span className="ml-2 capitalize">{audit.status}</span>
-              </div>
             </div>
-          </div>
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(audit.status)}`}>
+                      {getStatusIcon(audit.status)}
+                      <span className="ml-2 capitalize">{audit.status}</span>
+                  </div>
+                  </div>
+                </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3 mb-8">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
+              <button
+                onClick={handleRefresh}
+                    disabled={refreshing}
               className="flex items-center justify-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
-            <button
-              onClick={handleExportPDF}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+              </button>
+                  <button
+                    onClick={handleExportPDF}
               className="flex items-center justify-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export PDF
-            </button>
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PDF
+                </button>
           </div>
 
           {/* Audit Info Cards */}
@@ -635,7 +749,7 @@ export default function AuditDetailPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 space-y-2 sm:space-y-0">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900">Performance Analysis</h2>
                 
-                        </div>
+                          </div>
               
               {/* Device View Selector */}
               <div className="mb-6 md:mb-8">
@@ -665,8 +779,8 @@ export default function AuditDetailPage() {
                       <span className="hidden sm:inline">Desktop</span>
                       <span className="sm:hidden">D</span>
                     </button>
-                  </div>
-                </div>
+                        </div>
+                          </div>
                         </div>
               
               {/* Core Web Vitals */}
@@ -694,13 +808,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.lcp_score * 2.198)}
-                          className={`${audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) * 2.198)}
+                          className={`${getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 90 ? 'text-success-500' : getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.lcp_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice)}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">LCP</div>
@@ -709,11 +823,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].lcp}s
                     </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 90 ? 'text-success-600' : 
+                      getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.core_web_vitals.lcp_score >= 90 ? 'Good' : 
-                       audit.technical_audit.core_web_vitals.lcp_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 90 ? 'Good' : 
+                       getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 50 ? 'Needs Improvement' : 'Poor'}
                       </div>
                     </div>
                     
@@ -738,13 +852,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fcp_score * 2.198)}
-                          className={`${audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].fcp_score * 2.198)}
+                          className={`${audit.technical_audit.device_previews[activeDevice].fcp_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].fcp_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fcp_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].fcp_score}</span>
                               </div>
                               </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">FCP</div>
@@ -753,11 +867,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].fcp}s
                             </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      audit.technical_audit.device_previews[activeDevice].fcp_score >= 90 ? 'text-success-600' : 
+                      audit.technical_audit.device_previews[activeDevice].fcp_score >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.core_web_vitals.fcp_score >= 90 ? 'Good' : 
-                       audit.technical_audit.core_web_vitals.fcp_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {audit.technical_audit.device_previews[activeDevice].fcp_score >= 90 ? 'Good' : 
+                       audit.technical_audit.device_previews[activeDevice].fcp_score >= 50 ? 'Needs Improvement' : 'Poor'}
                             </div>
                           </div>
 
@@ -782,13 +896,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.cls_score * 2.198)}
-                          className={`${audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].cls_score * 2.198)}
+                          className={`${audit.technical_audit.device_previews[activeDevice].cls_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].cls_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.cls_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].cls_score}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">CLS</div>
@@ -797,11 +911,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].cls}
                   </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      audit.technical_audit.device_previews[activeDevice].cls_score >= 90 ? 'text-success-600' : 
+                      audit.technical_audit.device_previews[activeDevice].cls_score >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.core_web_vitals.cls_score >= 90 ? 'Good' : 
-                       audit.technical_audit.core_web_vitals.cls_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {audit.technical_audit.device_previews[activeDevice].cls_score >= 90 ? 'Good' : 
+                       audit.technical_audit.device_previews[activeDevice].cls_score >= 50 ? 'Needs Improvement' : 'Poor'}
                     </div>
             </div>
 
@@ -826,13 +940,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.fid_score * 2.198)}
-                          className={`${audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].fid_score * 2.198)}
+                          className={`${audit.technical_audit.device_previews[activeDevice].fid_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].fid_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.fid_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].fid_score}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">FID</div>
@@ -841,11 +955,11 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].fid}ms
                     </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      audit.technical_audit.device_previews[activeDevice].fid_score >= 90 ? 'text-success-600' : 
+                      audit.technical_audit.device_previews[activeDevice].fid_score >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.core_web_vitals.fid_score >= 90 ? 'Good' : 
-                       audit.technical_audit.core_web_vitals.fid_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {audit.technical_audit.device_previews[activeDevice].fid_score >= 90 ? 'Good' : 
+                       audit.technical_audit.device_previews[activeDevice].fid_score >= 50 ? 'Needs Improvement' : 'Poor'}
                     </div>
                   </div>
 
@@ -870,13 +984,13 @@ export default function AuditDetailPage() {
                           strokeWidth="6"
                           fill="none"
                           strokeDasharray="219.8"
-                          strokeDashoffset={219.8 - (audit.technical_audit.core_web_vitals.tti_score * 2.198)}
-                          className={`${audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-success-500' : audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
+                          strokeDashoffset={219.8 - (audit.technical_audit.device_previews[activeDevice].tti_score * 2.198)}
+                          className={`${audit.technical_audit.device_previews[activeDevice].tti_score >= 90 ? 'text-success-500' : audit.technical_audit.device_previews[activeDevice].tti_score >= 50 ? 'text-warning-500' : 'text-error-500'}`}
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.core_web_vitals.tti_score}</span>
+                        <span className="text-lg font-bold text-gray-900">{audit.technical_audit.device_previews[activeDevice].tti_score}</span>
                       </div>
                     </div>
                     <div className="text-sm font-medium text-gray-700 mb-1">TTI</div>
@@ -885,24 +999,21 @@ export default function AuditDetailPage() {
                       {audit.technical_audit.device_previews[activeDevice].tti}s
                     </div>
                     <div className={`text-xs font-medium ${
-                      audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'text-success-600' : 
-                      audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'text-warning-600' : 'text-error-600'
+                      audit.technical_audit.device_previews[activeDevice].tti_score >= 90 ? 'text-success-600' : 
+                      audit.technical_audit.device_previews[activeDevice].tti_score >= 50 ? 'text-warning-600' : 'text-error-600'
                     }`}>
-                      {audit.technical_audit.core_web_vitals.tti_score >= 90 ? 'Good' : 
-                       audit.technical_audit.core_web_vitals.tti_score >= 50 ? 'Needs Improvement' : 'Poor'}
+                      {audit.technical_audit.device_previews[activeDevice].tti_score >= 90 ? 'Good' : 
+                       audit.technical_audit.device_previews[activeDevice].tti_score >= 50 ? 'Needs Improvement' : 'Poor'}
                     </div>
                   </div>
                 </div>
             </div>
 
-                            {/* Performance Metrics */}
+              {/* Performance Metrics */}
             <div className="mb-6 md:mb-8">
                 <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Performance Metrics</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  <div 
-                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
-                    onClick={() => setExpandedMetric(expandedMetric === 'total_page_size' ? null : 'total_page_size')}
-                  >
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
                         <BarChart3 className="h-6 w-6 text-primary-600" />
@@ -911,28 +1022,20 @@ export default function AuditDetailPage() {
                     </div>
                     <div className="text-sm font-medium text-gray-700">Total Page Size</div>
                     <div className="text-xs text-gray-500 mt-1">All resources combined</div>
-                    {expandedMetric === 'total_page_size' && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {getMetricRecommendations('total_page_size')?.tips.slice(0, 3).map((tip, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="text-primary-600 mr-1">•</span>
-                              {tip}
-                            </li>
-                          ))}
-                        </ul>
-                        <button className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium">
-                          View all recommendations →
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div 
-                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
-                    onClick={() => setExpandedMetric(expandedMetric === 'total_requests' ? null : 'total_requests')}
-                  >
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        {getMetricRecommendations('total_page_size')?.tips.slice(0, 3).map((tip, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-primary-600 mr-1">•</span>
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+            </div>
+
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
                         <Zap className="h-6 w-6 text-success-600" />
@@ -941,83 +1044,62 @@ export default function AuditDetailPage() {
                     </div>
                     <div className="text-sm font-medium text-gray-700">Total Requests</div>
                     <div className="text-xs text-gray-500 mt-1">HTTP requests made</div>
-                    {expandedMetric === 'total_requests' && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {getMetricRecommendations('total_requests')?.tips.slice(0, 3).map((tip, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="text-success-600 mr-1">•</span>
-                              {tip}
-                            </li>
-                          ))}
-                        </ul>
-                        <button className="mt-2 text-xs text-success-600 hover:text-success-700 font-medium">
-                          View all recommendations →
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div 
-                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
-                    onClick={() => setExpandedMetric(expandedMetric === 'image_optimization' ? null : 'image_optimization')}
-                  >
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        {getMetricRecommendations('total_requests')?.tips.slice(0, 3).map((tip, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-success-600 mr-1">•</span>
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+            </div>
+
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
                         <Settings className="h-6 w-6 text-warning-600" />
-                      </div>
+                          </div>
                       <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
-                    </div>
+                        </div>
                     <div className="text-sm font-medium text-gray-700">Image Optimization</div>
                     <div className="text-xs text-gray-500 mt-1">Compression & format</div>
-                    {expandedMetric === 'image_optimization' && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {getMetricRecommendations('image_optimization')?.tips.slice(0, 3).map((tip, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="text-warning-600 mr-1">•</span>
-                              {tip}
-                            </li>
-                          ))}
-                        </ul>
-                        <button className="mt-2 text-xs text-warning-600 hover:text-warning-700 font-medium">
-                          View all recommendations →
-                        </button>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        {getMetricRecommendations('image_optimization')?.tips.slice(0, 3).map((tip, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-warning-600 mr-1">•</span>
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                       </div>
-                    )}
-                  </div>
                   
-                  <div 
-                    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 cursor-pointer hover:shadow-xl transition-all duration-200"
-                    onClick={() => setExpandedMetric(expandedMetric === 'caching_score' ? null : 'caching_score')}
-                  >
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-info-100 rounded-lg flex items-center justify-center">
                         <Shield className="h-6 w-6 text-info-600" />
-                      </div>
+                        </div>
                       <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
-                    </div>
+                      </div>
                     <div className="text-sm font-medium text-gray-700">Caching Score</div>
                     <div className="text-xs text-gray-500 mt-1">Browser caching</div>
-                    {expandedMetric === 'caching_score' && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
-                        <ul className="text-xs text-gray-600 space-y-1">
-                          {getMetricRecommendations('caching_score')?.tips.slice(0, 3).map((tip, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="text-info-600 mr-1">•</span>
-                              {tip}
-                            </li>
-                          ))}
-                        </ul>
-                        <button className="mt-2 text-xs text-info-600 hover:text-info-700 font-medium">
-                          View all recommendations →
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="text-sm font-medium text-gray-900 mb-2">Quick Tips:</div>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        {getMetricRecommendations('caching_score')?.tips.slice(0, 3).map((tip, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-info-600 mr-1">•</span>
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    </div>
                 </div>
               </div>
 
@@ -1056,7 +1138,98 @@ export default function AuditDetailPage() {
           {audit.top_fixes && audit.top_fixes.length > 0 && (
             <div>
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Top Fixes</h2>
-              <TopFixes fixes={audit.top_fixes} />
+              <div className="space-y-4">
+                {audit.top_fixes.map((fix, index) => {
+                  const recommendations = getFixRecommendations(fix)
+                  const isExpanded = expandedFix === index
+                  
+                  return (
+                    <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                      <div 
+                        className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => setExpandedFix(isExpanded ? null : index)}
+                      >
+                        <div className="flex items-start space-x-4">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            fix.impact === 'high' ? 'bg-error-100' : 
+                            fix.impact === 'medium' ? 'bg-warning-100' : 'bg-info-100'
+                          }`}>
+                            {fix.impact === 'high' ? (
+                              <AlertCircle className="h-4 w-4 text-error-600" />
+                            ) : fix.impact === 'medium' ? (
+                              <AlertTriangle className="h-4 w-4 text-warning-600" />
+                            ) : (
+                              <Info className="h-4 w-4 text-info-600" />
+                            )}
+                  </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">{fix.title}</h3>
+                              <div className="flex items-center space-x-2">
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                  fix.impact === 'high' ? 'bg-error-100 text-error-800' :
+                                  fix.impact === 'medium' ? 'bg-warning-100 text-warning-800' :
+                                  'bg-info-100 text-info-800'
+                                }`}>
+                                  {fix.impact} impact
+                                </span>
+                                <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+              </div>
+            </div>
+                  </div>
+                            <p className="text-gray-600 mb-3">{fix.description}</p>
+                            <div className="flex items-center space-x-4">
+                              <span className="text-sm text-gray-500">
+                                Impact: {fix.impact}
+                              </span>
+                  </div>
+                </div>
+                  </div>
+                  </div>
+                      
+                      {isExpanded && (
+                        <div className="px-6 pb-6 border-t border-gray-200 bg-gray-50">
+                          <div className="pt-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Current Issue</h4>
+                                <p className="text-sm text-gray-600 mb-4">{recommendations.currentIssue}</p>
+                                
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Recommendations</h4>
+                                <ul className="text-sm text-gray-600 space-y-2">
+                                  {recommendations.recommendations.map((rec, recIndex) => (
+                                    <li key={recIndex} className="flex items-start">
+                                      <span className="text-primary-600 mr-2 mt-1">•</span>
+                                      {rec}
+                                    </li>
+                                  ))}
+                                </ul>
+                </div>
+                
+                              <div>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Implementation Steps</h4>
+                                <ol className="text-sm text-gray-600 space-y-2">
+                                  {recommendations.implementation.map((step, stepIndex) => (
+                                    <li key={stepIndex} className="flex items-start">
+                                      <span className="bg-primary-100 text-primary-600 text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
+                                        {stepIndex + 1}
+                                      </span>
+                                      {step}
+                                    </li>
+                                  ))}
+                                </ol>
+                  </div>
+                </div>
+              </div>
+                        </div>
+                      )}
+                      </div>
+                    )
+                  })}
+                  </div>
                 </div>
           )}
 
@@ -1259,11 +1432,7 @@ export default function AuditDetailPage() {
 
 
 
-          {/* Detailed Rules */}
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Detailed Analysis</h2>
-            <RuleTable rules={audit.rules} />
-      </div>
+
         </div>
       </section>
 
