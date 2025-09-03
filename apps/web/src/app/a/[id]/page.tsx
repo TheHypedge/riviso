@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { 
   Loader2, 
   Download, 
@@ -163,6 +164,7 @@ interface AuditResult {
 export default function AuditDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { user } = useAuth()
   const [audit, setAudit] = useState<AuditResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -174,6 +176,27 @@ export default function AuditDetailPage() {
 
 
   const auditId = params.id as string
+
+  const updateAuditStatus = async (auditId: string, status: 'completed' | 'failed') => {
+    if (!user?.id) return
+    
+    try {
+      await fetch('/api/auth/audits', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auditId,
+          userId: user.id,
+          status,
+          completedAt: new Date().toISOString()
+        }),
+      })
+    } catch (error) {
+      console.error('Error updating audit status:', error)
+    }
+  }
 
   const fetchAudit = async () => {
     try {
@@ -187,6 +210,13 @@ export default function AuditDetailPage() {
       const data = await response.json()
       setAudit(data)
       setError('')
+      
+      // Update audit status in local storage if completed
+      if (data?.status === 'completed' && user?.id) {
+        await updateAuditStatus(auditId, 'completed')
+      } else if (data?.status === 'failed' && user?.id) {
+        await updateAuditStatus(auditId, 'failed')
+      }
       
       // Fetch keyword data after audit is loaded
       if (data?.url) {

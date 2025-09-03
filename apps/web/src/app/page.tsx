@@ -115,6 +115,8 @@ export default function HomePage() {
         },
         body: JSON.stringify({
           url: normalizedUrl,
+          userId: user?.id, // Include user ID if logged in
+          device: 'mobile', // Default device
           options: {
             include_sitemap: true,
             max_sitemap_urls: 5,

@@ -69,3 +69,44 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { auditId, userId, status, completedAt } = await request.json()
+
+    if (!auditId || !userId || !status) {
+      return NextResponse.json(
+        { message: 'Audit ID, User ID, and status are required' },
+        { status: 400 }
+      )
+    }
+
+    // Find and update the audit
+    const auditIndex = audits.findIndex(audit => audit.id === auditId && audit.userId === userId)
+    
+    if (auditIndex === -1) {
+      return NextResponse.json(
+        { message: 'Audit not found' },
+        { status: 404 }
+      )
+    }
+
+    audits[auditIndex] = {
+      ...audits[auditIndex],
+      status: status as 'completed' | 'failed',
+      completedAt: completedAt || new Date().toISOString()
+    }
+
+    return NextResponse.json({
+      message: 'Audit status updated successfully',
+      audit: audits[auditIndex]
+    })
+
+  } catch (error) {
+    console.error('Update audit error:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
