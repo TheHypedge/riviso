@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-
-// Mock database - in production, use a real database
-// This should be the same as in signup route
-const users: any[] = []
+import { users } from '../users'
 
 export async function POST(request: NextRequest) {
   try {

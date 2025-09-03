@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { sendWelcomeEmail } from '../emailService'
-
-// Mock database - in production, use a real database
-const users: any[] = []
+import { users } from '../users'
 
 export async function POST(request: NextRequest) {
   try {
