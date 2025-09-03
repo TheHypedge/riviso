@@ -45,6 +45,9 @@ importers:
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
+      better-sqlite3:
+        specifier: ^12.2.0
+        version: 12.2.0
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
@@ -79,6 +82,9 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.11
@@ -1401,7 +1407,6 @@ packages:
     resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
     dependencies:
       '@types/node': 20.19.11
-    dev: false
 
   /@types/d3-array@3.2.1:
     resolution: {integrity: sha512-Y2Jn2idRrLzUfAKV2LyRImR+y4oa2AntrgID95SHJxuMUrkNXmanDSed71sRNZysveJVt1hLLemQZIady0FpEg==}
