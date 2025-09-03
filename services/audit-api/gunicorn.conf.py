@@ -1,10 +1,8 @@
-# Gunicorn configuration for RIVISO production deployment
-
 import multiprocessing
 import os
 
 # Server socket
-bind = "0.0.0.0:8000"
+bind = f"0.0.0.0:{os.getenv('PORT', '8000')}"
 backlog = 2048
 
 # Worker processes
@@ -19,8 +17,8 @@ max_requests = 1000
 max_requests_jitter = 50
 
 # Logging
-accesslog = "/var/log/riviso/access.log"
-errorlog = "/var/log/riviso/error.log"
+accesslog = "-"
+errorlog = "-"
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
@@ -29,24 +27,11 @@ proc_name = "riviso-api"
 
 # Server mechanics
 daemon = False
-pidfile = "/var/run/riviso/gunicorn.pid"
+pidfile = None
 user = None
 group = None
 tmp_upload_dir = None
 
-# SSL (if using HTTPS)
-# keyfile = "/path/to/keyfile"
-# certfile = "/path/to/certfile"
-
-# Environment variables
-raw_env = [
-    "ENVIRONMENT=production",
-]
-
-# Preload app for better performance
-preload_app = True
-
-# Security
-limit_request_line = 4094
-limit_request_fields = 100
-limit_request_field_size = 8190
+# SSL (not used in Railway)
+keyfile = None
+certfile = None
