@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('API Error:', error)
     console.error('Backend URL attempted:', BACKEND_URL)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { detail: `Internal server error: ${error.message}` },
+      { detail: `Internal server error: ${errorMessage}` },
       { status: 500 }
     )
   }
@@ -71,8 +72,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { detail: 'Internal server error' },
+      { detail: `Internal server error: ${errorMessage}` },
       { status: 500 }
     )
   }
