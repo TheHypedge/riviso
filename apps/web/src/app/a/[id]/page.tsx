@@ -1033,7 +1033,7 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-            </div>
+                  </div>
 
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -1055,15 +1055,15 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-            </div>
+                  </div>
 
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
                         <Settings className="h-6 w-6 text-warning-600" />
-                          </div>
+                      </div>
                       <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.image_optimization}%</span>
-                        </div>
+                    </div>
                     <div className="text-sm font-medium text-gray-700">Image Optimization</div>
                     <div className="text-xs text-gray-500 mt-1">Compression & format</div>
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -1077,15 +1077,15 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-                      </div>
-                  
+                  </div>
+
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-info-100 rounded-lg flex items-center justify-center">
                         <Shield className="h-6 w-6 text-info-600" />
-                        </div>
-                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
                       </div>
+                      <span className="text-2xl font-bold text-gray-900">{audit.technical_audit.performance_metrics.caching_score}%</span>
+                    </div>
                     <div className="text-sm font-medium text-gray-700">Caching Score</div>
                     <div className="text-xs text-gray-500 mt-1">Browser caching</div>
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -1099,7 +1099,7 @@ export default function AuditDetailPage() {
                         ))}
                       </ul>
                     </div>
-                    </div>
+                  </div>
                 </div>
               </div>
 
