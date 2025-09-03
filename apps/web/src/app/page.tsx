@@ -176,32 +176,38 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32 overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-40 left-1/2 w-80 h-80 bg-accent-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8 animate-fade-in-up">
               <Sparkles className="h-4 w-4 mr-2" />
               India's #1 All-in-One SEO Platform
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 animate-fade-in-up animation-delay-200">
               Transform Your Website's
-              <span className="text-primary-600 block">SEO Performance</span>
+              <span className="text-primary-600 block bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent">
+                SEO Performance
+              </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up animation-delay-400">
               Get comprehensive SEO insights, competitor analysis, and actionable recommendations 
               to dominate search rankings and drive organic traffic growth.
             </p>
 
-            {/* Audit Form */}
-            <div className="max-w-2xl mx-auto mb-16">
-              <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-                <div className="mb-6">
-                  <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-3">
-                    Enter your website URL
-                  </label>
-                  <div className="relative">
+            {/* Minimal Search Form */}
+            <div className="max-w-xl mx-auto mb-16 animate-fade-in-up animation-delay-600">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border border-white/20">
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <Search className="h-5 w-5 text-gray-400" />
                     </div>
@@ -210,53 +216,139 @@ export default function HomePage() {
                       type="url"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
-                      placeholder="https://yourwebsite.com"
-                      className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl text-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="Enter your website URL"
+                      className="w-full pl-12 pr-4 py-4 border-0 bg-gray-50/50 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-300 text-lg placeholder-gray-400"
                       disabled={isLoading}
                     />
                   </div>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isLoading || !url}
+                    className="bg-gradient-to-r from-primary-600 to-secondary-500 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-primary-700 hover:to-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center shadow-lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        Start Audit
+                        <ArrowRight className="h-5 w-5 ml-2" />
+                      </>
+                    )}
+                  </button>
                 </div>
-
                 {error && (
-                  <div className="flex items-center space-x-2 text-error-600 bg-error-50 p-4 rounded-lg mb-6">
-                    <AlertCircle className="h-5 w-5" />
-                    <span className="text-sm">{error}</span>
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                      <span className="text-red-700">{error}</span>
+                    </div>
                   </div>
                 )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white py-4 px-8 rounded-xl text-lg font-semibold hover:from-primary-700 hover:to-primary-800 transition-all duration-200 flex items-center justify-center disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      Analyzing Your Website...
-                    </>
-                  ) : (
-                    <>
-                      Start Free SEO Audit
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </>
-                  )}
-                </button>
-              </form>
+              </div>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-gray-500">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-success-500 mr-2" />
-                <span className="text-sm">100% Free Analysis</span>
+            {/* Animated Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto animate-fade-in-up animation-delay-800">
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/80 transition-all duration-300">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 bg-success-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-success-600" />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">100% Free</div>
+                <div className="text-sm text-gray-600">Complete Analysis</div>
               </div>
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 text-primary-500 mr-2" />
-                <span className="text-sm">Results in 2 Minutes</span>
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/80 transition-all duration-300">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-primary-600" />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">2 Minutes</div>
+                <div className="text-sm text-gray-600">Quick Results</div>
               </div>
-              <div className="flex items-center">
-                <Shield className="h-5 w-5 text-info-500 mr-2" />
-                <span className="text-sm">Secure & Private</span>
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/80 transition-all duration-300">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 bg-info-100 rounded-full flex items-center justify-center">
+                    <Shield className="h-6 w-6 text-info-600" />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">Secure</div>
+                <div className="text-sm text-gray-600">Private & Safe</div>
+              </div>
+            </div>
+
+            {/* Animated SEO Chart */}
+            <div className="mt-16 animate-fade-in-up animation-delay-1000">
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-white/20 max-w-2xl mx-auto">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6 text-center">SEO Performance Overview</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="text-center">
+                    <div className="relative w-24 h-24 mx-auto mb-3">
+                      <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          stroke="currentColor"
+                          strokeWidth="8"
+                          fill="none"
+                          className="text-gray-200"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          stroke="currentColor"
+                          strokeWidth="8"
+                          fill="none"
+                          strokeDasharray="251.2"
+                          strokeDashoffset="75.36"
+                          className="text-success-500 animate-draw-circle"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-gray-900">70%</span>
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">Technical SEO</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="relative w-24 h-24 mx-auto mb-3">
+                      <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          stroke="currentColor"
+                          strokeWidth="8"
+                          fill="none"
+                          className="text-gray-200"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          stroke="currentColor"
+                          strokeWidth="8"
+                          fill="none"
+                          strokeDasharray="251.2"
+                          strokeDashoffset="50.24"
+                          className="text-primary-500 animate-draw-circle animation-delay-1000"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-gray-900">80%</span>
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium text-gray-700">On-Page SEO</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
