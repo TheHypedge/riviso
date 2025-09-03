@@ -17,7 +17,12 @@ import {
   Link,
   FileText,
   Clock,
-  Star
+  Star,
+  Sparkles,
+  Play,
+  ArrowDown,
+  IndianRupee,
+  Crown
 } from 'lucide-react'
 
 export default function ServicesPage() {
@@ -27,6 +32,9 @@ export default function ServicesPage() {
       title: "Website Audit",
       subtitle: "Comprehensive SEO Analysis",
       description: "Get a complete analysis of your website's SEO performance with detailed insights into technical issues, on-page optimization, and actionable recommendations.",
+      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
       features: [
         "On-page SEO analysis with 50+ checkpoints",
         "Technical SEO audit including Core Web Vitals",
@@ -43,13 +51,17 @@ export default function ServicesPage() {
         "Enhance user experience",
         "Boost website performance"
       ],
-      pricing: "Starting from ₹799/month"
+      pricing: "Starting from ₹799/month",
+      popular: false
     },
     {
       icon: <Users className="h-12 w-12" />,
       title: "Competitor Analysis",
       subtitle: "Beat Your Competition",
       description: "Deep dive into your competitors' SEO strategies to identify gaps, opportunities, and market positioning insights that give you a competitive edge.",
+      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200",
       features: [
         "Competitor keyword analysis and gap identification",
         "Backlink profile comparison",
@@ -66,13 +78,17 @@ export default function ServicesPage() {
         "Find content gaps to exploit",
         "Improve market positioning"
       ],
-      pricing: "Starting from ₹1,999/month"
+      pricing: "Starting from ₹1,999/month",
+      popular: true
     },
     {
       icon: <Target className="h-12 w-12" />,
       title: "Top Targeting Keywords",
       subtitle: "Strategic Keyword Research",
       description: "Discover high-value keywords that can drive qualified traffic to your website with comprehensive keyword research and analysis tools.",
+      color: "from-purple-500 to-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200",
       features: [
         "Advanced keyword research with 100M+ keywords",
         "Search volume and difficulty analysis",
@@ -89,13 +105,17 @@ export default function ServicesPage() {
         "Improve content strategy",
         "Increase organic traffic"
       ],
-      pricing: "Starting from ₹1,999/month"
+      pricing: "Starting from ₹1,999/month",
+      popular: false
     },
     {
       icon: <Settings className="h-12 w-12" />,
       title: "On-Page SEO Optimization",
       subtitle: "Content & Structure Optimization",
       description: "Optimize your website's content and structure for better search engine visibility with our comprehensive on-page SEO tools and recommendations.",
+      color: "from-orange-500 to-orange-600",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-200",
       features: [
         "Meta tags optimization (title, description, keywords)",
         "Content optimization and readability analysis",
@@ -112,13 +132,17 @@ export default function ServicesPage() {
         "Better user experience",
         "Higher click-through rates"
       ],
-      pricing: "Starting from ₹1,999/month"
+      pricing: "Starting from ₹1,999/month",
+      popular: false
     },
     {
       icon: <Award className="h-12 w-12" />,
       title: "Website DA & PA Analysis",
       subtitle: "Authority & Link Analysis",
       description: "Measure your website's domain authority and page authority to understand your SEO strength and track your progress over time.",
+      color: "from-red-500 to-red-600",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
       features: [
         "Domain Authority (DA) tracking and analysis",
         "Page Authority (PA) measurement",
@@ -135,7 +159,8 @@ export default function ServicesPage() {
         "Identify link building opportunities",
         "Improve overall domain strength"
       ],
-      pricing: "Starting from ₹1,999/month"
+      pricing: "Starting from ₹1,999/month",
+      popular: false
     }
   ]
 
@@ -143,22 +168,53 @@ export default function ServicesPage() {
     {
       icon: <BarChart3 className="h-8 w-8" />,
       title: "SEO Reporting",
-      description: "Comprehensive monthly SEO reports with actionable insights and progress tracking."
+      description: "Comprehensive monthly SEO reports with actionable insights and progress tracking.",
+      color: "bg-blue-100 text-blue-600"
     },
     {
       icon: <Globe className="h-8 w-8" />,
       title: "Local SEO",
-      description: "Optimize your business for local search results and Google My Business."
+      description: "Optimize your business for local search results and Google My Business.",
+      color: "bg-green-100 text-green-600"
     },
     {
       icon: <Zap className="h-8 w-8" />,
       title: "Technical SEO",
-      description: "Advanced technical optimization including Core Web Vitals and site speed."
+      description: "Advanced technical optimization including Core Web Vitals and site speed.",
+      color: "bg-purple-100 text-purple-600"
     },
     {
       icon: <Shield className="h-8 w-8" />,
       title: "SEO Consulting",
-      description: "Expert SEO consultation and strategy development for your business."
+      description: "Expert SEO consultation and strategy development for your business.",
+      color: "bg-orange-100 text-orange-600"
+    }
+  ]
+
+  const processSteps = [
+    {
+      step: "01",
+      title: "Analysis",
+      description: "We analyze your website and competitors to identify opportunities",
+      icon: <Search className="h-6 w-6" />
+    },
+    {
+      step: "02", 
+      title: "Strategy",
+      description: "Develop a customized SEO strategy based on your business goals",
+      icon: <Target className="h-6 w-6" />
+    },
+    {
+      step: "03",
+      title: "Implementation",
+      description: "Execute the strategy with our advanced tools and techniques",
+      icon: <Settings className="h-6 w-6" />
+    },
+    {
+      step: "04",
+      title: "Monitoring",
+      description: "Track progress and optimize continuously for better results",
+      icon: <BarChart3 className="h-6 w-6" />
     }
   ]
 
@@ -170,12 +226,12 @@ export default function ServicesPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <a href="/" className="text-2xl font-bold text-primary-600">RIVISO</a>
+                <a href="/" className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">RIVISO</a>
               </div>
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <a href="/#features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                <a href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
                 <a href="/services" className="text-primary-600 px-3 py-2 rounded-md text-sm font-medium font-semibold">Services</a>
                 <a href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
                 <a href="/" className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
@@ -188,8 +244,14 @@ export default function ServicesPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full opacity-20"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-100 rounded-full opacity-20"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8">
               <Star className="h-4 w-4 mr-2" />
@@ -211,7 +273,8 @@ export default function ServicesPage() {
                 View Pricing Plans
                 <ArrowRight className="h-5 w-5 ml-2" />
               </a>
-              <a href="/" className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors duration-200">
+              <a href="/" className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors duration-200 flex items-center justify-center">
+                <Play className="h-5 w-5 mr-2" />
                 Start Free Audit
               </a>
             </div>
@@ -232,63 +295,60 @@ export default function ServicesPage() {
             </p>
           </div>
 
-          <div className="space-y-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {services.map((service, index) => (
-              <div key={index} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}>
-                <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
-                  <div className="bg-primary-100 rounded-2xl w-20 h-20 flex items-center justify-center mb-6 text-primary-600">
+              <div key={index} className={`relative bg-white rounded-3xl p-8 border-2 transition-all duration-300 hover:shadow-2xl ${service.borderColor} ${service.popular ? 'ring-2 ring-primary-500 ring-opacity-50' : ''}`}>
+                {service.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center">
+                      <Crown className="h-4 w-4 mr-1" />
+                      Most Popular
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-center mb-8">
+                  <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6 ${service.bgColor} text-white`}>
                     {service.icon}
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-2">{service.title}</h3>
-                  <p className="text-xl text-primary-600 font-semibold mb-4">{service.subtitle}</p>
-                  <p className="text-lg text-gray-600 mb-8 leading-relaxed">{service.description}</p>
-                  
-                  <div className="mb-8">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features:</h4>
-                    <ul className="space-y-3">
-                      {service.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start">
-                          <CheckCircle className="h-5 w-5 text-success-500 mr-3 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="mb-8">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Benefits:</h4>
-                    <ul className="space-y-2">
-                      {service.benefits.map((benefit, benefitIndex) => (
-                        <li key={benefitIndex} className="flex items-center">
-                          <TrendingUp className="h-4 w-4 text-primary-500 mr-2 flex-shrink-0" />
-                          <span className="text-gray-700">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Starting from</p>
-                        <p className="text-2xl font-bold text-primary-600">{service.pricing}</p>
-                      </div>
-                      <a href="/pricing" className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors">
-                        Get Started
-                      </a>
-                    </div>
-                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{service.title}</h3>
+                  <p className="text-lg text-primary-600 font-semibold mb-4">{service.subtitle}</p>
+                  <p className="text-gray-600 leading-relaxed mb-6">{service.description}</p>
                 </div>
                 
-                <div className={index % 2 === 1 ? 'lg:col-start-1' : ''}>
-                  <div className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl p-8 h-96 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="bg-white rounded-2xl w-32 h-32 flex items-center justify-center mx-auto mb-6 shadow-lg">
-                        {service.icon}
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900 mb-2">{service.title}</h4>
-                      <p className="text-gray-600">{service.subtitle}</p>
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features:</h4>
+                  <ul className="space-y-3">
+                    {service.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-success-500 mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Benefits:</h4>
+                  <ul className="space-y-2">
+                    {service.benefits.map((benefit, benefitIndex) => (
+                      <li key={benefitIndex} className="flex items-center">
+                        <TrendingUp className="h-4 w-4 text-primary-500 mr-2 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Starting from</p>
+                      <p className="text-2xl font-bold text-primary-600">{service.pricing}</p>
                     </div>
+                    <a href="/pricing" className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors">
+                      Get Started
+                    </a>
                   </div>
                 </div>
               </div>
@@ -297,8 +357,37 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* Additional Services */}
+      {/* Process Section */}
       <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Our SEO Process
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              A proven 4-step process that delivers measurable results for your business.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {processSteps.map((step, index) => (
+              <div key={index} className="text-center group">
+                <div className="bg-white rounded-2xl p-8 shadow-lg mb-4 group-hover:shadow-xl transition-all duration-300">
+                  <div className="bg-primary-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-6 text-primary-600 group-hover:scale-110 transition-transform duration-300">
+                    {step.icon}
+                  </div>
+                  <div className="text-3xl font-bold text-primary-600 mb-2">{step.step}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Services */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -311,11 +400,11 @@ export default function ServicesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {additionalServices.map((service, index) => (
-              <div key={index} className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-primary-200">
-                <div className="bg-primary-100 rounded-xl w-16 h-16 flex items-center justify-center mb-4 text-primary-600">
+              <div key={index} className="group bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-primary-200">
+                <div className={`rounded-xl w-16 h-16 flex items-center justify-center mb-4 ${service.color} group-hover:scale-110 transition-transform duration-300`}>
                   {service.icon}
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
                   {service.title}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
@@ -358,17 +447,6 @@ export default function ServicesPage() {
                 India's leading all-in-one SEO platform. Transform your website's search performance 
                 with comprehensive analytics and actionable insights.
               </p>
-              <div className="flex space-x-4">
-                <div className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors">
-                  <Globe className="h-5 w-5" />
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors">
-                  <Users className="h-5 w-5" />
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors">
-                  <Award className="h-5 w-5" />
-                </div>
-              </div>
             </div>
             
             <div>
@@ -385,7 +463,7 @@ export default function ServicesPage() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="/#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
                 <li><a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</a></li>

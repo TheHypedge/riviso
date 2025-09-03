@@ -26,61 +26,42 @@ import {
   Download,
   Share2,
   Bell,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  ArrowDown,
+  Play
 } from 'lucide-react'
 
 export default function FeaturesPage() {
-  const coreFeatures = [
+  const heroFeatures = [
     {
-      icon: <Zap className="h-8 w-8" />,
-      title: "Lightning Fast Analysis",
-      description: "Get comprehensive SEO insights in minutes, not hours. Our optimized engine analyzes your website at lightning speed.",
-      details: [
-        "Real-time website crawling",
-        "Instant SEO scoring",
-        "Quick performance metrics",
-        "Fast report generation"
-      ]
+      icon: <Zap className="h-6 w-6" />,
+      title: "Lightning Fast",
+      description: "Get results in minutes"
     },
     {
-      icon: <Shield className="h-8 w-8" />,
-      title: "Enterprise-Grade Security",
-      description: "Your data is protected with bank-level security measures and GDPR compliance for complete peace of mind.",
-      details: [
-        "256-bit SSL encryption",
-        "GDPR compliant data handling",
-        "Secure data centers",
-        "Regular security audits"
-      ]
+      icon: <Shield className="h-6 w-6" />,
+      title: "Enterprise Security",
+      description: "Bank-level protection"
     },
     {
-      icon: <BarChart3 className="h-8 w-8" />,
-      title: "Advanced Analytics",
-      description: "Deep insights with actionable recommendations for growth. Track your progress with detailed analytics.",
-      details: [
-        "Comprehensive SEO metrics",
-        "Historical data tracking",
-        "Custom dashboard views",
-        "Exportable reports"
-      ]
-    },
-    {
-      icon: <Globe className="h-8 w-8" />,
+      icon: <Globe className="h-6 w-6" />,
       title: "Global Coverage",
-      description: "Analyze websites from any country with localized insights and region-specific SEO recommendations.",
-      details: [
-        "195+ country support",
-        "Local SEO insights",
-        "Regional keyword data",
-        "Multi-language support"
-      ]
+      description: "195+ countries supported"
+    },
+    {
+      icon: <BarChart3 className="h-6 w-6" />,
+      title: "Advanced Analytics",
+      description: "Deep insights & reports"
     }
   ]
 
-  const featureCategories = [
+  const mainFeatures = [
     {
-      title: "Website Analysis",
-      icon: <Search className="h-6 w-6" />,
+      category: "Website Analysis",
+      icon: <Search className="h-8 w-8" />,
+      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-50",
       features: [
         {
           name: "Comprehensive SEO Audit",
@@ -105,8 +86,10 @@ export default function FeaturesPage() {
       ]
     },
     {
-      title: "Competitor Intelligence",
-      icon: <Users className="h-6 w-6" />,
+      category: "Competitor Intelligence",
+      icon: <Users className="h-8 w-8" />,
+      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-50",
       features: [
         {
           name: "Competitor Keyword Analysis",
@@ -131,8 +114,10 @@ export default function FeaturesPage() {
       ]
     },
     {
-      title: "Keyword Research",
-      icon: <Target className="h-6 w-6" />,
+      category: "Keyword Research",
+      icon: <Target className="h-8 w-8" />,
+      color: "from-purple-500 to-purple-600",
+      bgColor: "bg-purple-50",
       features: [
         {
           name: "Advanced Keyword Discovery",
@@ -157,8 +142,10 @@ export default function FeaturesPage() {
       ]
     },
     {
-      title: "Reporting & Analytics",
-      icon: <BarChart3 className="h-6 w-6" />,
+      category: "Reporting & Analytics",
+      icon: <BarChart3 className="h-8 w-8" />,
+      color: "from-orange-500 to-orange-600",
+      bgColor: "bg-orange-50",
       features: [
         {
           name: "Custom Dashboards",
@@ -188,23 +175,34 @@ export default function FeaturesPage() {
     {
       name: "Google Analytics",
       description: "Connect your Google Analytics data for comprehensive insights",
-      icon: <BarChart3 className="h-6 w-6" />
+      icon: <BarChart3 className="h-8 w-8" />,
+      color: "bg-blue-100 text-blue-600"
     },
     {
       name: "Google Search Console",
       description: "Import search performance data directly from GSC",
-      icon: <Search className="h-6 w-6" />
+      icon: <Search className="h-8 w-8" />,
+      color: "bg-green-100 text-green-600"
     },
     {
       name: "Google My Business",
       description: "Optimize your local business listings and reviews",
-      icon: <Globe className="h-6 w-6" />
+      icon: <Globe className="h-8 w-8" />,
+      color: "bg-purple-100 text-purple-600"
     },
     {
       name: "Social Media Platforms",
       description: "Track social signals and engagement metrics",
-      icon: <Share2 className="h-6 w-6" />
+      icon: <Share2 className="h-8 w-8" />,
+      color: "bg-pink-100 text-pink-600"
     }
+  ]
+
+  const stats = [
+    { number: "10,000+", label: "Websites Analyzed", icon: <Search className="h-6 w-6" /> },
+    { number: "50+", label: "SEO Metrics", icon: <BarChart3 className="h-6 w-6" /> },
+    { number: "99.9%", label: "Uptime", icon: <Shield className="h-6 w-6" /> },
+    { number: "24/7", label: "Support", icon: <Users className="h-6 w-6" /> }
   ]
 
   return (
@@ -215,7 +213,7 @@ export default function FeaturesPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <a href="/" className="text-2xl font-bold text-primary-600">RIVISO</a>
+                <a href="/" className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">RIVISO</a>
               </div>
             </div>
             <div className="hidden md:block">
@@ -233,11 +231,17 @@ export default function FeaturesPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full opacity-20"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-100 rounded-full opacity-20"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8">
-              <Star className="h-4 w-4 mr-2" />
+              <Sparkles className="h-4 w-4 mr-2" />
               India's #1 SEO Platform Features
             </div>
             
@@ -251,12 +255,26 @@ export default function FeaturesPage() {
               the preferred choice for businesses across India.
             </p>
 
+            {/* Hero Feature Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-4xl mx-auto">
+              {heroFeatures.map((feature, index) => (
+                <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                  <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/pricing" className="bg-primary-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-700 transition-colors duration-200 flex items-center justify-center">
                 Get Started Today
                 <ArrowRight className="h-5 w-5 ml-2" />
               </a>
-              <a href="/" className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors duration-200">
+              <a href="/" className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors duration-200 flex items-center justify-center">
+                <Play className="h-5 w-5 mr-2" />
                 Try Free Audit
               </a>
             </div>
@@ -264,48 +282,8 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Core Features Section */}
+      {/* Main Features Section */}
       <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose RIVISO?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Built for modern businesses that demand excellence in SEO performance and results.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {coreFeatures.map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-white rounded-2xl p-6 shadow-lg mb-4 border border-gray-200 hover:shadow-xl transition-all duration-300">
-                  <div className="bg-primary-100 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 text-primary-600">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4">
-                    {feature.description}
-                  </p>
-                  <ul className="space-y-2 text-left">
-                    {feature.details.map((detail, detailIndex) => (
-                      <li key={detailIndex} className="flex items-center text-xs text-gray-600">
-                        <CheckCircle className="h-3 w-3 text-success-500 mr-2 flex-shrink-0" />
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Categories */}
-      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -317,27 +295,34 @@ export default function FeaturesPage() {
           </div>
 
           <div className="space-y-16">
-            {featureCategories.map((category, index) => (
-              <div key={index} className="bg-white rounded-3xl p-8 shadow-lg">
-                <div className="flex items-center mb-8">
-                  <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mr-4 text-primary-600">
-                    {category.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900">{category.title}</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {category.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-start p-4 rounded-xl hover:bg-gray-50 transition-colors">
-                      <div className="bg-primary-100 rounded-lg w-10 h-10 flex items-center justify-center mr-4 text-primary-600 flex-shrink-0">
-                        {feature.icon}
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">{feature.name}</h4>
-                        <p className="text-gray-600 text-sm">{feature.description}</p>
-                      </div>
+            {mainFeatures.map((category, index) => (
+              <div key={index} className="relative">
+                <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+                  <div className="flex items-center mb-8">
+                    <div className={`rounded-2xl w-16 h-16 flex items-center justify-center mr-6 ${category.bgColor} text-white`}>
+                      {category.icon}
                     </div>
-                  ))}
+                    <div>
+                      <h3 className="text-3xl font-bold text-gray-900">{category.category}</h3>
+                      <p className="text-gray-600 mt-2">Advanced tools for {category.category.toLowerCase()}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {category.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="group p-6 rounded-2xl hover:bg-gray-50 transition-all duration-300 border border-transparent hover:border-gray-200">
+                        <div className="flex items-start">
+                          <div className={`rounded-xl w-12 h-12 flex items-center justify-center mr-4 ${category.bgColor} text-white group-hover:scale-110 transition-transform duration-300`}>
+                            {feature.icon}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">{feature.name}</h4>
+                            <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
@@ -346,7 +331,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Integrations Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -359,14 +344,14 @@ export default function FeaturesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {integrations.map((integration, index) => (
-              <div key={index} className="bg-gray-50 rounded-2xl p-6 text-center hover:bg-gray-100 transition-colors">
-                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 text-primary-600 shadow-sm">
+              <div key={index} className="group bg-white rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200">
+                <div className={`rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-6 ${integration.color} group-hover:scale-110 transition-transform duration-300`}>
                   {integration.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
                   {integration.name}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 leading-relaxed">
                   {integration.description}
                 </p>
               </div>
@@ -388,13 +373,13 @@ export default function FeaturesPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { number: "10,000+", label: "Websites Analyzed" },
-              { number: "50+", label: "SEO Metrics" },
-              { number: "99.9%", label: "Uptime" },
-              { number: "24/7", label: "Support" }
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center group">
+                <div className="bg-white/10 rounded-2xl p-6 mb-4 group-hover:bg-white/20 transition-colors duration-300">
+                  <div className="text-white mb-3 flex justify-center">
+                    {stat.icon}
+                  </div>
+                </div>
                 <div className="text-4xl md:text-5xl font-bold text-white mb-2">
                   {stat.number}
                 </div>
@@ -410,20 +395,22 @@ export default function FeaturesPage() {
       {/* CTA Section */}
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            Ready to Experience These Features?
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Start your free trial today and discover why thousands of businesses choose RIVISO for their SEO needs.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/pricing" className="bg-primary-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-700 transition-colors duration-200 flex items-center justify-center">
-              View Pricing Plans
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </a>
-            <a href="/" className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors duration-200">
-              Start Free Audit
-            </a>
+          <div className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl p-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              Ready to Experience These Features?
+            </h2>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Start your free trial today and discover why thousands of businesses choose RIVISO for their SEO needs.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/pricing" className="bg-primary-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-700 transition-colors duration-200 flex items-center justify-center">
+                View Pricing Plans
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </a>
+              <a href="/" className="border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-600 hover:text-white transition-colors duration-200">
+                Start Free Audit
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -438,17 +425,6 @@ export default function FeaturesPage() {
                 India's leading all-in-one SEO platform. Transform your website's search performance 
                 with comprehensive analytics and actionable insights.
               </p>
-              <div className="flex space-x-4">
-                <div className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors">
-                  <Globe className="h-5 w-5" />
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors">
-                  <Users className="h-5 w-5" />
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors">
-                  <Award className="h-5 w-5" />
-                </div>
-              </div>
             </div>
             
             <div>
