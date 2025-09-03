@@ -1,12 +1,12 @@
 {
   "version": 2,
   "buildCommand": "turbo run build --filter=@riviso/web",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
   "installCommand": "npm install",
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "apps/web/$1"
     }
   ]
 }
