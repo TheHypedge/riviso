@@ -136,6 +136,8 @@ interface AuditResult {
     seo_technical_score: number
     security_score: number
   }
+  real_data?: boolean
+  data_source?: string
   metadata?: {
     page_title?: string
     meta_description?: string
@@ -772,7 +774,20 @@ export default function AuditDetailPage() {
           {/* Technical Audit Section */}
           {audit.technical_audit && (
             <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Technical Audit & Performance</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Technical Audit & Performance</h2>
+                {audit.real_data && audit.data_source && (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                      Real Data
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Source: {audit.data_source}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {/* Device Previews */}
               <div className="mb-8">
