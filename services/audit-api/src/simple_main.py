@@ -21,13 +21,18 @@ app = FastAPI(
 # Simple in-memory storage for audits
 audits_storage = {}
 
-# Google PageSpeed Insights API key (you'll need to get this from Google Cloud Console)
-PAGESPEED_API_KEY = os.getenv("PAGESPEED_API_KEY", "AIzaSyBvOkBwJcJkLmNpQrStUvWxYzAbCdEfGhI")  # Replace with your actual API key
+# Google PageSpeed Insights API key
+PAGESPEED_API_KEY = os.getenv("PAGESPEED_API_KEY", "AIzaSyCMyJAgY6aDuB2AznWfFafi7JvaKUdQPwg")
 
 async def fetch_pagespeed_data(url: str, strategy: str = "mobile") -> dict:
     """Fetch real performance data from Google PageSpeed Insights API"""
     try:
-        pagespeed_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+        # Check if we have a valid API key
+        if not PAGESPEED_API_KEY:
+            print("⚠️ No PageSpeed API key found, using fallback data")
+            return {}
+        
+        pagespeed_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
         params = {
             "url": url,
             "strategy": strategy,
@@ -35,16 +40,28 @@ async def fetch_pagespeed_data(url: str, strategy: str = "mobile") -> dict:
             "category": ["performance", "accessibility", "best-practices", "seo"]
         }
         
+        print(f"🔍 Fetching PageSpeed data for {url} ({strategy})")
+        
         async with aiohttp.ClientSession() as session:
             async with session.get(pagespeed_url, params=params) as response:
+                print(f"📊 PageSpeed API response: {response.status}")
+                
                 if response.status == 200:
                     data = await response.json()
+                    print("✅ Successfully fetched real PageSpeed data")
                     return data
+                elif response.status == 403:
+                    print("❌ PageSpeed API: Invalid API key or quota exceeded")
+                    return {}
+                elif response.status == 400:
+                    print("❌ PageSpeed API: Bad request - check URL format")
+                    return {}
                 else:
-                    print(f"PageSpeed API error: {response.status}")
+                    error_text = await response.text()
+                    print(f"❌ PageSpeed API error {response.status}: {error_text}")
                     return {}
     except Exception as e:
-        print(f"Error fetching PageSpeed data: {e}")
+        print(f"❌ Error fetching PageSpeed data: {e}")
         return {}
 
 async def fetch_webpagetest_data(url: str) -> dict:
@@ -75,45 +92,65 @@ async def fetch_webpagetest_data(url: str) -> dict:
 def extract_core_web_vitals(pagespeed_data: dict) -> dict:
     """Extract Core Web Vitals from PageSpeed Insights data"""
     try:
+        if not pagespeed_data:
+            return {}
+            
         lighthouse_result = pagespeed_data.get("lighthouseResult", {})
         audits = lighthouse_result.get("audits", {})
         
-        # Extract Core Web Vitals
+        # Extract Core Web Vitals with better error handling
         lcp_audit = audits.get("largest-contentful-paint", {})
         fcp_audit = audits.get("first-contentful-paint", {})
         cls_audit = audits.get("cumulative-layout-shift", {})
         fid_audit = audits.get("max-potential-fid", {})
         tti_audit = audits.get("interactive", {})
         
-        return {
+        # Extract values with proper conversion and fallbacks
+        lcp_value = lcp_audit.get("numericValue", 0)
+        fcp_value = fcp_audit.get("numericValue", 0)
+        tti_value = tti_audit.get("numericValue", 0)
+        
+        # Convert milliseconds to seconds for time-based metrics
+        lcp_seconds = lcp_value / 1000 if lcp_value > 0 else 0
+        fcp_seconds = fcp_value / 1000 if fcp_value > 0 else 0
+        tti_seconds = tti_value / 1000 if tti_value > 0 else 0
+        
+        result = {
             "lcp": {
-                "value": lcp_audit.get("numericValue", 0) / 1000,  # Convert to seconds
-                "score": lcp_audit.get("score", 0) * 100 if lcp_audit.get("score") else 0
+                "value": round(lcp_seconds, 2),
+                "score": int(lcp_audit.get("score", 0) * 100) if lcp_audit.get("score") else 0
             },
             "fcp": {
-                "value": fcp_audit.get("numericValue", 0) / 1000,  # Convert to seconds
-                "score": fcp_audit.get("score", 0) * 100 if fcp_audit.get("score") else 0
+                "value": round(fcp_seconds, 2),
+                "score": int(fcp_audit.get("score", 0) * 100) if fcp_audit.get("score") else 0
             },
             "cls": {
-                "value": cls_audit.get("numericValue", 0),
-                "score": cls_audit.get("score", 0) * 100 if cls_audit.get("score") else 0
+                "value": round(cls_audit.get("numericValue", 0), 3),
+                "score": int(cls_audit.get("score", 0) * 100) if cls_audit.get("score") else 0
             },
             "fid": {
-                "value": fid_audit.get("numericValue", 0),
-                "score": fid_audit.get("score", 0) * 100 if fid_audit.get("score") else 0
+                "value": round(fid_audit.get("numericValue", 0), 0),
+                "score": int(fid_audit.get("score", 0) * 100) if fid_audit.get("score") else 0
             },
             "tti": {
-                "value": tti_audit.get("numericValue", 0) / 1000,  # Convert to seconds
-                "score": tti_audit.get("score", 0) * 100 if tti_audit.get("score") else 0
+                "value": round(tti_seconds, 2),
+                "score": int(tti_audit.get("score", 0) * 100) if tti_audit.get("score") else 0
             }
         }
+        
+        print(f"📊 Extracted Core Web Vitals: LCP={result['lcp']['value']}s, FCP={result['fcp']['value']}s, CLS={result['cls']['value']}")
+        return result
+        
     except Exception as e:
-        print(f"Error extracting Core Web Vitals: {e}")
+        print(f"❌ Error extracting Core Web Vitals: {e}")
         return {}
 
 def extract_performance_metrics(pagespeed_data: dict) -> dict:
     """Extract performance metrics from PageSpeed Insights data"""
     try:
+        if not pagespeed_data:
+            return {}
+            
         lighthouse_result = pagespeed_data.get("lighthouseResult", {})
         audits = lighthouse_result.get("audits", {})
         
@@ -123,35 +160,69 @@ def extract_performance_metrics(pagespeed_data: dict) -> dict:
         image_optimization = audits.get("uses-optimized-images", {})
         css_optimization = audits.get("unused-css-rules", {})
         js_optimization = audits.get("unused-javascript", {})
+        text_compression = audits.get("uses-text-compression", {})
+        efficient_cache = audits.get("uses-long-cache-ttl", {})
         
-        return {
-            "total_page_size": int(total_byte_weight.get("numericValue", 0) / 1024),  # Convert to KB
-            "total_requests": len(network_requests.get("details", {}).get("items", [])),
-            "image_optimization": int(image_optimization.get("score", 0) * 100) if image_optimization.get("score") else 0,
-            "css_optimization": int(css_optimization.get("score", 0) * 100) if css_optimization.get("score") else 0,
-            "js_optimization": int(js_optimization.get("score", 0) * 100) if js_optimization.get("score") else 0,
-            "caching_score": 85,  # This would need more complex analysis
-            "compression_score": 90,  # This would need more complex analysis
+        # Calculate page size in KB
+        total_bytes = total_byte_weight.get("numericValue", 0)
+        page_size_kb = int(total_bytes / 1024) if total_bytes > 0 else 0
+        
+        # Count network requests
+        request_items = network_requests.get("details", {}).get("items", [])
+        request_count = len(request_items) if request_items else 0
+        
+        # Calculate optimization scores
+        image_score = int(image_optimization.get("score", 0) * 100) if image_optimization.get("score") else 0
+        css_score = int(css_optimization.get("score", 0) * 100) if css_optimization.get("score") else 0
+        js_score = int(js_optimization.get("score", 0) * 100) if js_optimization.get("score") else 0
+        compression_score = int(text_compression.get("score", 0) * 100) if text_compression.get("score") else 0
+        caching_score = int(efficient_cache.get("score", 0) * 100) if efficient_cache.get("score") else 0
+        
+        result = {
+            "total_page_size": page_size_kb,
+            "total_requests": request_count,
+            "image_optimization": image_score,
+            "css_optimization": css_score,
+            "js_optimization": js_score,
+            "caching_score": caching_score,
+            "compression_score": compression_score,
             "cdn_usage": True  # This would need more complex analysis
         }
+        
+        print(f"📊 Extracted Performance Metrics: Size={page_size_kb}KB, Requests={request_count}, Image={image_score}%")
+        return result
+        
     except Exception as e:
-        print(f"Error extracting performance metrics: {e}")
+        print(f"❌ Error extracting performance metrics: {e}")
         return {}
 
 def extract_scores(pagespeed_data: dict) -> dict:
     """Extract overall scores from PageSpeed Insights data"""
     try:
+        if not pagespeed_data:
+            return {}
+            
         lighthouse_result = pagespeed_data.get("lighthouseResult", {})
         categories = lighthouse_result.get("categories", {})
         
-        return {
-            "performance": int(categories.get("performance", {}).get("score", 0) * 100),
-            "accessibility": int(categories.get("accessibility", {}).get("score", 0) * 100),
-            "best_practices": int(categories.get("best-practices", {}).get("score", 0) * 100),
-            "seo": int(categories.get("seo", {}).get("score", 0) * 100)
+        # Extract scores with proper fallbacks
+        performance_score = categories.get("performance", {}).get("score", 0)
+        accessibility_score = categories.get("accessibility", {}).get("score", 0)
+        best_practices_score = categories.get("best-practices", {}).get("score", 0)
+        seo_score = categories.get("seo", {}).get("score", 0)
+        
+        result = {
+            "performance": int(performance_score * 100) if performance_score else 0,
+            "accessibility": int(accessibility_score * 100) if accessibility_score else 0,
+            "best_practices": int(best_practices_score * 100) if best_practices_score else 0,
+            "seo": int(seo_score * 100) if seo_score else 0
         }
+        
+        print(f"📊 Extracted Scores: Performance={result['performance']}%, SEO={result['seo']}%, Accessibility={result['accessibility']}%")
+        return result
+        
     except Exception as e:
-        print(f"Error extracting scores: {e}")
+        print(f"❌ Error extracting scores: {e}")
         return {}
 
 async def generate_real_audit_data(url: str):
