@@ -146,22 +146,31 @@ def generate_realistic_audit_data(url: str):
             "description": f"Improve content structure and readability for {domain}"
         })
     
-    # Generate domain-specific keywords
+    # Generate domain-specific keywords with more realistic data
     domain_keywords = [
         f"{domain} services",
-        f"{domain} solutions",
+        f"{domain} solutions", 
         f"best {domain}",
         f"{domain} company",
-        f"{domain} reviews"
+        f"{domain} reviews",
+        f"{domain} pricing",
+        f"{domain} features",
+        f"{domain} alternatives"
     ]
     
-    top_keywords = []
-    for keyword in domain_keywords[:3]:
-        top_keywords.append({
-            "keyword": keyword,
-            "volume": random.randint(100, 5000),
-            "difficulty": random.choice(["low", "medium", "high"])
-        })
+    # More realistic search volumes and difficulties
+    keyword_data = [
+        {"keyword": f"{domain} services", "volume": random.randint(500, 2000), "difficulty": "low"},
+        {"keyword": f"{domain} solutions", "volume": random.randint(1000, 5000), "difficulty": "medium"},
+        {"keyword": f"best {domain}", "volume": random.randint(200, 1500), "difficulty": "low"},
+        {"keyword": f"{domain} company", "volume": random.randint(300, 1200), "difficulty": "medium"},
+        {"keyword": f"{domain} reviews", "volume": random.randint(100, 800), "difficulty": "low"},
+        {"keyword": f"{domain} pricing", "volume": random.randint(400, 1800), "difficulty": "medium"},
+        {"keyword": f"{domain} features", "volume": random.randint(200, 1000), "difficulty": "high"},
+        {"keyword": f"{domain} alternatives", "volume": random.randint(150, 600), "difficulty": "high"}
+    ]
+    
+    top_keywords = keyword_data[:8]
     
     return {
         "scores": {

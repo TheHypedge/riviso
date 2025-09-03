@@ -511,11 +511,11 @@ export default function AuditDetailPage() {
                 </div>
           )}
 
-          {/* Top Keywords */}
+                    {/* Top Keywords */}
           {audit.top_keywords && audit.top_keywords.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Top Targeting Keywords</h2>
-              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Keyword Opportunities</h3>
                   <p className="text-sm text-gray-600">High-value keywords for your domain</p>
@@ -532,12 +532,12 @@ export default function AuditDetailPage() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {audit.top_keywords.map((keyword, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr key={index} className={`hover:bg-gray-50 ${index >= 3 ? 'blur-sm' : ''}`}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <Target className="h-4 w-4 text-primary-600 mr-2" />
                               <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
-                </div>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-900">{keyword.volume.toLocaleString()}</span>
@@ -566,6 +566,32 @@ export default function AuditDetailPage() {
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Pro Overlay for blurred results */}
+                {audit.top_keywords.length > 3 && (
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white/95 flex items-center justify-center">
+                    <div className="text-center bg-white rounded-xl shadow-2xl p-8 border border-gray-200 max-w-md mx-4">
+                      <div className="mb-4">
+                        <div className="w-16 h-16 bg-gradient-to-r from-primary-600 to-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Star className="h-8 w-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">View Full Insights with PRO</h3>
+                        <p className="text-gray-600 mb-6">
+                          Unlock all {audit.top_keywords.length} keyword opportunities with detailed analytics, 
+                          competitor insights, and advanced SEO recommendations.
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <button className="w-full bg-gradient-to-r from-primary-600 to-secondary-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-primary-700 hover:to-secondary-600 transition-all duration-200 transform hover:scale-105">
+                          Get PRO Access
+                        </button>
+                        <p className="text-xs text-gray-500">
+                          Starting from ₹799/month • Cancel anytime
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
