@@ -72,6 +72,12 @@ interface AuditResult {
     volume: number
     difficulty: string
   }>
+  on_page_keywords?: Array<{
+    keyword: string
+    frequency: number
+    density: number
+    position: string
+  }>
   metadata?: {
     page_title?: string
     meta_description?: string
@@ -592,6 +598,115 @@ export default function AuditDetailPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* On-Page Keywords Analysis */}
+          {audit.on_page_keywords && audit.on_page_keywords.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">On-Page Keywords Analysis</h2>
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Keywords Found on Page</h3>
+                  <p className="text-sm text-gray-600">Keywords extracted from {audit.url} ordered by frequency (most to least used)</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Density (%)</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Positions Found</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {audit.on_page_keywords.map((keyword, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                                index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                                index === 1 ? 'bg-gray-100 text-gray-800' :
+                                index === 2 ? 'bg-orange-100 text-orange-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {index + 1}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Target className="h-4 w-4 text-primary-600 mr-2" />
+                              <span className="text-sm font-medium text-gray-900">{keyword.keyword}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className="text-sm font-bold text-gray-900">{keyword.frequency}</span>
+                              <span className="ml-1 text-xs text-gray-500">times</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className={`text-sm font-medium ${
+                                keyword.density >= 3.0 ? 'text-error-600' :
+                                keyword.density >= 2.0 ? 'text-warning-600' :
+                                keyword.density >= 1.0 ? 'text-success-600' :
+                                'text-gray-600'
+                              }`}>
+                                {keyword.density}%
+                              </span>
+                              <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                keyword.density >= 3.0 ? 'bg-error-100 text-error-800' :
+                                keyword.density >= 2.0 ? 'bg-warning-100 text-warning-800' :
+                                keyword.density >= 1.0 ? 'bg-success-100 text-success-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {keyword.density >= 3.0 ? 'High' :
+                                 keyword.density >= 2.0 ? 'Medium' :
+                                 keyword.density >= 1.0 ? 'Good' : 'Low'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1">
+                              {keyword.position.split(', ').map((pos, posIndex) => (
+                                <span key={posIndex} className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                  {pos}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Analysis Summary */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">{audit.on_page_keywords.length}</div>
+                      <div className="text-sm text-gray-600">Total Keywords</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {audit.on_page_keywords.reduce((sum, kw) => sum + kw.frequency, 0)}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Occurrences</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {Math.round(audit.on_page_keywords.reduce((sum, kw) => sum + kw.density, 0) / audit.on_page_keywords.length * 10) / 10}%
+                      </div>
+                      <div className="text-sm text-gray-600">Avg Density</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -172,6 +172,23 @@ def generate_realistic_audit_data(url: str):
     
     top_keywords = keyword_data[:8]
     
+    # Generate on-page keyword analysis (simulating actual page analysis)
+    on_page_keywords = [
+        {"keyword": domain, "frequency": random.randint(15, 25), "density": round(random.uniform(2.5, 4.2), 1), "position": "title, h1, h2"},
+        {"keyword": f"{domain} services", "frequency": random.randint(8, 15), "density": round(random.uniform(1.8, 3.1), 1), "position": "h2, h3, content"},
+        {"keyword": "seo", "frequency": random.randint(6, 12), "density": round(random.uniform(1.2, 2.5), 1), "position": "content, meta"},
+        {"keyword": "website", "frequency": random.randint(5, 10), "density": round(random.uniform(1.0, 2.0), 1), "position": "content, alt text"},
+        {"keyword": "analysis", "frequency": random.randint(4, 8), "density": round(random.uniform(0.8, 1.8), 1), "position": "content"},
+        {"keyword": "audit", "frequency": random.randint(3, 7), "density": round(random.uniform(0.6, 1.5), 1), "position": "content, navigation"},
+        {"keyword": "optimization", "frequency": random.randint(2, 6), "density": round(random.uniform(0.4, 1.2), 1), "position": "content"},
+        {"keyword": "performance", "frequency": random.randint(2, 5), "density": round(random.uniform(0.3, 1.0), 1), "position": "content"},
+        {"keyword": "ranking", "frequency": random.randint(1, 4), "density": round(random.uniform(0.2, 0.8), 1), "position": "content"},
+        {"keyword": "traffic", "frequency": random.randint(1, 3), "density": round(random.uniform(0.1, 0.6), 1), "position": "content"}
+    ]
+    
+    # Sort by frequency (most used to least used)
+    on_page_keywords.sort(key=lambda x: x["frequency"], reverse=True)
+    
     return {
         "scores": {
             "overall": base_score,
@@ -181,7 +198,8 @@ def generate_realistic_audit_data(url: str):
         },
         "rules": rules,
         "top_fixes": top_fixes,
-        "top_keywords": top_keywords
+        "top_keywords": top_keywords,
+        "on_page_keywords": on_page_keywords
     }
 
 @app.get("/")
