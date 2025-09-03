@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { sendWelcomeEmail } from '../emailService'
 import { users } from '../users'
+import { UserRole } from '../../../../lib/roles'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +37,9 @@ export async function POST(request: NextRequest) {
     const saltRounds = 12
     const hashedPassword = await bcrypt.hash(password, saltRounds)
 
+    // Determine user role - make iamakhileshsoni@gmail.com SUPER_ADMIN
+    const userRole = email === 'iamakhileshsoni@gmail.com' ? UserRole.SUPER_ADMIN : UserRole.USER
+    
     // Create user
     const newUser = {
       id: Date.now().toString(),
@@ -46,7 +50,8 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       plan: 'free',
       auditsUsed: 0,
-      auditsLimit: 5
+      auditsLimit: 5,
+      role: userRole
     }
 
     users.push(newUser)

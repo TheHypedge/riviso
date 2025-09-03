@@ -12,6 +12,7 @@ interface User {
   plan: 'free' | 'pro' | 'enterprise'
   auditsUsed: number
   auditsLimit: number
+  role: 'super_admin' | 'admin' | 'manager' | 'user'
 }
 
 interface AuthContextType {
