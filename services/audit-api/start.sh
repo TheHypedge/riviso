@@ -11,7 +11,6 @@ echo "Port: $PORT"
 echo "Environment: $ENVIRONMENT"
 echo "Database URL: $DATABASE_URL"
 
-# Start the application with uvicorn (lighter for Railway free tier)
-# Use full application with audit functionality
-echo "✅ Starting full application..."
-exec uvicorn src.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 30
+# Start with simple app that we know works
+echo "✅ Starting simple application..."
+exec uvicorn src.simple_main:app --host 0.0.0.0 --port $PORT
