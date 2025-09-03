@@ -38,7 +38,33 @@ interface RoleBasedDashboardProps {
 export default function RoleBasedDashboard({ user, audits, loading, logout }: RoleBasedDashboardProps) {
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const permissions = getUserPermissions(user.role as UserRole)
+  
+  // Add null check for user
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  const permissions = getUserPermissions((user?.role as UserRole) || UserRole.USER)
+  
+  // Ensure user has all required properties with defaults
+  const safeUser = {
+    id: user.id || '',
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    email: user.email || '',
+    createdAt: user.createdAt || new Date().toISOString(),
+    plan: user.plan || 'free' as const,
+    auditsUsed: user.auditsUsed || 0,
+    auditsLimit: user.auditsLimit || 5,
+    role: user.role || 'user' as const
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -332,18 +358,18 @@ export default function RoleBasedDashboard({ user, audits, loading, logout }: Ro
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(user.plan)}`}>
-              {getRoleIcon(user.plan)}
-              <span className="ml-2 capitalize">{user.plan} Plan</span>
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(safeUser.plan)}`}>
+              {getRoleIcon(safeUser.plan)}
+              <span className="ml-2 capitalize">{safeUser.plan} Plan</span>
             </div>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Current Plan</h3>
           <p className="text-gray-600 text-sm mb-4">
-            {user.plan === 'free' && 'You have access to basic SEO audits'}
-            {user.plan === 'pro' && 'You have access to advanced features and unlimited audits'}
-            {user.plan === 'enterprise' && 'You have access to all features and priority support'}
+            {safeUser.plan === 'free' && 'You have access to basic SEO audits'}
+            {safeUser.plan === 'pro' && 'You have access to advanced features and unlimited audits'}
+            {safeUser.plan === 'enterprise' && 'You have access to all features and priority support'}
           </p>
-          {user.plan === 'free' && (
+          {safeUser.plan === 'free' && (
             <Link
               href="/pricing"
               className="inline-flex items-center text-primary-600 hover:text-primary-700 text-sm font-medium"
@@ -379,12 +405,12 @@ export default function RoleBasedDashboard({ user, audits, loading, logout }: Ro
           <div className="flex items-center justify-between mb-4">
             <Calendar className="h-8 w-8 text-primary-600" />
             <span className="text-2xl font-bold text-gray-900">
-              {Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
+              {Math.floor((Date.now() - new Date(safeUser.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
             </span>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Days Active</h3>
           <p className="text-gray-600 text-sm">
-            Member since {new Date(user.createdAt).toLocaleDateString()}
+            Member since {new Date(safeUser.createdAt).toLocaleDateString()}
           </p>
         </div>
       </div>
@@ -492,7 +518,7 @@ export default function RoleBasedDashboard({ user, audits, loading, logout }: Ro
   )
 
   const renderDashboard = () => {
-    switch (user.role) {
+    switch (safeUser.role) {
       case 'super_admin':
         return renderSuperAdminDashboard()
       case 'admin':
@@ -523,17 +549,17 @@ export default function RoleBasedDashboard({ user, audits, loading, logout }: Ro
                 >
                   <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                     <span className="text-sm font-medium text-primary-600">
-                      {user.firstName?.charAt(0)}
+                      {safeUser.firstName?.charAt(0)}
                     </span>
                   </div>
                   <div className="text-left">
                     <span className="text-sm font-medium">
-                      {user.firstName} {user.lastName}
+                      {safeUser.firstName} {safeUser.lastName}
                     </span>
                     <div className="flex items-center space-x-1">
-                      {getRoleIcon(user.role)}
+                      {getRoleIcon(safeUser.role)}
                       <span className="text-xs text-gray-500">
-                        {ROLE_DISPLAY_NAMES[user.role as UserRole]}
+                        {ROLE_DISPLAY_NAMES[safeUser.role as UserRole]}
                       </span>
                     </div>
                   </div>
@@ -593,10 +619,10 @@ export default function RoleBasedDashboard({ user, audits, loading, logout }: Ro
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user.firstName}! 👋
+            Welcome back, {safeUser.firstName}! 👋
           </h1>
           <p className="text-gray-600">
-            Here's your {ROLE_DISPLAY_NAMES[user.role as UserRole]} dashboard overview
+            Here's your {ROLE_DISPLAY_NAMES[safeUser.role as UserRole]} dashboard overview
           </p>
         </div>
 
