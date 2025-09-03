@@ -1,0 +1,51 @@
+# Production requirements for RIVISO SEO Audit API
+# Install with: pip install -r requirements.txt
+
+# Core FastAPI dependencies
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Database
+sqlalchemy>=2.0.23
+alembic>=1.12.1
+psycopg2-binary>=2.9.9
+
+# HTTP client
+httpx>=0.25.2
+
+# HTML parsing
+beautifulsoup4>=4.12.2
+lxml>=4.9.3
+
+# Configuration
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# Logging
+structlog>=23.2.0
+
+# Monitoring (optional)
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-instrumentation-fastapi>=0.42b0
+opentelemetry-instrumentation-sqlalchemy>=0.42b0
+opentelemetry-instrumentation-httpx>=0.42b0
+
+# Error tracking (optional)
+sentry-sdk[fastapi]>=1.38.0
+
+# Production server
+gunicorn>=21.2.0
+
+# Development dependencies (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+ruff>=0.1.0

@@ -1,0 +1,104 @@
+2025-09-03T07:08:21.421227Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("production-config.env")}
+2025-09-03T07:08:21.423549Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:08:21.604695Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("production-config.env")}
+2025-09-03T07:08:21.604703Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:08:43.704857Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy.sh")}
+2025-09-03T07:08:43.704877Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:08:43.804754Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy.sh")}
+2025-09-03T07:08:43.804762Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:09:17.805585Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-setup.md")}
+2025-09-03T07:09:17.805635Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:09:17.904421Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-setup.md")}
+2025-09-03T07:09:17.904429Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:09:27.904917Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/next.config.mjs")}
+2025-09-03T07:09:27.905228Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-03T07:09:36.303849Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/requirements.txt")}
+2025-09-03T07:09:36.303889Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:09:36.404162Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/requirements.txt")}
+2025-09-03T07:09:36.404170Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:09:48.204511Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/gunicorn.conf.py")}
+2025-09-03T07:09:48.204532Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:10:33.106243Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-deploy.sh")}
+2025-09-03T07:10:33.106619Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:10:33.204655Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-deploy.sh")}
+2025-09-03T07:10:33.204663Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:10:39.904193Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-deploy.sh")}
+2025-09-03T07:10:39.904201Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:10:47.405264Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-deploy")}
+2025-09-03T07:10:47.405299Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:10:48.104360Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("_tmp_44920_235fb8785ec26303fd7f8f0e13c85111"), AnchoredSystemPathBuf("")}
+2025-09-03T07:10:48.104370Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:42.313445Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("production-config.env")}
+2025-09-03T07:16:42.314530Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:45.904994Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy.sh")}
+2025-09-03T07:16:45.905003Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:47.705388Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-setup.md")}
+2025-09-03T07:16:47.705399Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:49.504987Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/next.config.mjs")}
+2025-09-03T07:16:49.505224Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-03T07:16:49.505426Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-03T07:16:50.405112Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/requirements.txt")}
+2025-09-03T07:16:50.405120Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:51.405036Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/gunicorn.conf.py")}
+2025-09-03T07:16:51.405045Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:52.304618Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-deploy.sh")}
+2025-09-03T07:16:52.304631Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:16:54.204167Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
+2025-09-03T07:16:54.204187Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-03T07:16:54.204254Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-03T07:19:17.008564Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".gitignore")}
+2025-09-03T07:19:17.008583Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:19:46.605846Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("README.md")}
+2025-09-03T07:19:46.605857Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:21.006648Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".gitignore")}
+2025-09-03T07:20:21.006668Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:22.605164Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("README.md")}
+2025-09-03T07:20:22.605171Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:25.204335Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("README.md")}
+2025-09-03T07:20:25.204351Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:25.605517Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("github-setup.md")}
+2025-09-03T07:20:25.605525Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:25.705054Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("github-setup.md")}
+2025-09-03T07:20:25.705062Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:53.104783Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-to-hostinger.sh")}
+2025-09-03T07:20:53.104804Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:20:53.204331Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-to-hostinger.sh")}
+2025-09-03T07:20:53.204339Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:21:00.006418Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-to-hostinger.sh")}
+2025-09-03T07:21:00.006429Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:21:09.004473Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("hostinger-deploy")}
+2025-09-03T07:21:09.004489Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:21:09.705090Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("_tmp_51275_e5417d86ac0b888118ce6c8d064e48c8"), AnchoredSystemPathBuf("")}
+2025-09-03T07:21:09.705098Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:21:42.105912Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("github-setup.md")}
+2025-09-03T07:21:42.105942Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:21:43.808087Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-to-hostinger.sh")}
+2025-09-03T07:21:43.808109Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:21:45.105263Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-to-hostinger.sh")}
+2025-09-03T07:21:45.105283Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:47:40.578693Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("README.md"), AnchoredSystemPathBuf("deploy-to-hostinger.sh")}
+2025-09-03T07:47:40.579840Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:48:30.069051Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("vercel.json")}
+2025-09-03T07:48:30.069099Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:48:30.169340Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("vercel.json")}
+2025-09-03T07:48:30.169350Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:48:40.668610Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("railway.json")}
+2025-09-03T07:48:40.668629Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:20.770380Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("free-deployment-guide.md")}
+2025-09-03T07:49:20.770414Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:24.570534Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/Procfile")}
+2025-09-03T07:49:24.570544Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:24.669359Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/Procfile")}
+2025-09-03T07:49:24.669367Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:29.670069Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/runtime.txt")}
+2025-09-03T07:49:29.670078Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:29.769593Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/runtime.txt")}
+2025-09-03T07:49:29.769601Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:43.970709Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-free.sh")}
+2025-09-03T07:49:43.970748Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:44.069431Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-free.sh")}
+2025-09-03T07:49:44.069440Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:49:51.970575Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-free.sh")}
+2025-09-03T07:49:51.970586Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-03T07:50:12.070268Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("deploy-free.sh"), AnchoredSystemPathBuf("free-deployment-guide.md"), AnchoredSystemPathBuf("vercel.json"), AnchoredSystemPathBuf("services/audit-api/runtime.txt"), AnchoredSystemPathBuf("services/audit-api/Procfile"), AnchoredSystemPathBuf("railway.json")}
+2025-09-03T07:50:12.070347Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
