@@ -23,9 +23,9 @@ class ToolDetector:
         return {
             # Analytics & Tracking
             "google_analytics": {
-                "name": "Google Analytics",
+                "name": "Google Analytics GA4",
                 "category": "Analytics",
-                "description": "Web analytics service by Google",
+                "description": "Web analytics service by Google (GA4)",
                 "confidence": 0,
                 "patterns": {
                     "scripts": [
@@ -33,23 +33,29 @@ class ToolDetector:
                         r"google-analytics\.com/analytics\.js",
                         r"google-analytics\.com/ga\.js",
                         r"googletagmanager\.com/gtag/js",
-                        r"google-analytics\.com/gtag/js"
+                        r"google-analytics\.com/gtag/js",
+                        r"googletagmanager\.com/gtag/js",
+                        r"www\.googletagmanager\.com/gtag/js"
                     ],
                     "js_objects": [
                         r"window\.dataLayer",
                         r"window\.gtag",
                         r"window\.ga",
                         r"window\._gaq",
-                        r"window\.google_tag_manager"
+                        r"window\.google_tag_manager",
+                        r"gtag\(",
+                        r"ga\("
                     ],
                     "cookies": [
                         r"_ga[^=]*=",
                         r"_gid[^=]*=",
                         r"_gat[^=]*=",
-                        r"_gcl_[^=]*="
+                        r"_gcl_[^=]*=",
+                        r"_ga_[^=]*="
                     ],
                     "meta_tags": [
-                        r"google-site-verification"
+                        r"google-site-verification",
+                        r"google-analytics"
                     ]
                 }
             },
@@ -276,16 +282,195 @@ class ToolDetector:
                 "patterns": {
                     "meta_tags": [
                         r"generator.*wordpress",
-                        r"wp-content"
+                        r"wp-content",
+                        r"WordPress"
                     ],
                     "scripts": [
                         r"wp-content/themes/",
                         r"wp-includes/js/",
-                        r"wp-content/plugins/"
+                        r"wp-content/plugins/",
+                        r"wp-content/themes/.*\.js",
+                        r"wp-includes/js/.*\.js"
                     ],
                     "cookies": [
                         r"wordpress_[^=]*=",
-                        r"wp-[^=]*="
+                        r"wp-[^=]*=",
+                        r"wordpress_logged_in"
+                    ],
+                    "html_content": [
+                        r"wp-content",
+                        r"wp-includes",
+                        r"WordPress"
+                    ]
+                }
+            },
+            "elementor": {
+                "name": "Elementor",
+                "category": "Page Builder",
+                "description": "WordPress page builder plugin",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"elementor.*\.js",
+                        r"wp-content/plugins/elementor/",
+                        r"elementor/assets/",
+                        r"elementor-frontend"
+                    ],
+                    "css": [
+                        r"elementor.*\.css",
+                        r"wp-content/plugins/elementor/",
+                        r"elementor/assets/css/"
+                    ],
+                    "html_content": [
+                        r"elementor",
+                        r"elementor-section",
+                        r"elementor-widget"
+                    ],
+                    "meta_tags": [
+                        r"elementor"
+                    ]
+                }
+            },
+            "yoast_seo": {
+                "name": "Yoast SEO",
+                "category": "SEO",
+                "description": "WordPress SEO plugin",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"yoast.*\.js",
+                        r"wp-content/plugins/wordpress-seo/",
+                        r"yoast-seo"
+                    ],
+                    "meta_tags": [
+                        r"yoast",
+                        r"yoast-seo",
+                        r"yoast_wpseo"
+                    ],
+                    "html_content": [
+                        r"yoast",
+                        r"wpseo",
+                        r"yoast-seo"
+                    ]
+                }
+            },
+            "lenis": {
+                "name": "Lenis",
+                "category": "JavaScript Library",
+                "description": "Smooth scrolling library",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"lenis.*\.js",
+                        r"cdn\.jsdelivr\.net/npm/@studio-freight/lenis",
+                        r"lenis"
+                    ],
+                    "js_objects": [
+                        r"window\.lenis",
+                        r"new Lenis",
+                        r"Lenis"
+                    ]
+                }
+            },
+            "jquery_ui": {
+                "name": "jQuery UI",
+                "category": "JavaScript Library",
+                "description": "jQuery user interface library",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"jquery-ui.*\.js",
+                        r"jquery\.ui.*\.js",
+                        r"cdn\.jsdelivr\.net/npm/jquery-ui",
+                        r"jqueryui"
+                    ],
+                    "css": [
+                        r"jquery-ui.*\.css",
+                        r"jquery\.ui.*\.css"
+                    ],
+                    "js_objects": [
+                        r"jQuery\.ui",
+                        r"\$\.ui"
+                    ]
+                }
+            },
+            "core_js": {
+                "name": "core-js",
+                "category": "JavaScript Library",
+                "description": "JavaScript polyfill library",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"core-js.*\.js",
+                        r"cdn\.jsdelivr\.net/npm/core-js",
+                        r"core-js/"
+                    ],
+                    "js_objects": [
+                        r"core-js",
+                        r"core_js"
+                    ]
+                }
+            },
+            "swiper": {
+                "name": "Swiper",
+                "category": "JavaScript Library",
+                "description": "Modern touch slider library",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"swiper.*\.js",
+                        r"cdn\.jsdelivr\.net/npm/swiper",
+                        r"swiper/"
+                    ],
+                    "css": [
+                        r"swiper.*\.css",
+                        r"swiper/css/"
+                    ],
+                    "js_objects": [
+                        r"new Swiper",
+                        r"window\.Swiper",
+                        r"Swiper"
+                    ]
+                }
+            },
+            "owl_carousel": {
+                "name": "OWL Carousel",
+                "category": "JavaScript Library",
+                "description": "Touch enabled jQuery carousel plugin",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"owl\.carousel.*\.js",
+                        r"owl-carousel.*\.js",
+                        r"cdn\.jsdelivr\.net/npm/owl\.carousel"
+                    ],
+                    "css": [
+                        r"owl\.carousel.*\.css",
+                        r"owl-carousel.*\.css"
+                    ],
+                    "js_objects": [
+                        r"owlCarousel",
+                        r"\$\.fn\.owlCarousel"
+                    ]
+                }
+            },
+            "google_fonts": {
+                "name": "Google Fonts",
+                "category": "Font Script",
+                "description": "Google Font API for web fonts",
+                "confidence": 0,
+                "patterns": {
+                    "scripts": [
+                        r"fonts\.googleapis\.com",
+                        r"fonts\.gstatic\.com"
+                    ],
+                    "css": [
+                        r"fonts\.googleapis\.com",
+                        r"fonts\.gstatic\.com"
+                    ],
+                    "html_content": [
+                        r"fonts\.googleapis\.com",
+                        r"Google Fonts"
                     ]
                 }
             },
@@ -524,6 +709,9 @@ class ToolDetector:
         # Extract JavaScript objects (this would need to be done via browser execution)
         js_objects = self._extract_js_objects(html_content)
         
+        # Extract CSS links
+        css_links = self._extract_css_links(soup)
+        
         # Check each tool pattern
         for tool_id, tool_config in self.tool_patterns.items():
             confidence = 0
@@ -535,6 +723,14 @@ class ToolDetector:
                     if re.search(pattern, script, re.IGNORECASE):
                         confidence += 30
                         evidence.append(f"Script: {script[:100]}...")
+                        break
+            
+            # Check CSS patterns
+            for css in css_links:
+                for pattern in tool_config["patterns"].get("css", []):
+                    if re.search(pattern, css, re.IGNORECASE):
+                        confidence += 25
+                        evidence.append(f"CSS: {css[:100]}...")
                         break
             
             # Check meta tag patterns
@@ -560,6 +756,13 @@ class ToolDetector:
                         confidence += 25
                         evidence.append(f"JS Object: {obj}")
                         break
+            
+            # Check HTML content patterns
+            for pattern in tool_config["patterns"].get("html_content", []):
+                if re.search(pattern, html_content, re.IGNORECASE):
+                    confidence += 20
+                    evidence.append(f"HTML Content: {pattern}")
+                    break
             
             # Only include tools with some confidence
             if confidence > 0:
@@ -653,17 +856,38 @@ class ToolDetector:
         
         return list(set(js_objects))  # Remove duplicates
     
+    def _extract_css_links(self, soup: BeautifulSoup) -> List[str]:
+        """Extract all CSS links."""
+        css_links = []
+        
+        # External CSS files
+        for link in soup.find_all("link", rel="stylesheet"):
+            href = link.get("href", "")
+            if href:
+                css_links.append(href)
+        
+        # Inline CSS in style tags
+        for style in soup.find_all("style"):
+            if style.string:
+                css_links.append(style.string[:500])  # First 500 chars
+        
+        return css_links
+    
     def _get_detection_methods(self, tool_config: Dict[str, Any], evidence: List[str]) -> List[str]:
         """Get the methods used to detect the tool."""
         methods = []
         
         if any("Script:" in e for e in evidence):
             methods.append("Script Analysis")
+        if any("CSS:" in e for e in evidence):
+            methods.append("CSS Analysis")
         if any("Meta tag:" in e for e in evidence):
             methods.append("Meta Tag Analysis")
         if any("Cookie:" in e for e in evidence):
             methods.append("Cookie Analysis")
         if any("JS Object:" in e for e in evidence):
             methods.append("JavaScript Object Analysis")
+        if any("HTML Content:" in e for e in evidence):
+            methods.append("HTML Content Analysis")
         
         return methods
