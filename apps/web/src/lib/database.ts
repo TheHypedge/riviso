@@ -9,8 +9,9 @@ try {
   // Create database file in the project root
   const dbPath = path.join(process.cwd(), 'seo_audit.db')
   db = new Database(dbPath)
+  console.log('✅ Database initialized successfully')
 } catch (error) {
-  console.log('better-sqlite3 not available, using fallback mode')
+  console.log('❌ better-sqlite3 not available, using fallback mode:', error.message)
   // Fallback mode for build environments
   db = null
 }
