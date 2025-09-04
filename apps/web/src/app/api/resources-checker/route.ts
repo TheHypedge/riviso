@@ -419,9 +419,9 @@ async function detectTools(url: string) {
 
     // Analyze each tool pattern
     for (const [toolName, toolData] of Object.entries(toolPatterns)) {
-      const evidence = []
+      const evidence: string[] = []
       let matchCount = 0
-      const detectionMethods = []
+      const detectionMethods: string[] = []
 
       // Check each pattern for this tool
       for (const patternInfo of toolData.patterns) {
