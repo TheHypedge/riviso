@@ -323,6 +323,46 @@ async def get_performance_metrics(
             detail=f"Failed to get performance metrics: {str(e)}"
         )
 
+@router.post("/detect-tools")
+async def detect_tools(request: Dict[str, Any]):
+    """Detect tools and platforms used by a website."""
+    from audit.tool_detector import ToolDetector
+    from audit.fetcher import Fetcher
+    from audit.parser import Parser
+    
+    try:
+        url = request.get("url")
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        # Fetch website content
+        fetcher = Fetcher()
+        content = await fetcher.fetch_url(url)
+        if not content:
+            raise HTTPException(status_code=400, detail="Failed to fetch website content")
+        
+        # Parse content
+        parser = Parser()
+        parsed_content = await parser.parse_content(content, url)
+        
+        # Detect tools
+        detector = ToolDetector()
+        detected_tools = detector.detect_tools(parsed_content)
+        
+        return {
+            "status": "success",
+            "tools_detected": len(detected_tools),
+            "tools": detected_tools,
+            "url": url
+        }
+        
+    except Exception as e:
+        logger.error("Tool detection failed", error=str(e), url=request.get("url"))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Tool detection failed: {str(e)}"
+        )
+
 @router.get("/test-tool-detection")
 async def test_tool_detection():
     """Test endpoint to verify tool detection is working."""
