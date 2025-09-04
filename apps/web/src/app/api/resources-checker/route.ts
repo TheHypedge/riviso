@@ -570,6 +570,132 @@ const toolPatterns = {
     category: 'SEO',
     description: 'Open Graph social media protocol',
     confidence: 90
+  },
+
+  // Additional tools from Wappalyzer screenshots
+  'Lenis': {
+    patterns: [
+      { type: 'script', pattern: /lenis/ },
+      { type: 'script', pattern: /lenis\.js/ }
+    ],
+    category: 'JavaScript Library',
+    description: 'Lenis smooth scrolling library',
+    confidence: 90
+  },
+  'jQuery UI': {
+    patterns: [
+      { type: 'script', pattern: /jquery-ui/ },
+      { type: 'script', pattern: /jquery\.ui/ },
+      { type: 'link', pattern: /jquery-ui/ }
+    ],
+    category: 'JavaScript Library',
+    description: 'jQuery UI user interface library',
+    confidence: 90
+  },
+  'Font Awesome': {
+    patterns: [
+      { type: 'script', pattern: /fontawesome/ },
+      { type: 'script', pattern: /font-awesome/ },
+      { type: 'link', pattern: /fontawesome/ },
+      { type: 'link', pattern: /font-awesome/ }
+    ],
+    category: 'Font Script',
+    description: 'Font Awesome icon font library',
+    confidence: 90
+  },
+  'Google Font API': {
+    patterns: [
+      { type: 'link', pattern: /fonts\.googleapis\.com/ },
+      { type: 'script', pattern: /fonts\.googleapis\.com/ }
+    ],
+    category: 'Font Script',
+    description: 'Google Fonts API service',
+    confidence: 90
+  },
+  'RSS': {
+    patterns: [
+      { type: 'link', pattern: /type="application\/rss\+xml"/ },
+      { type: 'link', pattern: /\.rss/ },
+      { type: 'link', pattern: /\.xml/ }
+    ],
+    category: 'Miscellaneous',
+    description: 'RSS feed syndication',
+    confidence: 85
+  },
+  'HSTS': {
+    patterns: [
+      { type: 'header', pattern: /strict-transport-security/i },
+      { type: 'header', pattern: /hsts/i }
+    ],
+    category: 'Security',
+    description: 'HTTP Strict Transport Security',
+    confidence: 85
+  },
+  'Unpkg': {
+    patterns: [
+      { type: 'script', pattern: /unpkg\.com/ },
+      { type: 'link', pattern: /unpkg\.com/ }
+    ],
+    category: 'CDN',
+    description: 'Unpkg CDN for npm packages',
+    confidence: 90
+  },
+  'cdnjs': {
+    patterns: [
+      { type: 'script', pattern: /cdnjs\.cloudflare\.com/ },
+      { type: 'link', pattern: /cdnjs\.cloudflare\.com/ }
+    ],
+    category: 'CDN',
+    description: 'cdnjs JavaScript library CDN',
+    confidence: 90
+  },
+  'particles.js': {
+    patterns: [
+      { type: 'script', pattern: /particles\.js/ },
+      { type: 'script', pattern: /particles/ }
+    ],
+    category: 'JavaScript Graphics',
+    description: 'particles.js interactive particle effects',
+    confidence: 90
+  },
+  'Svelte': {
+    patterns: [
+      { type: 'script', pattern: /svelte/ },
+      { type: 'script', pattern: /svelte\.js/ }
+    ],
+    category: 'JavaScript Framework',
+    description: 'Svelte component framework',
+    confidence: 90
+  },
+  'React': {
+    patterns: [
+      { type: 'script', pattern: /react/ },
+      { type: 'script', pattern: /react\.js/ },
+      { type: 'script', pattern: /React\./ },
+      { type: 'script', pattern: /_reactInternalInstance/ },
+      { type: 'script', pattern: /react-dom/ }
+    ],
+    category: 'JavaScript Framework',
+    description: 'React JavaScript library for building user interfaces',
+    confidence: 90
+  },
+  'Semrush': {
+    patterns: [
+      { type: 'script', pattern: /semrush/ },
+      { type: 'script', pattern: /semrush\.com/ }
+    ],
+    category: 'SEO',
+    description: 'Semrush SEO and marketing platform',
+    confidence: 85
+  },
+  'Prompt For Blogs': {
+    patterns: [
+      { type: 'script', pattern: /prompt.*blog/ },
+      { type: 'script', pattern: /blog.*prompt/ }
+    ],
+    category: 'Content',
+    description: 'Prompt For Blogs content generation tool',
+    confidence: 80
   }
 }
 

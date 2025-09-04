@@ -2381,28 +2381,41 @@ export default function AuditDetailPage() {
             {audit.detected_tools && audit.detected_tools.length > 0 ? (
               <div>
                 {/* Summary Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{audit.detected_tools.length}</div>
-                    <div className="text-sm text-gray-600">Total Tools</div>
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">{audit.detected_tools.length}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Total Tools</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">
                       {audit.detected_tools.filter((tool: any) => tool.category === 'Analytics').length}
                     </div>
-                    <div className="text-sm text-gray-600">Analytics</div>
+                    <div className="text-xs md:text-sm text-gray-600">Analytics</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">
                       {audit.detected_tools.filter((tool: any) => tool.category === 'CMS').length}
                     </div>
-                    <div className="text-sm text-gray-600">CMS</div>
+                    <div className="text-xs md:text-sm text-gray-600">CMS</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">
-                      {audit.detected_tools.filter((tool: any) => tool.category === 'JavaScript Framework').length}
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">
+                      {audit.detected_tools.filter((tool: any) => tool.category === 'JavaScript Framework').length + 
+                       audit.detected_tools.filter((tool: any) => tool.category === 'JavaScript Library').length}
                     </div>
-                    <div className="text-sm text-gray-600">Frameworks</div>
+                    <div className="text-xs md:text-sm text-gray-600">JS Tools</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">
+                      {audit.detected_tools.filter((tool: any) => tool.category === 'E-commerce').length}
+                    </div>
+                    <div className="text-xs md:text-sm text-gray-600">E-commerce</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">
+                      {audit.detected_tools.filter((tool: any) => tool.category === 'CDN').length}
+                    </div>
+                    <div className="text-xs md:text-sm text-gray-600">CDN</div>
                   </div>
                 </div>
 
@@ -2422,6 +2435,21 @@ export default function AuditDetailPage() {
                             tool.category === 'Tag Management' ? 'bg-indigo-100 text-indigo-800' :
                             tool.category === 'Font Script' ? 'bg-teal-100 text-teal-800' :
                             tool.category === 'Advertising' ? 'bg-red-100 text-red-800' :
+                            tool.category === 'JavaScript Library' ? 'bg-cyan-100 text-cyan-800' :
+                            tool.category === 'CDN' ? 'bg-emerald-100 text-emerald-800' :
+                            tool.category === 'Hosting' ? 'bg-violet-100 text-violet-800' :
+                            tool.category === 'Web Server' ? 'bg-amber-100 text-amber-800' :
+                            tool.category === 'Database' ? 'bg-rose-100 text-rose-800' :
+                            tool.category === 'Programming Language' ? 'bg-sky-100 text-sky-800' :
+                            tool.category === 'Protocol' ? 'bg-lime-100 text-lime-800' :
+                            tool.category === 'Security' ? 'bg-red-100 text-red-800' :
+                            tool.category === 'Miscellaneous' ? 'bg-slate-100 text-slate-800' :
+                            tool.category === 'Performance' ? 'bg-fuchsia-100 text-fuchsia-800' :
+                            tool.category === 'Live Chat' ? 'bg-green-100 text-green-800' :
+                            tool.category === 'Reviews' ? 'bg-yellow-100 text-yellow-800' :
+                            tool.category === 'A/B Testing' ? 'bg-purple-100 text-purple-800' :
+                            tool.category === 'JavaScript Graphics' ? 'bg-pink-100 text-pink-800' :
+                            tool.category === 'Content' ? 'bg-indigo-100 text-indigo-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
                             {tool.category === 'Analytics' ? <BarChart3 className="h-5 w-5" /> :
@@ -2433,6 +2461,21 @@ export default function AuditDetailPage() {
                              tool.category === 'Tag Management' ? <Tag className="h-5 w-5" /> :
                              tool.category === 'Font Script' ? <Zap className="h-5 w-5" /> :
                              tool.category === 'Advertising' ? <BarChart3 className="h-5 w-5" /> :
+                             tool.category === 'JavaScript Library' ? <Code className="h-5 w-5" /> :
+                             tool.category === 'CDN' ? <Globe className="h-5 w-5" /> :
+                             tool.category === 'Hosting' ? <Database className="h-5 w-5" /> :
+                             tool.category === 'Web Server' ? <Settings className="h-5 w-5" /> :
+                             tool.category === 'Database' ? <Database className="h-5 w-5" /> :
+                             tool.category === 'Programming Language' ? <Code className="h-5 w-5" /> :
+                             tool.category === 'Protocol' ? <Globe className="h-5 w-5" /> :
+                             tool.category === 'Security' ? <Shield className="h-5 w-5" /> :
+                             tool.category === 'Miscellaneous' ? <Settings className="h-5 w-5" /> :
+                             tool.category === 'Performance' ? <Zap className="h-5 w-5" /> :
+                             tool.category === 'Live Chat' ? <Users className="h-5 w-5" /> :
+                             tool.category === 'Reviews' ? <Star className="h-5 w-5" /> :
+                             tool.category === 'A/B Testing' ? <Target className="h-5 w-5" /> :
+                             tool.category === 'JavaScript Graphics' ? <Code className="h-5 w-5" /> :
+                             tool.category === 'Content' ? <FileText className="h-5 w-5" /> :
                              <Settings className="h-5 w-5" />}
                           </div>
                           <div>
