@@ -54,6 +54,36 @@ if (db) {
   `)
 }
 
+// In-memory user store for production (when SQLite is not available)
+const inMemoryUsers = new Map<string, any>()
+
+// Initialize SUPER_ADMIN account in memory
+const initializeSuperAdmin = () => {
+  const bcrypt = require('bcryptjs')
+  const hashedPassword = bcrypt.hashSync('Admin@2025', 12)
+  
+  inMemoryUsers.set('iamakhileshsoni@gmail.com', {
+    id: '1',
+    firstName: 'Akhilesh',
+    lastName: 'Soni',
+    email: 'iamakhileshsoni@gmail.com',
+    password: hashedPassword,
+    role: 'super_admin',
+    plan: 'enterprise',
+    auditsUsed: 0,
+    auditsLimit: -1,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+  })
+  
+  console.log('✅ SUPER_ADMIN account initialized in memory')
+}
+
+// Initialize SUPER_ADMIN if not already done
+if (!inMemoryUsers.has('iamakhileshsoni@gmail.com')) {
+  initializeSuperAdmin()
+}
+
 // Prepared statements for better performance (with fallbacks)
 export const userQueries = db ? {
   create: db.prepare(`
@@ -82,12 +112,50 @@ export const userQueries = db ? {
     UPDATE users SET auditsUsed = ? WHERE id = ?
   `)
 } : {
-  create: { run: () => {} },
-  findByEmail: { get: () => null },
-  findById: { get: () => null },
-  updateLastLogin: { run: () => {} },
-  getAll: { all: () => [] },
-  updateAuditsUsed: { run: () => {} }
+  // Fallback to in-memory store
+  create: { 
+    run: (id: string, firstName: string, lastName: string, email: string, password: string, role: string, plan: string, auditsUsed: number, auditsLimit: number, createdAt: string) => {
+      inMemoryUsers.set(email, {
+        id, firstName, lastName, email, password, role, plan, auditsUsed, auditsLimit, createdAt, lastLogin: null
+      })
+    }
+  },
+  findByEmail: { 
+    get: (email: string) => inMemoryUsers.get(email) || null
+  },
+  findById: { 
+    get: (id: string) => {
+      for (const user of inMemoryUsers.values()) {
+        if (user.id === id) return user
+      }
+      return null
+    }
+  },
+  updateLastLogin: { 
+    run: (lastLogin: string, id: string) => {
+      for (const [email, user] of inMemoryUsers.entries()) {
+        if (user.id === id) {
+          user.lastLogin = lastLogin
+          inMemoryUsers.set(email, user)
+          break
+        }
+      }
+    }
+  },
+  getAll: { 
+    all: () => Array.from(inMemoryUsers.values()).map(({ password, ...user }) => user)
+  },
+  updateAuditsUsed: { 
+    run: (auditsUsed: number, id: string) => {
+      for (const [email, user] of inMemoryUsers.entries()) {
+        if (user.id === id) {
+          user.auditsUsed = auditsUsed
+          inMemoryUsers.set(email, user)
+          break
+        }
+      }
+    }
+  }
 }
 
 export const auditQueries = db ? {

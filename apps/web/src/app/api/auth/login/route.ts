@@ -33,39 +33,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Ensure SUPER_ADMIN account exists (for production environments)
-    if (email === 'iamakhileshsoni@gmail.com') {
-      console.log('Checking for SUPER_ADMIN account...')
-      const existingAdmin = userQueries.findByEmail.get(email)
-      console.log('Existing admin check:', { existingAdmin: !!existingAdmin })
-      
-      if (!existingAdmin) {
-        console.log('Creating SUPER_ADMIN account...')
-        try {
-          const hashedPassword = await bcrypt.hash('Admin@2025', 12)
-          console.log('Password hashed successfully')
-          
-          userQueries.create.run(
-            '1', // id
-            'Akhilesh', // firstName
-            'Soni', // lastName
-            'iamakhileshsoni@gmail.com', // email
-            hashedPassword, // password
-            'super_admin', // role
-            'enterprise', // plan
-            0, // auditsUsed
-            -1, // auditsLimit (unlimited)
-            new Date().toISOString() // createdAt
-          )
-          console.log('✅ SUPER_ADMIN account created during login: iamakhileshsoni@gmail.com')
-        } catch (createError) {
-          console.error('Error creating SUPER_ADMIN account:', createError)
-        }
-      } else {
-        console.log('SUPER_ADMIN account already exists')
-      }
-    }
-
     // Find user in database
     const user = userQueries.findByEmail.get(email) as any
     console.log('Login attempt for:', email, 'User found:', !!user)

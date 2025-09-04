@@ -35,6 +35,18 @@ export async function GET(request: NextRequest) {
       console.error('Database query error:', queryError)
     }
     
+    // Test password verification
+    let passwordTest = false
+    if (testUser && testUser.password) {
+      try {
+        const bcrypt = require('bcryptjs')
+        passwordTest = bcrypt.compareSync('Admin@2025', testUser.password)
+        console.log('Password test result:', passwordTest)
+      } catch (pwdError) {
+        console.error('Password test error:', pwdError)
+      }
+    }
+    
     return NextResponse.json({
       message: 'Database test completed',
       databaseStatus: dbStatus,
@@ -42,8 +54,10 @@ export async function GET(request: NextRequest) {
       testUser: testUser ? {
         id: testUser.id,
         email: testUser.email,
-        role: testUser.role
+        role: testUser.role,
+        hasPassword: !!testUser.password
       } : null,
+      passwordTest,
       timestamp: new Date().toISOString()
     })
     
