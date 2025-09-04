@@ -11,6 +11,6 @@ echo "Port: $PORT"
 echo "Environment: $ENVIRONMENT"
 echo "Database URL: $DATABASE_URL"
 
-# Start with main application
-echo "✅ Starting main application..."
-exec uvicorn src.main:app --host 0.0.0.0 --port $PORT
+# Start with simple application (more reliable for deployment)
+echo "✅ Starting simple application..."
+exec uvicorn src.simple_main:app --host 0.0.0.0 --port $PORT
