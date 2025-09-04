@@ -8,8 +8,8 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: 'iamakhileshsoni@gmail.com',
+    password: 'Admin@2025'
   })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -22,8 +22,11 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
+    console.log('Form submitted with:', { email: formData.email, password: formData.password ? '***' : 'missing' })
+
     try {
       const success = await login(formData.email, formData.password)
+      console.log('Login result:', success)
       
       if (success) {
         // Redirect to dashboard after successful login
@@ -32,6 +35,7 @@ export default function LoginPage() {
         setError('Invalid email or password')
       }
     } catch (error) {
+      console.error('Login error:', error)
       setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
@@ -39,10 +43,12 @@ export default function LoginPage() {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
+    const newFormData = {
       ...formData,
       [e.target.name]: e.target.value
-    })
+    }
+    console.log('Form data updated:', newFormData)
+    setFormData(newFormData)
   }
 
   return (

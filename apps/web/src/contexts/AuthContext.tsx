@@ -58,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log('AuthContext login called with:', { email, password: password ? '***' : 'missing' })
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -66,7 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
+      console.log('Login response status:', response.status)
       const data = await response.json()
+      console.log('Login response data:', data)
 
       if (response.ok) {
         setUser(data.user)

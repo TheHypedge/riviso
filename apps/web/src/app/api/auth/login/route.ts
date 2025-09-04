@@ -6,9 +6,12 @@ import { userQueries } from '../../../../lib/database'
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
+    
+    console.log('Login attempt:', { email, password: password ? '***' : 'missing' })
 
     // Validation
     if (!email || !password) {
+      console.log('Validation failed: missing email or password')
       return NextResponse.json(
         { message: 'Email and password are required' },
         { status: 400 }
@@ -17,7 +20,10 @@ export async function POST(request: NextRequest) {
 
     // Find user in database
     const user = userQueries.findByEmail.get(email) as any
+    console.log('User found:', user ? 'Yes' : 'No', user ? { id: user.id, email: user.email } : null)
+    
     if (!user) {
+      console.log('User not found for email:', email)
       return NextResponse.json(
         { message: 'Invalid email or password' },
         { status: 401 }
@@ -26,7 +32,10 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password)
+    console.log('Password verification:', { isValidPassword, passwordLength: password.length })
+    
     if (!isValidPassword) {
+      console.log('Password verification failed')
       return NextResponse.json(
         { message: 'Invalid email or password' },
         { status: 401 }
