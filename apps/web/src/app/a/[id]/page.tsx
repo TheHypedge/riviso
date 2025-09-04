@@ -1107,7 +1107,7 @@ export default function AuditDetailPage() {
                         </div>
 
           {/* Performance Analysis Section */}
-          {audit.technical_audit && (
+          {audit.technical_audit && audit.technical_audit.device_previews && (
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 space-y-2 sm:space-y-0">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-900">Performance Analysis</h2>
@@ -1405,6 +1405,7 @@ export default function AuditDetailPage() {
               </div>
 
               {/* Performance Metrics */}
+            {audit.technical_audit && audit.technical_audit.performance_metrics && (
             <div className="mb-6 md:mb-8">
                 <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Performance Metrics</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -1497,6 +1498,7 @@ export default function AuditDetailPage() {
                     </div>
                 </div>
               </div>
+            )}
 
               {/* SEO Tests Section */}
               <div className="mb-6 md:mb-8">
