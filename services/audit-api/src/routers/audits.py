@@ -253,6 +253,58 @@ async def list_audits(
     )
 
 
+@router.get("/test-tool-detection")
+async def test_tool_detection():
+    """Test endpoint to verify tool detection is working."""
+    from audit.tool_detector import ToolDetector
+    
+    # Sample HTML content that should trigger detections
+    sample_html = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="generator" content="WordPress 6.4">
+        <script src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+        </script>
+        <style>
+            .elementor-section { margin: 0; }
+        </style>
+    </head>
+    <body>
+        <div class="elementor-section">
+            <h1>Test</h1>
+        </div>
+        <script src="/wp-content/themes/theme/style.js"></script>
+    </body>
+    </html>
+    '''
+    
+    parsed_content = {
+        'html_content': sample_html,
+        'url': 'https://test.com',
+        'headers': {'Set-Cookie': '_ga=GA1.2.123456789.1234567890'}
+    }
+    
+    try:
+        detector = ToolDetector()
+        detected_tools = detector.detect_tools(parsed_content)
+        
+        return {
+            "status": "success",
+            "tools_detected": len(detected_tools),
+            "tools": detected_tools
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "tools_detected": 0,
+            "tools": []
+        }
+
 @router.delete("/{audit_id}", status_code=204)
 async def delete_audit(
     audit_id: str,
