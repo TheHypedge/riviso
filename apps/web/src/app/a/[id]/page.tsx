@@ -31,7 +31,13 @@ import {
   FileText,
   Settings,
   Smartphone,
-  Monitor
+  Monitor,
+  Database,
+  Activity,
+  Code,
+  Layers,
+  Tag,
+  Search
 } from 'lucide-react'
 import { ScoreGauge } from '@/components/ScoreGauge'
 import { RuleTable } from '@/components/RuleTable'
@@ -2357,6 +2363,141 @@ export default function AuditDetailPage() {
             )}
           </div>
 
+        </div>
+      </section>
+
+      {/* Resources Checker Section */}
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Detected Tools & Platforms</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Discover the technologies, tools, and platforms used by this website. 
+              Get detailed insights about analytics, CMS, frameworks, and more.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            {audit.detected_tools && audit.detected_tools.length > 0 ? (
+              <div>
+                {/* Summary Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gray-900">{audit.detected_tools.length}</div>
+                    <div className="text-sm text-gray-600">Total Tools</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {audit.detected_tools.filter((tool: any) => tool.category === 'Analytics').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Analytics</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {audit.detected_tools.filter((tool: any) => tool.category === 'CMS').length}
+                    </div>
+                    <div className="text-sm text-gray-600">CMS</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-gray-900">
+                      {audit.detected_tools.filter((tool: any) => tool.category === 'JavaScript Framework').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Frameworks</div>
+                  </div>
+                </div>
+
+                {/* Tools Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {audit.detected_tools.map((tool: any, index: number) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                            tool.category === 'Analytics' ? 'bg-blue-100 text-blue-800' :
+                            tool.category === 'CMS' ? 'bg-green-100 text-green-800' :
+                            tool.category === 'E-commerce' ? 'bg-purple-100 text-purple-800' :
+                            tool.category === 'JavaScript Framework' ? 'bg-yellow-100 text-yellow-800' :
+                            tool.category === 'Page Builder' ? 'bg-pink-100 text-pink-800' :
+                            tool.category === 'SEO' ? 'bg-orange-100 text-orange-800' :
+                            tool.category === 'Tag Management' ? 'bg-indigo-100 text-indigo-800' :
+                            tool.category === 'Font Script' ? 'bg-teal-100 text-teal-800' :
+                            tool.category === 'Advertising' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {tool.category === 'Analytics' ? <BarChart3 className="h-5 w-5" /> :
+                             tool.category === 'CMS' ? <Database className="h-5 w-5" /> :
+                             tool.category === 'E-commerce' ? <Activity className="h-5 w-5" /> :
+                             tool.category === 'JavaScript Framework' ? <Code className="h-5 w-5" /> :
+                             tool.category === 'Page Builder' ? <Layers className="h-5 w-5" /> :
+                             tool.category === 'SEO' ? <Search className="h-5 w-5" /> :
+                             tool.category === 'Tag Management' ? <Tag className="h-5 w-5" /> :
+                             tool.category === 'Font Script' ? <Zap className="h-5 w-5" /> :
+                             tool.category === 'Advertising' ? <BarChart3 className="h-5 w-5" /> :
+                             <Settings className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{tool.name}</h4>
+                            <p className="text-sm text-gray-600">{tool.category}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          tool.confidence >= 80 ? 'bg-green-100 text-green-800' :
+                          tool.confidence >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {tool.confidence}%
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mb-4">{tool.description}</p>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-900 mb-2">Detection Methods:</h5>
+                          <div className="flex flex-wrap gap-1">
+                            {tool.detection_methods?.map((method: string, methodIndex: number) => (
+                              <span key={methodIndex} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                {method}
+                              </span>
+                            )) || <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">Content Analysis</span>}
+                          </div>
+                        </div>
+                        
+                        {tool.evidence && tool.evidence.length > 0 && (
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-900 mb-2">Evidence:</h5>
+                            <div className="space-y-1">
+                              {tool.evidence.slice(0, 2).map((evidence: string, evidenceIndex: number) => (
+                                <div key={evidenceIndex} className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                                  <code className="break-all">{evidence}</code>
+                                </div>
+                              ))}
+                              {tool.evidence.length > 2 && (
+                                <div className="text-xs text-gray-400">
+                                  +{tool.evidence.length - 2} more evidence items
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Settings className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Tools Detected</h3>
+                <p className="text-gray-600">
+                  Our analysis didn't find any detectable tools or platforms on this website. 
+                  This could mean the site uses custom solutions or has minimal third-party integrations.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

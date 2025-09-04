@@ -51,6 +51,7 @@ export default function ResourcesChecker() {
     setResult(null)
 
     try {
+      console.log('Submitting URL for analysis:', url.trim())
       const response = await fetch('/api/resources-checker', {
         method: 'POST',
         headers: {
@@ -59,13 +60,19 @@ export default function ResourcesChecker() {
         body: JSON.stringify({ url: url.trim() }),
       })
 
+      console.log('Response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error('Failed to analyze website')
+        const errorData = await response.json()
+        console.log('Error response:', errorData)
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to analyze website`)
       }
 
       const data = await response.json()
+      console.log('Analysis result:', data)
       setResult(data)
     } catch (err) {
+      console.error('Analysis error:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)

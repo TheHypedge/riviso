@@ -354,6 +354,222 @@ const toolPatterns = {
     category: 'Marketing',
     description: 'ConvertKit email marketing platform',
     confidence: 80
+  },
+
+  // Additional tools from Wappalyzer screenshots
+  'OWL Carousel': {
+    patterns: [
+      { type: 'script', pattern: /owl\.carousel/ },
+      { type: 'script', pattern: /owl-carousel/ },
+      { type: 'link', pattern: /owl\.carousel/ }
+    ],
+    category: 'JavaScript Library',
+    description: 'OWL Carousel touch slider library',
+    confidence: 90
+  },
+  'jQuery Migrate': {
+    patterns: [
+      { type: 'script', pattern: /jquery-migrate/ },
+      { type: 'script', pattern: /jquery\.migrate/ }
+    ],
+    category: 'JavaScript Library',
+    description: 'jQuery Migrate compatibility library',
+    confidence: 85
+  },
+  'LiteSpeed': {
+    patterns: [
+      { type: 'header', pattern: /server: litespeed/i },
+      { type: 'header', pattern: /x-litespeed-cache/i },
+      { type: 'script', pattern: /litespeed/ }
+    ],
+    category: 'Web Server',
+    description: 'LiteSpeed web server',
+    confidence: 80
+  },
+  'Hostinger': {
+    patterns: [
+      { type: 'header', pattern: /server:.*hostinger/i },
+      { type: 'script', pattern: /hostinger/ },
+      { type: 'meta', pattern: /hostinger/ }
+    ],
+    category: 'Hosting',
+    description: 'Hostinger web hosting service',
+    confidence: 80
+  },
+  'jsDelivr': {
+    patterns: [
+      { type: 'script', pattern: /cdn\.jsdelivr\.net/ },
+      { type: 'link', pattern: /cdn\.jsdelivr\.net/ }
+    ],
+    category: 'CDN',
+    description: 'jsDelivr CDN for open source projects',
+    confidence: 90
+  },
+  'Hostinger CDN': {
+    patterns: [
+      { type: 'script', pattern: /hostinger-cdn/ },
+      { type: 'link', pattern: /hostinger-cdn/ }
+    ],
+    category: 'CDN',
+    description: 'Hostinger CDN service',
+    confidence: 85
+  },
+  'PHP': {
+    patterns: [
+      { type: 'header', pattern: /x-powered-by: php/i },
+      { type: 'script', pattern: /\.php/ },
+      { type: 'meta', pattern: /generator.*php/i }
+    ],
+    category: 'Programming Language',
+    description: 'PHP server-side programming language',
+    confidence: 80
+  },
+  'MySQL': {
+    patterns: [
+      { type: 'script', pattern: /mysql/ },
+      { type: 'meta', pattern: /mysql/ },
+      { type: 'script', pattern: /mysqli/ }
+    ],
+    category: 'Database',
+    description: 'MySQL database management system',
+    confidence: 75
+  },
+  'HTTP/3': {
+    patterns: [
+      { type: 'header', pattern: /alt-svc: h3=/i },
+      { type: 'header', pattern: /alt-svc: h3-.*=/i }
+    ],
+    category: 'Protocol',
+    description: 'HTTP/3 protocol support',
+    confidence: 85
+  },
+  'Preact': {
+    patterns: [
+      { type: 'script', pattern: /preact/ },
+      { type: 'script', pattern: /preact\.js/ }
+    ],
+    category: 'JavaScript Framework',
+    description: 'Preact lightweight React alternative',
+    confidence: 90
+  },
+  'Flickity': {
+    patterns: [
+      { type: 'script', pattern: /flickity/ },
+      { type: 'script', pattern: /flickity\.js/ }
+    ],
+    category: 'JavaScript Library',
+    description: 'Flickity touch slider library',
+    confidence: 90
+  },
+  'core-js': {
+    patterns: [
+      { type: 'script', pattern: /core-js/ },
+      { type: 'script', pattern: /core\.js/ }
+    ],
+    category: 'JavaScript Library',
+    description: 'core-js JavaScript polyfill library',
+    confidence: 85
+  },
+  'DoubleClick Floodlight': {
+    patterns: [
+      { type: 'script', pattern: /doubleclick\.net/ },
+      { type: 'script', pattern: /floodlight/ },
+      { type: 'script', pattern: /googlesyndication\.com/ }
+    ],
+    category: 'Advertising',
+    description: 'Google DoubleClick Floodlight advertising platform',
+    confidence: 90
+  },
+  'WhatsApp Business Chat': {
+    patterns: [
+      { type: 'script', pattern: /whatsapp\.com/ },
+      { type: 'script', pattern: /wa\.me/ },
+      { type: 'script', pattern: /whatsapp.*chat/ }
+    ],
+    category: 'Live Chat',
+    description: 'WhatsApp Business live chat widget',
+    confidence: 85
+  },
+  'Microsoft Clarity': {
+    patterns: [
+      { type: 'script', pattern: /clarity\.ms/ },
+      { type: 'script', pattern: /microsoft.*clarity/ }
+    ],
+    category: 'Analytics',
+    description: 'Microsoft Clarity user behavior analytics',
+    confidence: 90
+  },
+  'Zoorix': {
+    patterns: [
+      { type: 'script', pattern: /zoorix/ },
+      { type: 'script', pattern: /zoorix\.com/ }
+    ],
+    category: 'E-commerce',
+    description: 'Zoorix e-commerce platform',
+    confidence: 85
+  },
+  'Show Recent Orders': {
+    patterns: [
+      { type: 'script', pattern: /show.*recent.*orders/ },
+      { type: 'script', pattern: /recent.*orders/ }
+    ],
+    category: 'E-commerce',
+    description: 'Show Recent Orders e-commerce feature',
+    confidence: 80
+  },
+  'Trident AB': {
+    patterns: [
+      { type: 'script', pattern: /trident.*ab/ },
+      { type: 'script', pattern: /tridentab/ }
+    ],
+    category: 'A/B Testing',
+    description: 'Trident AB testing platform',
+    confidence: 85
+  },
+  'Judge.me': {
+    patterns: [
+      { type: 'script', pattern: /judge\.me/ },
+      { type: 'script', pattern: /judgeme/ }
+    ],
+    category: 'Reviews',
+    description: 'Judge.me product review platform',
+    confidence: 90
+  },
+  'Priority Hints': {
+    patterns: [
+      { type: 'script', pattern: /importance=/ },
+      { type: 'script', pattern: /fetchpriority=/ }
+    ],
+    category: 'Performance',
+    description: 'Priority Hints performance optimization',
+    confidence: 85
+  },
+  'Imgix': {
+    patterns: [
+      { type: 'script', pattern: /imgix\.net/ },
+      { type: 'script', pattern: /imgix/ }
+    ],
+    category: 'CDN',
+    description: 'Imgix image optimization CDN',
+    confidence: 90
+  },
+  'GoKwik': {
+    patterns: [
+      { type: 'script', pattern: /gokwik/ },
+      { type: 'script', pattern: /gokwik\.co/ }
+    ],
+    category: 'E-commerce',
+    description: 'GoKwik checkout optimization platform',
+    confidence: 85
+  },
+  'Open Graph': {
+    patterns: [
+      { type: 'meta', pattern: /property="og:/ },
+      { type: 'meta', pattern: /og:/ }
+    ],
+    category: 'SEO',
+    description: 'Open Graph social media protocol',
+    confidence: 90
   }
 }
 
