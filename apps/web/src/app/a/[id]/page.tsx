@@ -37,6 +37,7 @@ import { ScoreGauge } from '@/components/ScoreGauge'
 import { RuleTable } from '@/components/RuleTable'
 import { TopFixes } from '@/components/TopFixes'
 import { Spinner } from '@/components/Spinner'
+import { KeywordsResponse } from '@/lib/keywords/types'
 
 interface AuditResult {
   id: string
@@ -171,11 +172,41 @@ export default function AuditDetailPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [activeDevice, setActiveDevice] = useState<'mobile' | 'desktop'>('mobile')
   const [expandedFix, setExpandedFix] = useState<number | null>(null)
+  const [keywords, setKeywords] = useState<KeywordsResponse | null>(null)
+  const [keywordsLoading, setKeywordsLoading] = useState(false)
+  const [keywordsError, setKeywordsError] = useState<string | null>(null)
   const [keywordData, setKeywordData] = useState<any>(null)
   const [keywordLoading, setKeywordLoading] = useState(false)
 
 
   const auditId = params.id as string
+
+  // Keywords analysis function
+  const analyzeKeywords = async (url: string) => {
+    setKeywordsLoading(true)
+    setKeywordsError(null)
+    
+    try {
+      const response = await fetch('/api/keywords', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      setKeywords(data)
+    } catch (err) {
+      setKeywordsError(err instanceof Error ? err.message : 'Failed to analyze keywords')
+    } finally {
+      setKeywordsLoading(false)
+    }
+  }
 
   const updateAuditStatus = async (auditId: string, status: 'completed' | 'failed') => {
     if (!user?.id) return
