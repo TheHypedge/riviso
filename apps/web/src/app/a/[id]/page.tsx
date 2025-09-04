@@ -1420,8 +1420,16 @@ export default function AuditDetailPage() {
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
-                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                          audit.rules?.find(r => r.id === 'page_title')?.status === 'pass' ? 'bg-success-100' :
+                          audit.rules?.find(r => r.id === 'page_title')?.status === 'warning' ? 'bg-warning-100' : 'bg-error-100'
+                        }`}>
+                          {audit.rules?.find(r => r.id === 'page_title')?.status === 'pass' ? 
+                            <CheckCircle className="h-5 w-5 text-success-600" /> :
+                            audit.rules?.find(r => r.id === 'page_title')?.status === 'warning' ?
+                            <AlertTriangle className="h-5 w-5 text-warning-600" /> :
+                            <XCircle className="h-5 w-5 text-error-600" />
+                          }
                         </div>
                         <div>
                           <h4 className="text-sm font-semibold text-gray-900">Meta Title Test</h4>
@@ -1447,10 +1455,15 @@ export default function AuditDetailPage() {
                         </div>
                       </div>
                     )}
-                    {!audit.metadata?.page_title && (
-                      <button className="w-full bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                        How to fix
-                      </button>
+                    {audit.rules?.find(r => r.id === 'page_title')?.status !== 'pass' && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                          See results list
+                        </button>
+                        <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                          How to fix
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -1458,8 +1471,16 @@ export default function AuditDetailPage() {
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
-                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                          audit.rules?.find(r => r.id === 'meta_description')?.status === 'pass' ? 'bg-success-100' :
+                          audit.rules?.find(r => r.id === 'meta_description')?.status === 'warning' ? 'bg-warning-100' : 'bg-error-100'
+                        }`}>
+                          {audit.rules?.find(r => r.id === 'meta_description')?.status === 'pass' ? 
+                            <CheckCircle className="h-5 w-5 text-success-600" /> :
+                            audit.rules?.find(r => r.id === 'meta_description')?.status === 'warning' ?
+                            <AlertTriangle className="h-5 w-5 text-warning-600" /> :
+                            <XCircle className="h-5 w-5 text-error-600" />
+                          }
                         </div>
                         <div>
                           <h4 className="text-sm font-semibold text-gray-900">Meta Description Test</h4>
@@ -1485,10 +1506,15 @@ export default function AuditDetailPage() {
                         </div>
                       </div>
                     )}
-                    {!audit.metadata?.meta_description && (
-                      <button className="w-full bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                        How to fix
-                      </button>
+                    {audit.rules?.find(r => r.id === 'meta_description')?.status !== 'pass' && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                          See results list
+                        </button>
+                        <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                          How to fix
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -1604,8 +1630,16 @@ export default function AuditDetailPage() {
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
-                          <AlertTriangle className="h-5 w-5 text-warning-600" />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                          (audit.metadata?.images_without_alt || 0) === 0 ? 'bg-success-100' :
+                          (audit.metadata?.images_without_alt || 0) <= 2 ? 'bg-warning-100' : 'bg-error-100'
+                        }`}>
+                          {(audit.metadata?.images_without_alt || 0) === 0 ? 
+                            <CheckCircle className="h-5 w-5 text-success-600" /> :
+                            (audit.metadata?.images_without_alt || 0) <= 2 ?
+                            <AlertTriangle className="h-5 w-5 text-warning-600" /> :
+                            <XCircle className="h-5 w-5 text-error-600" />
+                          }
                         </div>
                         <div>
                           <h4 className="text-sm font-semibold text-gray-900">Image Alt Text Test</h4>
@@ -1615,24 +1649,37 @@ export default function AuditDetailPage() {
                       <Info className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-sm text-gray-700 mb-3">
-                      This webpage is using 'img' tags with empty or missing 'alt' attribute!
+                      {(audit.metadata?.images_without_alt || 0) === 0 ? 
+                        `All images have proper alt text attributes.` :
+                        `This webpage has ${audit.metadata?.images_without_alt || 0} images with missing or empty 'alt' attributes!`
+                      }
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                        See full list
-                      </button>
-                      <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                        How to fix
-                      </button>
-                    </div>
+                    {(audit.metadata?.images_without_alt || 0) > 0 && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                          See full list
+                        </button>
+                        <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                          How to fix
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Responsive Image Test */}
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-error-100 rounded-lg flex items-center justify-center mr-3">
-                          <XCircle className="h-5 w-5 text-error-600" />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
+                          (audit.technical_audit?.performance_metrics?.image_optimization || 0) >= 80 ? 'bg-success-100' :
+                          (audit.technical_audit?.performance_metrics?.image_optimization || 0) >= 50 ? 'bg-warning-100' : 'bg-error-100'
+                        }`}>
+                          {(audit.technical_audit?.performance_metrics?.image_optimization || 0) >= 80 ? 
+                            <CheckCircle className="h-5 w-5 text-success-600" /> :
+                            (audit.technical_audit?.performance_metrics?.image_optimization || 0) >= 50 ?
+                            <AlertTriangle className="h-5 w-5 text-warning-600" /> :
+                            <XCircle className="h-5 w-5 text-error-600" />
+                          }
                         </div>
                         <div>
                           <h4 className="text-sm font-semibold text-gray-900">Responsive Image Test</h4>
@@ -1642,16 +1689,24 @@ export default function AuditDetailPage() {
                       <Info className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-sm text-gray-700 mb-3">
-                      Not all images in this webpage are properly sized! This webpage is serving images that are larger than needed for the size of the user's viewport.
+                      {(audit.technical_audit?.performance_metrics?.image_optimization || 0) >= 80 ? 
+                        `Images are properly optimized and responsive.` :
+                        `Not all images in this webpage are properly sized! This webpage is serving images that are larger than needed for the size of the user's viewport.`
+                      }
                     </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                        See results list
-                      </button>
-                      <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                        How to fix
-                      </button>
+                    <div className="text-xs text-gray-500 mb-3">
+                      Image Optimization Score: {audit.technical_audit?.performance_metrics?.image_optimization || 0}%
                     </div>
+                    {(audit.technical_audit?.performance_metrics?.image_optimization || 0) < 80 && (
+                      <div className="flex gap-2">
+                        <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                          See results list
+                        </button>
+                        <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                          How to fix
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Image Ratio Test */}
