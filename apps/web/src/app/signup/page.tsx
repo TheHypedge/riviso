@@ -119,7 +119,7 @@ export default function SignUpPage() {
         <div className="text-center">
           <Link href="/" className="inline-block">
             <div className="flex justify-center mb-2">
-              <img src="/logo.png" alt="RIVISO" className="h-12 w-auto" />
+              <img src="/riviso.png" alt="RIVISO" className="h-12 w-auto" />
             </div>
           </Link>
           <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>

@@ -772,7 +772,7 @@ export default function AuditDetailPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <a href="/" className="flex items-center">
-                    <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+                    <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
                   </a>
                 </div>
               </div>
@@ -810,7 +810,7 @@ export default function AuditDetailPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <a href="/" className="flex items-center">
-                    <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+                    <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
                   </a>
                 </div>
               </div>
@@ -887,7 +887,7 @@ export default function AuditDetailPage() {
           {/* Report Header */}
           <div className="text-center mb-8">
             <div className="flex items-center mb-4">
-              <img src="/logo.png" alt="RIVISO" className="h-10 w-auto mr-3" />
+              <img src="/riviso.png" alt="RIVISO" className="h-10 w-auto mr-3" />
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Analytics Report</h1>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center space-y-2 sm:space-y-0 sm:space-x-4">
@@ -1763,7 +1763,7 @@ export default function AuditDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-4">
-                <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
               </div>
               <p className="text-gray-400 mb-6 max-w-md">
                 India's leading all-in-one SEO platform. Transform your website's search performance 

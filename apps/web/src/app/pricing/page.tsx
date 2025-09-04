@@ -182,7 +182,7 @@ export default function PricingPage() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <a href="/" className="flex items-center">
-                  <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+                  <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
                 </a>
               </div>
             </div>
@@ -488,7 +488,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center mb-4">
-                <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
               </div>
               <p className="text-gray-400 mb-6 max-w-md">
                 India's leading all-in-one SEO platform. Transform your website's search performance 
