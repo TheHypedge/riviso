@@ -222,8 +222,9 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <a href="/" className="flex items-center">
+                <a href="/" className="flex items-center space-x-2">
                   <Image src={logoImage} alt="RIVISO" width={32} height={32} className="h-8 w-auto" />
+                  <span className="text-2xl font-bold text-primary-600">RIVISO</span>
                 </a>
               </div>
             </div>
@@ -602,8 +603,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-4">
+              <div className="flex items-center space-x-2 mb-4">
                 <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
+                <span className="text-2xl font-bold text-white">RIVISO</span>
               </div>
               <p className="text-gray-400 mb-6 max-w-md">
                 India's leading all-in-one SEO platform. Transform your website's search performance 
