@@ -308,3 +308,46 @@
 2025-09-04T16:15:14.033377Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
 2025-09-04T16:15:32.733193Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
 2025-09-04T16:15:32.733224Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T16:16:19.932758Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
+2025-09-04T16:16:19.932788Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T16:16:19.960878Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-04T16:16:50.232607Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
+2025-09-04T16:16:50.232852Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T16:16:50.269043Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-04T17:48:18.048927Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T17:48:18.050475Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:18.140479Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T17:48:18.140487Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:25.340820Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/parser.py")}
+2025-09-04T17:48:25.340841Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:28.841034Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py")}
+2025-09-04T17:48:28.841079Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:28.938710Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py")}
+2025-09-04T17:48:28.938720Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:32.940244Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py")}
+2025-09-04T17:48:32.940291Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:39.339752Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py")}
+2025-09-04T17:48:39.339762Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:45.940281Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/models.py")}
+2025-09-04T17:48:45.940313Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:49.338848Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/models.py")}
+2025-09-04T17:48:49.338858Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:54.439524Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/workers/runner.py")}
+2025-09-04T17:48:54.439533Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:48:59.939448Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/migrations/versions/add_detected_tools_field.py")}
+2025-09-04T17:48:59.939478Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:49:14.283441Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
+2025-09-04T17:49:14.285874Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T17:51:09.540867Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
+2025-09-04T17:51:09.540913Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T17:51:30.040509Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/seo_audit.db-journal")}
+2025-09-04T17:51:30.040537Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:51:47.875488Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_tool_detection.py")}
+2025-09-04T17:51:47.875537Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:51:48.042091Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_tool_detection.py")}
+2025-09-04T17:51:48.042101Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:51:54.139126Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_tool_detection.py")}
+2025-09-04T17:51:54.139159Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:52:06.940716Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/parser.py"), AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx"), AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py"), AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py"), AnchoredSystemPathBuf("services/audit-api/migrations/versions/add_detected_tools_field.py"), AnchoredSystemPathBuf("services/audit-api/src/models.py"), AnchoredSystemPathBuf("services/audit-api/src/workers/runner.py")}
+2025-09-04T17:52:06.940920Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }, WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T17:52:06.940963Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun

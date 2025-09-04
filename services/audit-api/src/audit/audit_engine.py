@@ -12,6 +12,7 @@ from audit.parser import Parser
 from audit.rules_engine import RulesEngine
 from audit.scoring import ScoringEngine
 from audit.security import SecurityValidator
+from audit.tool_detector import ToolDetector
 from config import settings
 
 logger = structlog.get_logger(__name__)
@@ -26,6 +27,7 @@ class AuditEngine:
         self.rules_engine = RulesEngine()
         self.scoring_engine = ScoringEngine()
         self.security_validator = SecurityValidator()
+        self.tool_detector = ToolDetector()
     
     async def run_audit(self, url: str, options: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -87,12 +89,16 @@ class AuditEngine:
             # Generate top keywords data
             top_keywords = self._generate_top_keywords(main_parsed)
             
+            # Detect tools and platforms
+            detected_tools = self.tool_detector.detect_tools(main_parsed)
+            
             result = {
                 "scores": scores,
                 "rules": rules_results,
                 "top_fixes": top_fixes,
                 "top_keywords": top_keywords,
                 "metadata": metadata,
+                "detected_tools": detected_tools,
                 "urls_analyzed": len(all_parsed_content),
             }
             

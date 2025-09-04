@@ -160,6 +160,15 @@ interface AuditResult {
     word_count?: number
     loading_time?: number
   }
+  detected_tools?: Array<{
+    id: string
+    name: string
+    category: string
+    description: string
+    confidence: number
+    evidence: string[]
+    detection_methods: string[]
+  }>
 }
 
 export default function AuditDetailPage() {
@@ -2147,6 +2156,103 @@ export default function AuditDetailPage() {
 
 
 
+
+          {/* Detected Tools & Platforms */}
+          {audit.detected_tools && audit.detected_tools.length > 0 && (
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Detected Tools & Platforms</h2>
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Technology Stack Analysis</h3>
+                  <p className="text-sm text-gray-600">
+                    Tools and platforms detected on {audit.url} using advanced fingerprinting techniques
+                  </p>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {audit.detected_tools.map((tool, index) => (
+                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 text-sm">{tool.name}</h4>
+                            <p className="text-xs text-gray-600 mb-1">{tool.category}</p>
+                            <p className="text-xs text-gray-500">{tool.description}</p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              tool.confidence >= 80 ? 'bg-green-100 text-green-800' :
+                              tool.confidence >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {tool.confidence}%
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-1">
+                            {tool.detection_methods.map((method, methodIndex) => (
+                              <span key={methodIndex} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                {method}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          {tool.evidence && tool.evidence.length > 0 && (
+                            <details className="group">
+                              <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+                                View Evidence ({tool.evidence.length})
+                              </summary>
+                              <div className="mt-2 space-y-1">
+                                {tool.evidence.slice(0, 3).map((evidence, evidenceIndex) => (
+                                  <div key={evidenceIndex} className="text-xs text-gray-500 bg-white p-2 rounded border">
+                                    <code className="break-all">{evidence}</code>
+                                  </div>
+                                ))}
+                                {tool.evidence.length > 3 && (
+                                  <div className="text-xs text-gray-400">
+                                    +{tool.evidence.length - 3} more evidence items
+                                  </div>
+                                )}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Summary Stats */}
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold text-gray-900">{audit.detected_tools.length}</div>
+                        <div className="text-sm text-gray-600">Total Tools</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {audit.detected_tools.filter(t => t.category === 'Analytics').length}
+                        </div>
+                        <div className="text-sm text-gray-600">Analytics</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {audit.detected_tools.filter(t => t.category === 'E-commerce').length}
+                        </div>
+                        <div className="text-sm text-gray-600">E-commerce</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {audit.detected_tools.filter(t => t.category === 'JavaScript Framework').length}
+                        </div>
+                        <div className="text-sm text-gray-600">Frameworks</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </section>

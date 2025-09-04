@@ -53,6 +53,7 @@ class Audit(Base):
     top_fixes = Column(JSON, nullable=True)  # List of top priority fixes
     top_keywords = Column(JSON, nullable=True)  # List of top ranking keywords
     page_metadata = Column(JSON, nullable=True)   # Page metadata (title, description, etc.)
+    detected_tools = Column(JSON, nullable=True)  # List of detected tools and platforms
     
     # Error information
     error_message = Column(Text, nullable=True)
@@ -79,6 +80,7 @@ class Audit(Base):
             "top_fixes": self.top_fixes,
             "top_keywords": self.top_keywords,
             "metadata": self.page_metadata,
+            "detected_tools": self.detected_tools,
             "error_message": self.error_message,
             "error_details": self.error_details,
         }

@@ -135,7 +135,8 @@ class WorkerRunner:
         audit.scores = result.get("scores")
         audit.rules = result.get("rules")
         audit.top_fixes = result.get("top_fixes")
-        audit.metadata = result.get("metadata")
+        audit.page_metadata = result.get("metadata")
+        audit.detected_tools = result.get("detected_tools")
         self.db.commit()
         
         return result

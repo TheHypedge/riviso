@@ -65,6 +65,9 @@ class Parser:
             # Extract technical elements
             parsed_data.update(self._extract_technical_elements())
             
+            # Store HTML content for tool detection
+            parsed_data["html_content"] = content
+            
             logger.info(
                 "Content parsed successfully",
                 url=base_url,
