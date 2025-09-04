@@ -331,6 +331,13 @@ async def run_audit_task(audit_id: str, url: str, options: Dict[str, Any]) -> No
         audit.metadata = result.get("metadata")
         audit.detected_tools = result.get("detected_tools")
         
+        logger.info(
+            "Audit results saved",
+            audit_id=audit_id,
+            detected_tools_count=len(result.get("detected_tools", [])),
+            detected_tools=result.get("detected_tools", [])[:3]  # Log first 3 tools
+        )
+        
         db.commit()
         
         logger.info("Audit completed successfully", audit_id=audit_id)

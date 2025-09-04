@@ -53,12 +53,17 @@ class AuditEngine:
                 await self.security_validator.validate_url(url)
             
             # Fetch main page
+            logger.info("Fetching main page", url=url)
             main_content = await self.fetcher.fetch_url(url)
             if not main_content:
                 raise ValueError("Failed to fetch main page content")
             
+            logger.info("Main page fetched", content_length=len(main_content.get('html_content', '')))
+            
             # Parse main page
+            logger.info("Parsing main page", url=url)
             main_parsed = await self.parser.parse_content(main_content, url)
+            logger.info("Main page parsed", url=url)
             
             # Get additional URLs if sitemap is requested
             additional_urls = []
@@ -96,7 +101,13 @@ class AuditEngine:
             top_keywords = self._generate_top_keywords(main_parsed)
             
             # Detect tools and platforms
-            detected_tools = self.tool_detector.detect_tools(main_parsed)
+            logger.info("Starting tool detection", url=url)
+            try:
+                detected_tools = self.tool_detector.detect_tools(main_parsed)
+                logger.info("Tool detection completed", tools_detected=len(detected_tools), url=url)
+            except Exception as e:
+                logger.error("Tool detection failed", error=str(e), url=url)
+                detected_tools = []  # Fallback to empty list
             
             result = {
                 "scores": scores,
