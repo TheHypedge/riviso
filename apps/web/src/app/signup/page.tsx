@@ -118,7 +118,9 @@ export default function SignUpPage() {
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <h1 className="text-4xl font-bold text-primary-600 mb-2">RIVISO</h1>
+            <div className="flex justify-center mb-2">
+              <img src="/logo.png" alt="RIVISO" className="h-12 w-auto" />
+            </div>
           </Link>
           <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
           <p className="mt-2 text-sm text-gray-600">

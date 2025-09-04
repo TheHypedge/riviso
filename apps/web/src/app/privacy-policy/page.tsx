@@ -20,7 +20,9 @@ export default function PrivacyPolicyPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <a href="/" className="text-2xl font-bold text-primary-600">RIVISO</a>
+                <a href="/" className="flex items-center">
+                  <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+                </a>
               </div>
             </div>
             <div className="hidden md:block">
@@ -239,7 +241,9 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">RIVISO</h3>
+              <div className="flex items-center mb-4">
+                <img src="/logo.png" alt="RIVISO" className="h-8 w-auto" />
+              </div>
               <p className="text-gray-400 mb-6 max-w-md">
                 India's leading all-in-one SEO platform. Transform your website's search performance 
                 with comprehensive analytics and actionable insights.

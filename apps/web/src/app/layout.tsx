@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'RIVISO' }],
   viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   openGraph: {
     title: 'RIVISO - Advanced SEO Analytics Platform',
     description: 'Professional SEO audit and analytics tool for comprehensive website analysis and optimization',
