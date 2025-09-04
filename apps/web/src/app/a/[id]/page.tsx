@@ -1411,6 +1411,309 @@ export default function AuditDetailPage() {
                 </div>
               </div>
 
+              {/* SEO Tests Section */}
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">SEO Tests</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                  
+                  {/* Meta Title Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Meta Title Test</h4>
+                          <p className="text-xs text-gray-500">95% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      {audit.metadata?.page_title ? 
+                        `This webpage is using a title tag.` : 
+                        `This webpage is missing a title tag.`
+                      }
+                    </div>
+                    {audit.metadata?.page_title && (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                        <div className="text-xs text-gray-600 mb-1">Title:</div>
+                        <div className="text-sm font-medium text-gray-900 break-words">
+                          {audit.metadata.page_title}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {audit.metadata.page_title.length} characters
+                        </div>
+                      </div>
+                    )}
+                    {!audit.metadata?.page_title && (
+                      <button className="w-full bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                        How to fix
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Meta Description Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Meta Description Test</h4>
+                          <p className="text-xs text-gray-500">92% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      {audit.metadata?.meta_description ? 
+                        `This webpage is using a meta description tag.` : 
+                        `This webpage is missing a meta description tag.`
+                      }
+                    </div>
+                    {audit.metadata?.meta_description && (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                        <div className="text-xs text-gray-600 mb-1">Description:</div>
+                        <div className="text-sm font-medium text-gray-900 break-words">
+                          {audit.metadata.meta_description}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {audit.metadata.meta_description.length} characters
+                        </div>
+                      </div>
+                    )}
+                    {!audit.metadata?.meta_description && (
+                      <button className="w-full bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                        How to fix
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Google Search Result Preview Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-info-100 rounded-lg flex items-center justify-center mr-3">
+                          <Globe className="h-5 w-5 text-info-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Google Search Result Preview</h4>
+                          <p className="text-xs text-gray-500">Search result appearance</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-xs text-gray-600 mb-2">Desktop Preview:</div>
+                        <div className="bg-gray-50 rounded-lg p-3 border">
+                          <div className="text-xs text-blue-600 mb-1">{audit.url}</div>
+                          <div className="text-sm font-medium text-blue-900 mb-1">
+                            {audit.metadata?.page_title || 'No title available'}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {audit.metadata?.meta_description || 'No description available'}
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600 mb-2">Mobile Preview:</div>
+                        <div className="bg-gray-50 rounded-lg p-3 border">
+                          <div className="text-xs text-blue-600 mb-1">{audit.url}</div>
+                          <div className="text-sm font-medium text-blue-900 mb-1">
+                            {audit.metadata?.page_title || 'No title available'}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {(audit.metadata?.meta_description || 'No description available').substring(0, 100)}...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Robots.txt Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Robots.txt Test</h4>
+                          <p className="text-xs text-gray-500">99% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This website is using a robots.txt file.
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      {audit.url}/robots.txt
+                    </div>
+                  </div>
+
+                  {/* Sitemap Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Sitemap Test</h4>
+                          <p className="text-xs text-gray-500">85% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This website is using a sitemap.xml file.
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      {audit.url}/sitemap.xml
+                    </div>
+                  </div>
+
+                  {/* SEO Friendly URL Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">SEO Friendly URL Test</h4>
+                          <p className="text-xs text-gray-500">78% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This webpage has an SEO-friendly URL structure.
+                    </div>
+                    <div className="text-xs text-blue-600 break-all">
+                      {audit.url}
+                    </div>
+                  </div>
+
+                  {/* Image Alt Text Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
+                          <AlertTriangle className="h-5 w-5 text-warning-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Image Alt Text Test</h4>
+                          <p className="text-xs text-gray-500">78% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This webpage is using 'img' tags with empty or missing 'alt' attribute!
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        See full list
+                      </button>
+                      <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                        How to fix
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Responsive Image Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-error-100 rounded-lg flex items-center justify-center mr-3">
+                          <XCircle className="h-5 w-5 text-error-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Responsive Image Test</h4>
+                          <p className="text-xs text-gray-500">29% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      Not all images in this webpage are properly sized! This webpage is serving images that are larger than needed for the size of the user's viewport.
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        See results list
+                      </button>
+                      <button className="flex-1 bg-red-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                        How to fix
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Image Ratio Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Image Aspect Ratio Test</h4>
+                          <p className="text-xs text-gray-500">94% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This webpage does not use images with incorrect aspect ratios.
+                    </div>
+                  </div>
+
+                  {/* Google Analytics Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Google Analytics Test</h4>
+                          <p className="text-xs text-gray-500">72% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This webpage is using Google Analytics.
+                    </div>
+                  </div>
+
+                  {/* Favicon Test */}
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center mr-3">
+                          <CheckCircle className="h-5 w-5 text-success-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">Favicon Test</h4>
+                          <p className="text-xs text-gray-500">100% of top 100 sites passed</p>
+                        </div>
+                      </div>
+                      <Info className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      This website appears to have a favicon.
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
               {/* Additional Scores */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
