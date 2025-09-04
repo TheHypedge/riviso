@@ -1,17 +1,5 @@
 {
   "buildCommand": "pnpm --filter @riviso/web run build",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "framework": "nextjs",
-  "outputDirectory": "apps/web/.next",
-  "public": true,
-  "rewrites": [
-    {
-      "source": "/logo.png",
-      "destination": "/apps/web/public/logo.png"
-    },
-    {
-      "source": "/favicon.ico",
-      "destination": "/apps/web/public/favicon.ico"
-    }
-  ]
+  "framework": "nextjs"
 }
