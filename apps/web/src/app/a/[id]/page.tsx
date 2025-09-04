@@ -867,7 +867,9 @@ export default function AuditDetailPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <a href="/" className="flex items-center space-x-2">
-                    <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
+                    <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
+                    }} />
                     <span className="text-2xl font-bold text-primary-600">RIVISO</span>
                   </a>
                 </div>
@@ -906,7 +908,9 @@ export default function AuditDetailPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <a href="/" className="flex items-center space-x-2">
-                    <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
+                    <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
+                    }} />
                     <span className="text-2xl font-bold text-primary-600">RIVISO</span>
                   </a>
                 </div>
@@ -984,7 +988,9 @@ export default function AuditDetailPage() {
           {/* Report Header */}
           <div className="text-center mb-8">
             <div className="flex items-center mb-4">
-              <img src="/riviso.png" alt="RIVISO" className="h-10 w-auto mr-3" />
+              <img src="/riviso.png" alt="RIVISO" className="h-10 w-auto mr-3" onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
+                    }} />
               <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
                 <span className="text-3xl md:text-4xl font-bold text-primary-600">RIVISO</span>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Analytics Report</h1>
@@ -2553,7 +2559,9 @@ export default function AuditDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
-                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" />
+                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
+                    }} />
                 <span className="text-2xl font-bold text-white">RIVISO</span>
               </div>
               <p className="text-gray-400 mb-6 max-w-md">

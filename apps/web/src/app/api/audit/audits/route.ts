@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     let data
     try {
       data = await response.json()
+      console.log('Backend audit response:', data)
     } catch (jsonError) {
       console.error('Failed to parse backend response as JSON:', jsonError)
       const responseText = await response.text()
@@ -62,9 +63,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Ensure data has an ID
+    if (!data.id) {
+      console.warn('Backend response missing ID, generating fallback')
+      data.id = Date.now().toString()
+    }
+
     // Track audit in database if user is logged in
     if (userId && url) {
-      const auditId = data.id || Date.now().toString()
+      const auditId = data.id
       const createdAt = new Date().toISOString()
       
       auditQueries.create.run(
@@ -78,6 +85,7 @@ export async function POST(request: NextRequest) {
       console.log('Audit tracked in database for user:', userId)
     }
 
+    console.log('Returning audit data:', data)
     return NextResponse.json(data)
   } catch (error) {
     console.error('API Error:', error)

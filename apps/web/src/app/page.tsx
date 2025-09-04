@@ -132,7 +132,14 @@ export default function HomePage() {
       }
 
       const audit = await response.json()
+      console.log('Audit response:', audit)
       setLoadingProgress(100)
+      
+      // Check if audit has valid ID
+      if (!audit.id) {
+        console.error('No audit ID in response:', audit)
+        throw new Error('Invalid audit response: missing ID')
+      }
       
       // Small delay before redirect
       await new Promise(resolve => setTimeout(resolve, 1000))
