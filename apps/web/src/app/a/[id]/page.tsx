@@ -2158,9 +2158,9 @@ export default function AuditDetailPage() {
 
 
           {/* Detected Tools & Platforms */}
-          {audit.detected_tools && audit.detected_tools.length > 0 && (
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Detected Tools & Platforms</h2>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Detected Tools & Platforms</h2>
+            {audit.detected_tools && audit.detected_tools.length > 0 ? (
               <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Technology Stack Analysis</h3>
@@ -2251,8 +2251,31 @@ export default function AuditDetailPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Technology Stack Analysis</h3>
+                  <p className="text-sm text-gray-600">
+                    No tools or platforms were detected on {audit.url}
+                  </p>
+                </div>
+                <div className="p-6">
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Settings className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">No Tools Detected</h4>
+                    <p className="text-gray-600 mb-4">
+                      Our advanced detection system didn't find any analytics, tracking, or platform tools on this website.
+                    </p>
+                    <div className="text-sm text-gray-500">
+                      This could mean the site uses custom solutions or has minimal third-party integrations.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
         </div>
       </section>

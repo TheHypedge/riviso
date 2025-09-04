@@ -59,6 +59,7 @@ class AuditResponse(BaseModel):
     top_fixes: Optional[List[Dict[str, Any]]] = None
     top_keywords: Optional[List[Dict[str, Any]]] = None
     metadata: Optional[Dict[str, Any]] = None
+    detected_tools: Optional[List[Dict[str, Any]]] = None
     error_message: Optional[str] = None
     error_details: Optional[Dict[str, Any]] = None
 
@@ -328,6 +329,7 @@ async def run_audit_task(audit_id: str, url: str, options: Dict[str, Any]) -> No
         audit.top_fixes = result.get("top_fixes")
         audit.top_keywords = result.get("top_keywords")
         audit.metadata = result.get("metadata")
+        audit.detected_tools = result.get("detected_tools")
         
         db.commit()
         
