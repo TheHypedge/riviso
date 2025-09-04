@@ -695,22 +695,30 @@ class ToolDetector:
         if not html_content:
             return detected_tools
         
-        soup = BeautifulSoup(html_content, "lxml")
-        
-        # Extract all scripts
-        scripts = self._extract_scripts(soup)
-        
-        # Extract all meta tags
-        meta_tags = self._extract_meta_tags(soup)
+        # Try BeautifulSoup parsing, fallback to regex if it fails
+        try:
+            soup = BeautifulSoup(html_content, "lxml")
+            
+            # Extract all scripts
+            scripts = self._extract_scripts(soup)
+            
+            # Extract all meta tags
+            meta_tags = self._extract_meta_tags(soup)
+            
+            # Extract CSS links
+            css_links = self._extract_css_links(soup)
+        except Exception as e:
+            logger.warning("BeautifulSoup parsing failed, using regex fallback", error=str(e))
+            # Fallback to regex-based extraction
+            scripts = self._extract_scripts_regex(html_content)
+            meta_tags = self._extract_meta_tags_regex(html_content)
+            css_links = self._extract_css_links_regex(html_content)
         
         # Extract cookies from headers or document
         cookies = self._extract_cookies(parsed_content)
         
         # Extract JavaScript objects (this would need to be done via browser execution)
         js_objects = self._extract_js_objects(html_content)
-        
-        # Extract CSS links
-        css_links = self._extract_css_links(soup)
         
         # Check each tool pattern
         for tool_id, tool_config in self.tool_patterns.items():
@@ -762,7 +770,7 @@ class ToolDetector:
                 if re.search(pattern, html_content, re.IGNORECASE):
                     confidence += 20
                     evidence.append(f"HTML Content: {pattern}")
-                    break
+                        break
             
             # Only include tools with some confidence
             if confidence > 0:
@@ -782,7 +790,11 @@ class ToolDetector:
         logger.info(
             "Tool detection completed",
             tools_detected=len(detected_tools),
-            url=parsed_content.get("url", "")
+            url=parsed_content.get("url", ""),
+            html_length=len(html_content),
+            scripts_count=len(scripts),
+            meta_count=len(meta_tags),
+            css_count=len(css_links)
         )
         
         return detected_tools
@@ -793,12 +805,14 @@ class ToolDetector:
         
         # External scripts
         for script in soup.find_all("script", src=True):
-            scripts.append(script.get("src", ""))
+            src = script.get("src", "")
+            if src:
+                scripts.append(src)
         
         # Inline scripts (first 1000 chars)
         for script in soup.find_all("script", src=False):
-            if script.string:
-                scripts.append(script.string[:1000])
+            if script.string and script.string.strip():
+                scripts.append(script.string.strip()[:1000])
         
         return scripts
     
@@ -870,6 +884,52 @@ class ToolDetector:
         for style in soup.find_all("style"):
             if style.string:
                 css_links.append(style.string[:500])  # First 500 chars
+        
+        return css_links
+    
+    def _extract_scripts_regex(self, html_content: str) -> List[str]:
+        """Extract scripts using regex fallback."""
+        scripts = []
+        
+        # External scripts
+        script_pattern = r'<script[^>]*src=["\']([^"\']*)["\'][^>]*>'
+        matches = re.findall(script_pattern, html_content, re.IGNORECASE)
+        scripts.extend(matches)
+        
+        # Inline scripts
+        inline_pattern = r'<script[^>]*>(.*?)</script>'
+        matches = re.findall(inline_pattern, html_content, re.IGNORECASE | re.DOTALL)
+        for match in matches:
+            if match.strip():
+                scripts.append(match.strip()[:1000])
+        
+        return scripts
+    
+    def _extract_meta_tags_regex(self, html_content: str) -> List[str]:
+        """Extract meta tags using regex fallback."""
+        meta_tags = []
+        
+        meta_pattern = r'<meta[^>]*>'
+        matches = re.findall(meta_pattern, html_content, re.IGNORECASE)
+        meta_tags.extend(matches)
+        
+        return meta_tags
+    
+    def _extract_css_links_regex(self, html_content: str) -> List[str]:
+        """Extract CSS links using regex fallback."""
+        css_links = []
+        
+        # External CSS files
+        css_pattern = r'<link[^>]*rel=["\']stylesheet["\'][^>]*href=["\']([^"\']*)["\'][^>]*>'
+        matches = re.findall(css_pattern, html_content, re.IGNORECASE)
+        css_links.extend(matches)
+        
+        # Inline CSS in style tags
+        style_pattern = r'<style[^>]*>(.*?)</style>'
+        matches = re.findall(style_pattern, html_content, re.IGNORECASE | re.DOTALL)
+        for match in matches:
+            if match.strip():
+                css_links.append(match.strip()[:500])
         
         return css_links
     

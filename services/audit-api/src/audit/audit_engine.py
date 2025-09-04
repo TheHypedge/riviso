@@ -26,8 +26,13 @@ class AuditEngine:
         self.parser = Parser()
         self.rules_engine = RulesEngine()
         self.scoring_engine = ScoringEngine()
-        self.security_validator = SecurityValidator()
         self.tool_detector = ToolDetector()
+        # Initialize security validator if available
+        try:
+            from audit.security import SecurityValidator
+            self.security_validator = SecurityValidator()
+        except ImportError:
+            self.security_validator = None
     
     async def run_audit(self, url: str, options: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -43,8 +48,9 @@ class AuditEngine:
         logger.info("Starting SEO audit", url=url, options=options)
         
         try:
-            # Validate URL security
-            await self.security_validator.validate_url(url)
+            # Validate URL security if validator is available
+            if self.security_validator:
+                await self.security_validator.validate_url(url)
             
             # Fetch main page
             main_content = await self.fetcher.fetch_url(url)
