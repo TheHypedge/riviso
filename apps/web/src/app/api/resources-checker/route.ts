@@ -157,18 +157,6 @@ const toolPatterns = {
     description: 'jQuery JavaScript library',
     confidence: 85
   },
-  'React': {
-    patterns: [
-      { type: 'script', pattern: /react\.min\.js/ },
-      { type: 'script', pattern: /react\.js/ },
-      { type: 'script', pattern: /React\./ },
-      { type: 'script', pattern: /_reactInternalInstance/ },
-      { type: 'script', pattern: /react-dom/ }
-    ],
-    category: 'JavaScript Framework',
-    description: 'React JavaScript library for building user interfaces',
-    confidence: 90
-  },
   'Vue.js': {
     patterns: [
       { type: 'script', pattern: /vue\.min\.js/ },
@@ -292,16 +280,6 @@ const toolPatterns = {
     category: 'Font Script',
     description: 'Google Fonts web font service',
     confidence: 90
-  },
-  'Font Awesome': {
-    patterns: [
-      { type: 'script', pattern: /fontawesome/ },
-      { type: 'script', pattern: /font-awesome/ },
-      { type: 'link', pattern: /fontawesome/ }
-    ],
-    category: 'Font Script',
-    description: 'Font Awesome icon font',
-    confidence: 85
   },
 
   // CDN & Performance
