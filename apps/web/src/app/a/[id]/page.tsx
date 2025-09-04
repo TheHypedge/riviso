@@ -338,9 +338,12 @@ export default function AuditDetailPage() {
   }
 
   useEffect(() => {
-    if (auditId) {
-        fetchAudit()
-      }
+    if (auditId && auditId !== 'undefined') {
+      fetchAudit()
+    } else {
+      setError('Invalid audit ID')
+      setLoading(false)
+    }
   }, [auditId])
 
   const handleRefresh = () => {
@@ -377,16 +380,16 @@ export default function AuditDetailPage() {
             <div class="section">
               <h2>Audit Summary</h2>
               <div class="metric">
-                <div class="score">Overall Score: ${audit.scores.overall}</div>
+                <div class="score">Overall Score: ${audit.scores?.overall || 'N/A'}</div>
               </div>
               <div class="metric">
-                <div class="score">On-Page SEO: ${audit.scores.on_page}</div>
+                <div class="score">On-Page SEO: ${audit.scores?.on_page || 'N/A'}</div>
               </div>
               <div class="metric">
-                <div class="score">Technical SEO: ${audit.scores.technical}</div>
+                <div class="score">Technical SEO: ${audit.scores?.technical || 'N/A'}</div>
               </div>
               <div class="metric">
-                <div class="score">Content Quality: ${audit.scores.content || 0}</div>
+                <div class="score">Content Quality: ${audit.scores?.content || 'N/A'}</div>
               </div>
             </div>
             ${audit.technical_audit ? `
@@ -893,7 +896,7 @@ export default function AuditDetailPage() {
     )
   }
 
-  if (error || !audit) {
+  if (error || !audit || !audit.scores) {
     return (
       <div className="min-h-screen bg-white">
         {/* Navigation */}
@@ -1050,15 +1053,15 @@ export default function AuditDetailPage() {
                                 <div className="mb-4">
               <ScoreGauge
                 title="Overall Score"
-                score={audit.scores.overall}
+                score={audit.scores?.overall || 0}
                 color="primary"
               />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Overall Performance</h3>
                 <p className="text-sm text-gray-600 mt-2">
-                  {audit.scores.overall >= 80 ? 'Excellent' : 
-                   audit.scores.overall >= 60 ? 'Good' : 
-                   audit.scores.overall >= 40 ? 'Fair' : 'Needs Improvement'}
+                  {(audit.scores?.overall || 0) >= 80 ? 'Excellent' : 
+                   (audit.scores?.overall || 0) >= 60 ? 'Good' : 
+                   (audit.scores?.overall || 0) >= 40 ? 'Fair' : 'Needs Improvement'}
                 </p>
                 </div>
               
@@ -1066,15 +1069,15 @@ export default function AuditDetailPage() {
                                 <div className="mb-4">
               <ScoreGauge
                 title="On-Page SEO"
-                score={audit.scores.on_page}
+                score={audit.scores?.on_page || 0}
                 color="success"
               />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">On-Page SEO</h3>
                 <p className="text-sm text-gray-600 mt-2">
-                  {audit.scores.on_page >= 80 ? 'Excellent' : 
-                   audit.scores.on_page >= 60 ? 'Good' : 
-                   audit.scores.on_page >= 40 ? 'Fair' : 'Needs Improvement'}
+                  {(audit.scores?.on_page || 0) >= 80 ? 'Excellent' : 
+                   (audit.scores?.on_page || 0) >= 60 ? 'Good' : 
+                   (audit.scores?.on_page || 0) >= 40 ? 'Fair' : 'Needs Improvement'}
                 </p>
                   </div>
 
@@ -1082,15 +1085,15 @@ export default function AuditDetailPage() {
                 <div className="mb-4">
               <ScoreGauge
                 title="Technical SEO"
-                score={audit.scores.technical}
+                score={audit.scores?.technical || 0}
                 color="warning"
               />
               </div>
                 <h3 className="text-lg font-semibold text-gray-900">Technical SEO</h3>
                 <p className="text-sm text-gray-600 mt-2">
-                  {audit.scores.technical >= 80 ? 'Excellent' : 
-                   audit.scores.technical >= 60 ? 'Good' : 
-                   audit.scores.technical >= 40 ? 'Fair' : 'Needs Improvement'}
+                  {(audit.scores?.technical || 0) >= 80 ? 'Excellent' : 
+                   (audit.scores?.technical || 0) >= 60 ? 'Good' : 
+                   (audit.scores?.technical || 0) >= 40 ? 'Fair' : 'Needs Improvement'}
                 </p>
             </div>
 
