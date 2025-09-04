@@ -125,7 +125,7 @@ export const userQueries = db ? {
   },
   findById: { 
     get: (id: string) => {
-      for (const user of inMemoryUsers.values()) {
+      for (const user of Array.from(inMemoryUsers.values())) {
         if (user.id === id) return user
       }
       return null
@@ -133,7 +133,7 @@ export const userQueries = db ? {
   },
   updateLastLogin: { 
     run: (lastLogin: string, id: string) => {
-      for (const [email, user] of inMemoryUsers.entries()) {
+      for (const [email, user] of Array.from(inMemoryUsers.entries())) {
         if (user.id === id) {
           user.lastLogin = lastLogin
           inMemoryUsers.set(email, user)
@@ -147,7 +147,7 @@ export const userQueries = db ? {
   },
   updateAuditsUsed: { 
     run: (auditsUsed: number, id: string) => {
-      for (const [email, user] of inMemoryUsers.entries()) {
+      for (const [email, user] of Array.from(inMemoryUsers.entries())) {
         if (user.id === id) {
           user.auditsUsed = auditsUsed
           inMemoryUsers.set(email, user)
