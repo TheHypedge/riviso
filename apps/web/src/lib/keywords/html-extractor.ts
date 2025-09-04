@@ -80,7 +80,7 @@ function extractSections(html: string): ExtractedContent {
   };
   
   // Extract title
-  const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   if (titleMatch) {
     result.title = normalizeText(decodeEntities(titleMatch[1]));
   }
@@ -92,7 +92,7 @@ function extractSections(html: string): ExtractedContent {
   }
   
   // Extract headings
-  const h1Matches = html.match(/<h1[^>]*>(.*?)<\/h1>/gi);
+  const h1Matches = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/gi);
   if (h1Matches) {
     result.h1 = h1Matches.map(match => {
       const content = match.replace(/<[^>]*>/g, '');
@@ -100,7 +100,7 @@ function extractSections(html: string): ExtractedContent {
     });
   }
   
-  const h2Matches = html.match(/<h2[^>]*>(.*?)<\/h2>/gi);
+  const h2Matches = html.match(/<h2[^>]*>([\s\S]*?)<\/h2>/gi);
   if (h2Matches) {
     result.h2 = h2Matches.map(match => {
       const content = match.replace(/<[^>]*>/g, '');
@@ -108,7 +108,7 @@ function extractSections(html: string): ExtractedContent {
     });
   }
   
-  const h3Matches = html.match(/<h3[^>]*>(.*?)<\/h3>/gi);
+  const h3Matches = html.match(/<h3[^>]*>([\s\S]*?)<\/h3>/gi);
   if (h3Matches) {
     result.h3 = h3Matches.map(match => {
       const content = match.replace(/<[^>]*>/g, '');
@@ -127,11 +127,11 @@ function extractSections(html: string): ExtractedContent {
   
   // Extract main content - prefer <main> tag, fallback to <body>
   let mainContent = '';
-  const mainMatch = html.match(/<main[^>]*>(.*?)<\/main>/i);
+  const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
   if (mainMatch) {
     mainContent = mainMatch[1];
   } else {
-    const bodyMatch = html.match(/<body[^>]*>(.*?)<\/body>/i);
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     if (bodyMatch) {
       mainContent = bodyMatch[1];
     }
