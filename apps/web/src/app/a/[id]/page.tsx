@@ -159,6 +159,17 @@ interface AuditResult {
     external_links?: number
     word_count?: number
     loading_time?: number
+    performance?: {
+      performance_score?: number
+      first_contentful_paint?: number
+      largest_contentful_paint?: number
+      cumulative_layout_shift?: number
+      first_input_delay?: number
+      time_to_interactive?: number
+      total_blocking_time?: number
+      speed_index?: number
+      data_source?: string
+    }
   }
   detected_tools?: Array<{
     id: string
