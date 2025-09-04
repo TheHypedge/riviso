@@ -186,6 +186,7 @@ export default function AuditDetailPage() {
   const [keywordsError, setKeywordsError] = useState<string | null>(null)
   const [keywordData, setKeywordData] = useState<any>(null)
   const [keywordLoading, setKeywordLoading] = useState(false)
+  const [loadingPerformance, setLoadingPerformance] = useState(false)
 
 
   const auditId = params.id as string
@@ -235,6 +236,40 @@ export default function AuditDetailPage() {
       })
     } catch (error) {
       console.error('Error updating audit status:', error)
+    }
+  }
+
+  const loadPerformanceMetrics = async () => {
+    if (!audit?.id) return
+    
+    setLoadingPerformance(true)
+    try {
+      const response = await fetch(`/api/audit/${audit.id}/performance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to load performance metrics')
+      }
+      
+      const data = await response.json()
+      
+      // Update audit with performance data
+      setAudit(prev => prev ? {
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          performance: data.performance_metrics
+        }
+      } : null)
+      
+    } catch (error) {
+      console.error('Error loading performance metrics:', error)
+    } finally {
+      setLoadingPerformance(false)
     }
   }
 
@@ -1102,8 +1137,26 @@ export default function AuditDetailPage() {
               
               {/* Core Web Vitals */}
               <div className="mb-6 md:mb-8">
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6">Core Web Vitals</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
+                  <h3 className="text-lg md:text-xl font-semibold text-gray-900">Core Web Vitals</h3>
+                  {!audit.metadata?.performance && (
+                    <button
+                      onClick={loadPerformanceMetrics}
+                      disabled={loadingPerformance}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {loadingPerformance ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Zap className="w-4 h-4" />
+                      )}
+                      <span>{loadingPerformance ? 'Loading...' : 'Load Performance Data'}</span>
+                    </button>
+                  )}
+                </div>
+                
+                {audit.metadata?.performance ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
                   {/* LCP */}
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
                     <div className="relative w-20 h-20 mx-auto mb-4">
@@ -1137,7 +1190,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">LCP</div>
                     <div className="text-xs text-gray-500 mb-2">Largest Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews[activeDevice].lcp}s
+                      {audit.metadata?.performance?.largest_contentful_paint || audit.technical_audit.device_previews[activeDevice].lcp}s
                     </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1181,7 +1234,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">FCP</div>
                     <div className="text-xs text-gray-500 mb-2">First Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews[activeDevice].fcp}s
+                      {audit.metadata?.performance?.first_contentful_paint || audit.technical_audit.device_previews[activeDevice].fcp}s
                             </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1225,7 +1278,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">CLS</div>
                     <div className="text-xs text-gray-500 mb-2">Cumulative Layout Shift</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews[activeDevice].cls}
+                      {audit.metadata?.performance?.cumulative_layout_shift || audit.technical_audit.device_previews[activeDevice].cls}
                   </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1269,7 +1322,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">FID</div>
                     <div className="text-xs text-gray-500 mb-2">First Input Delay</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews[activeDevice].fid}ms
+                      {audit.metadata?.performance?.first_input_delay || audit.technical_audit.device_previews[activeDevice].fid}ms
                     </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1313,7 +1366,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">TTI</div>
                     <div className="text-xs text-gray-500 mb-2">Time to Interactive</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.technical_audit.device_previews[activeDevice].tti}s
+                      {audit.metadata?.performance?.time_to_interactive || audit.technical_audit.device_previews[activeDevice].tti}s
                     </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1324,7 +1377,21 @@ export default function AuditDetailPage() {
                     </div>
                   </div>
                 </div>
-            </div>
+                ) : (
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Zap className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Performance Analysis Available</h4>
+                    <p className="text-gray-600 mb-4">
+                      Get detailed Core Web Vitals metrics including LCP, FCP, CLS, FID, and TTI from Google PageSpeed Insights.
+                    </p>
+                    <div className="text-sm text-gray-500">
+                      Click "Load Performance Data" to analyze your website's performance metrics.
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Performance Metrics */}
             <div className="mb-6 md:mb-8">

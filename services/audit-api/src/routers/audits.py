@@ -253,6 +253,76 @@ async def list_audits(
     )
 
 
+@router.post("/{audit_id}/performance")
+async def get_performance_metrics(
+    audit_id: str,
+    db: Session = Depends(get_db),
+    http_request: Request = None,
+) -> Dict[str, Any]:
+    """
+    Get detailed performance metrics (Core Web Vitals) for an audit.
+    
+    Args:
+        audit_id: Audit UUID
+        db: Database session
+        http_request: HTTP request object for logging
+        
+    Returns:
+        Dict containing performance metrics
+    """
+    try:
+        audit_uuid = uuid.UUID(audit_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid audit ID format")
+    
+    audit = db.query(Audit).filter(Audit.id == audit_uuid).first()
+    
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    
+    if audit.status != AuditStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Audit not completed yet")
+    
+    try:
+        # Import PageSpeed Insights provider
+        from audit.providers.performance.psi import PageSpeedInsightsProvider
+        
+        # Get performance metrics
+        psi_provider = PageSpeedInsightsProvider()
+        performance_data = await psi_provider.get_metrics(audit.url)
+        
+        # Update audit with performance data
+        if not audit.metadata:
+            audit.metadata = {}
+        audit.metadata["performance"] = performance_data
+        db.commit()
+        
+        logger.info(
+            "Performance metrics retrieved",
+            audit_id=audit_id,
+            url=audit.url,
+            request_id=getattr(http_request.state, "request_id", None),
+        )
+        
+        return {
+            "status": "success",
+            "performance_metrics": performance_data,
+            "url": audit.url
+        }
+        
+    except Exception as e:
+        logger.error(
+            "Failed to get performance metrics",
+            audit_id=audit_id,
+            error=str(e),
+            request_id=getattr(http_request.state, "request_id", None),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get performance metrics: {str(e)}"
+        )
+
 @router.get("/test-tool-detection")
 async def test_tool_detection():
     """Test endpoint to verify tool detection is working."""

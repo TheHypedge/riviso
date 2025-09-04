@@ -355,3 +355,82 @@
 2025-09-04T18:26:16.998814Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
 2025-09-04T18:27:21.478132Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("vercel.json"), AnchoredSystemPathBuf("apps/web/vercel.json")}
 2025-09-04T18:27:21.478169Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T19:06:52.791313Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/routers/audits.py")}
+2025-09-04T19:06:52.792273Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:07:58.907684Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx")}
+2025-09-04T19:07:58.908219Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-04T19:08:13.882548Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/routers/audits.py")}
+2025-09-04T19:08:13.882580Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:08:49.490597Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/a/[id]/page.tsx"), AnchoredSystemPathBuf("services/audit-api/src/routers/audits.py")}
+2025-09-04T19:08:49.491319Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }, WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:08:49.559738Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-04T19:09:55.782567Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/models.py")}
+2025-09-04T19:09:55.782612Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:22:03.598268Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:22:03.599971Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:22:09.284307Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:22:09.284341Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:22:10.384590Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:22:10.384601Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:23:00.786792Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:23:00.786817Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:23:31.185097Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:23:31.185159Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:23:50.488162Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:23:50.488192Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:24:10.485931Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:24:10.485977Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:24:52.473830Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_tool_detection.py")}
+2025-09-04T19:24:52.474074Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:24:52.573699Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_tool_detection.py")}
+2025-09-04T19:24:52.573707Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:25:03.283457Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:25:03.283495Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:25:19.966573Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:25:19.966614Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:25:32.165034Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/.!36050!tool_detector.py"), AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:25:32.165058Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:26:04.265121Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_tool_detection.py")}
+2025-09-04T19:26:04.265154Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:26:19.665085Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:26:19.665118Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:30:35.173401Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:30:35.174693Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:30:35.764977Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:30:35.764986Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:32:23.874460Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py")}
+2025-09-04T19:32:23.876041Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:32:35.964295Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py")}
+2025-09-04T19:32:35.964330Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:33:24.864968Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_real_detection.py")}
+2025-09-04T19:33:24.864990Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:33:56.167541Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("simple_test.py")}
+2025-09-04T19:33:56.168313Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:33:56.464861Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("simple_test.py")}
+2025-09-04T19:33:56.464869Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:37:21.464699Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("debug_tool_detector.py")}
+2025-09-04T19:37:21.464741Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:37:21.664701Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("debug_tool_detector.py")}
+2025-09-04T19:37:21.664708Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:37:35.865199Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:37:35.865228Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:37:43.365450Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:37:43.365485Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:37:58.966160Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:37:58.966198Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:38:20.165533Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py")}
+2025-09-04T19:38:20.165564Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:38:42.164895Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_real_detection.py")}
+2025-09-04T19:38:42.164934Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:38:42.264988Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("test_real_detection.py")}
+2025-09-04T19:38:42.265002Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:38:42.865509Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("simple_test.py")}
+2025-09-04T19:38:42.865554Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:38:43.664479Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("debug_tool_detector.py")}
+2025-09-04T19:38:43.664488Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:39:16.665064Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("TOOL_DETECTION_SUMMARY.md")}
+2025-09-04T19:39:16.665119Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:39:16.865009Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("TOOL_DETECTION_SUMMARY.md")}
+2025-09-04T19:39:16.865018Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-09-04T19:39:24.865200Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("services/audit-api/src/audit/audit_engine.py"), AnchoredSystemPathBuf("services/audit-api/src/audit/tool_detector.py"), AnchoredSystemPathBuf("TOOL_DETECTION_SUMMARY.md")}
+2025-09-04T19:39:24.865223Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))

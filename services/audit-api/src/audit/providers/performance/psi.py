@@ -30,13 +30,60 @@ class PageSpeedInsightsProvider:
             return self._get_mock_metrics()
         
         try:
-            # TODO: Implement actual PageSpeed Insights API call
-            # This is a placeholder for future implementation
-            logger.info("PageSpeed Insights analysis requested", url=url)
-            return self._get_mock_metrics()
+            import aiohttp
+            
+            params = {
+                "url": url,
+                "key": self.api_key,
+                "strategy": "mobile",
+                "category": "performance"
+            }
+            
+            logger.info("Fetching PageSpeed Insights data", url=url)
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.base_url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        logger.info("PageSpeed Insights data fetched successfully", url=url)
+                        return self._extract_metrics(data)
+                    else:
+                        logger.warning("PageSpeed Insights API error", url=url, status=response.status)
+                        return self._get_mock_metrics()
             
         except Exception as e:
             logger.error("PageSpeed Insights API error", url=url, error=str(e))
+            return self._get_mock_metrics()
+    
+    def _extract_metrics(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract metrics from PageSpeed Insights API response."""
+        try:
+            lighthouse_result = data.get("lighthouseResult", {})
+            audits = lighthouse_result.get("audits", {})
+            
+            # Core Web Vitals
+            lcp = audits.get("largest-contentful-paint", {}).get("numericValue", 0) / 1000
+            fcp = audits.get("first-contentful-paint", {}).get("numericValue", 0) / 1000
+            cls = audits.get("cumulative-layout-shift", {}).get("numericValue", 0)
+            fid = audits.get("max-potential-fid", {}).get("numericValue", 0)
+            tti = audits.get("interactive", {}).get("numericValue", 0) / 1000
+            
+            # Performance scores
+            performance_score = lighthouse_result.get("categories", {}).get("performance", {}).get("score", 0) * 100
+            
+            return {
+                "performance_score": round(performance_score),
+                "first_contentful_paint": round(fcp, 2),
+                "largest_contentful_paint": round(lcp, 2),
+                "cumulative_layout_shift": round(cls, 3),
+                "first_input_delay": round(fid, 0),
+                "time_to_interactive": round(tti, 2),
+                "total_blocking_time": audits.get("total-blocking-time", {}).get("numericValue", 0),
+                "speed_index": audits.get("speed-index", {}).get("numericValue", 0) / 1000,
+                "data_source": "Google PageSpeed Insights API"
+            }
+        except Exception as e:
+            logger.error("Error extracting PageSpeed metrics", error=str(e))
             return self._get_mock_metrics()
     
     def _get_mock_metrics(self) -> Dict[str, Any]:

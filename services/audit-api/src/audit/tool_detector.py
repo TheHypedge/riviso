@@ -770,7 +770,7 @@ class ToolDetector:
                 if re.search(pattern, html_content, re.IGNORECASE):
                     confidence += 20
                     evidence.append(f"HTML Content: {pattern}")
-                        break
+                    break
             
             # Only include tools with some confidence
             if confidence > 0:
