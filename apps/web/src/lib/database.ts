@@ -11,7 +11,7 @@ try {
   db = new Database(dbPath)
   console.log('✅ Database initialized successfully')
 } catch (error) {
-  console.log('❌ better-sqlite3 not available, using fallback mode:', error.message)
+  console.log('❌ better-sqlite3 not available, using fallback mode:', error instanceof Error ? error.message : String(error))
   // Fallback mode for build environments
   db = null
 }
