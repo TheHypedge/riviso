@@ -35,9 +35,9 @@ except ImportError:
 
 # Import with error handling
 try:
-    from config import Settings
-    from db import engine, get_db
-    from routers import health, audits
+    from .config import Settings
+    from .db import engine, get_db
+    from .routers import health, audits
     print("✅ All imports successful")
     FULL_APP_AVAILABLE = True
 except ImportError as e:
