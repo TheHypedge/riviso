@@ -1,5 +1,12 @@
 {
   "buildCommand": "pnpm --filter @riviso/web run build",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "public": true,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/apps/web/$1"
+    }
+  ]
 }

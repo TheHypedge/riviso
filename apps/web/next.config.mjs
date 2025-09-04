@@ -8,7 +8,6 @@ const nextConfig = {
   },
   // Removed rewrites - using API routes instead
   // Production optimizations
-  output: 'standalone',
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
