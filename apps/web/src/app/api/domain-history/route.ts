@@ -113,7 +113,9 @@ async function fetchWhoisData(domain: string) {
     const apis = [
       `https://api.whoisjson.com/v1/whois/${domain}`,
       `https://whoisjson.com/api/v1/whois/${domain}`,
-      `https://api.whoisjson.com/whois/${domain}`
+      `https://api.whoisjson.com/whois/${domain}`,
+      `https://whoisjson.com/api/v1/whois/${domain}?format=json`,
+      `https://api.whoisjson.com/v1/whois/${domain}?format=json`
     ]
     
     for (const apiUrl of apis) {
@@ -127,6 +129,7 @@ async function fetchWhoisData(domain: string) {
         
         if (response.ok) {
           const data = await response.json()
+          console.log(`WHOIS API response for ${domain}:`, JSON.stringify(data, null, 2))
           const parsed = parseWhoisData(data)
           if (parsed.registered !== undefined) {
             return parsed
@@ -138,8 +141,8 @@ async function fetchWhoisData(domain: string) {
       }
     }
     
-    // Fallback to a simple domain availability check
-    return await checkDomainAvailability(domain)
+    // Fallback to alternative WHOIS service
+    return await fetchAlternativeWhois(domain)
     
   } catch (error) {
     console.error('WHOIS fetch error:', error)
@@ -148,6 +151,47 @@ async function fetchWhoisData(domain: string) {
       registered: false,
       error: 'WHOIS data not available'
     }
+  }
+}
+
+async function fetchAlternativeWhois(domain: string) {
+  try {
+    // Try alternative WHOIS services
+    const alternativeApis = [
+      `https://whoisjson.com/api/v1/whois/${domain}`,
+      `https://api.whoisjson.com/whois/${domain}`,
+      `https://whoisjson.com/api/v1/whois/${domain}?format=json`
+    ]
+    
+    for (const apiUrl of alternativeApis) {
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; SEO-Audit/1.0)',
+            'Accept': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log(`Alternative WHOIS API response for ${domain}:`, JSON.stringify(data, null, 2))
+          const parsed = parseWhoisData(data)
+          if (parsed.registered !== undefined) {
+            return parsed
+          }
+        }
+      } catch (e) {
+        console.log(`Alternative WHOIS API failed: ${apiUrl}`)
+        continue
+      }
+    }
+    
+    // Final fallback to DNS check
+    return await checkDomainAvailability(domain)
+    
+  } catch (error) {
+    console.error('Alternative WHOIS fetch error:', error)
+    return await checkDomainAvailability(domain)
   }
 }
 
@@ -198,82 +242,83 @@ function parseWhoisData(data: any) {
       }
     }
     
-    // Parse registration date
-    if (data.creation_date) {
-      result.registrationDate = formatDate(data.creation_date)
-    } else if (data.created_date) {
-      result.registrationDate = formatDate(data.created_date)
-    } else if (data.registered) {
-      result.registrationDate = formatDate(data.registered)
+    // Parse registration date - try multiple field names
+    const regDate = data.creation_date || data.created_date || data.registered || 
+                   data.creationDate || data.createdDate || data.registeredDate ||
+                   data.creation || data.created || data.registered_at
+    if (regDate) {
+      result.registrationDate = formatDate(regDate)
     }
     
-    // Parse expiration date
-    if (data.expiration_date) {
-      result.expirationDate = formatDate(data.expiration_date)
-    } else if (data.expires) {
-      result.expirationDate = formatDate(data.expires)
-    } else if (data.expiry) {
-      result.expirationDate = formatDate(data.expiry)
+    // Parse expiration date - try multiple field names
+    const expDate = data.expiration_date || data.expires || data.expiry || 
+                   data.expirationDate || data.expiresDate || data.expiryDate ||
+                   data.expiration || data.expires_at || data.expiry_at
+    if (expDate) {
+      result.expirationDate = formatDate(expDate)
     }
     
-    // Parse last updated
-    if (data.updated_date) {
-      result.lastUpdated = formatDate(data.updated_date)
-    } else if (data.updated) {
-      result.lastUpdated = formatDate(data.updated)
+    // Parse last updated - try multiple field names
+    const updDate = data.updated_date || data.updated || data.lastUpdated ||
+                   data.updatedDate || data.last_updated || data.lastUpdatedDate ||
+                   data.modified || data.modified_at
+    if (updDate) {
+      result.lastUpdated = formatDate(updDate)
     }
     
-    // Parse registrar
-    if (data.registrar) {
+    // Parse registrar - try multiple field names
+    const registrar = data.registrar || data.registrarName || data.registrar_name
+    if (registrar) {
       result.registrar = {
-        name: data.registrar.name || data.registrar,
-        url: data.registrar.url,
-        whoisServer: data.registrar.whois_server
+        name: registrar.name || registrar.registrar || registrar,
+        url: registrar.url || registrar.website || registrar.registrar_url,
+        whoisServer: registrar.whois_server || registrar.whoisServer || registrar.whois
       }
     }
     
-    // Parse registrant
-    if (data.registrant) {
+    // Parse registrant - try multiple field names
+    const registrant = data.registrant || data.owner || data.domain_owner || data.owner_info
+    if (registrant) {
       result.registrant = {
-        name: data.registrant.name,
-        organization: data.registrant.organization,
-        email: data.registrant.email,
-        phone: data.registrant.phone,
-        address: data.registrant.address,
-        city: data.registrant.city,
-        state: data.registrant.state,
-        country: data.registrant.country,
-        zipCode: data.registrant.zip_code
+        name: registrant.name || registrant.registrant_name || registrant.owner_name,
+        organization: registrant.organization || registrant.org || registrant.company,
+        email: registrant.email || registrant.registrant_email || registrant.owner_email,
+        phone: registrant.phone || registrant.registrant_phone || registrant.owner_phone,
+        address: registrant.address || registrant.registrant_address || registrant.owner_address,
+        city: registrant.city || registrant.registrant_city || registrant.owner_city,
+        state: registrant.state || registrant.registrant_state || registrant.owner_state,
+        country: registrant.country || registrant.registrant_country || registrant.owner_country,
+        zipCode: registrant.zip_code || registrant.zipCode || registrant.postal_code
       }
     }
     
-    // Parse admin contact
-    if (data.admin_contact) {
+    // Parse admin contact - try multiple field names
+    const adminContact = data.admin_contact || data.adminContact || data.admin || data.administrative_contact
+    if (adminContact) {
       result.adminContact = {
-        name: data.admin_contact.name,
-        email: data.admin_contact.email,
-        phone: data.admin_contact.phone
+        name: adminContact.name || adminContact.admin_name || adminContact.contact_name,
+        email: adminContact.email || adminContact.admin_email || adminContact.contact_email,
+        phone: adminContact.phone || adminContact.admin_phone || adminContact.contact_phone
       }
     }
     
-    // Parse tech contact
-    if (data.tech_contact) {
+    // Parse tech contact - try multiple field names
+    const techContact = data.tech_contact || data.techContact || data.technical_contact || data.tech
+    if (techContact) {
       result.techContact = {
-        name: data.tech_contact.name,
-        email: data.tech_contact.email,
-        phone: data.tech_contact.phone
+        name: techContact.name || techContact.tech_name || techContact.contact_name,
+        email: techContact.email || techContact.tech_email || techContact.contact_email,
+        phone: techContact.phone || techContact.tech_phone || techContact.contact_phone
       }
     }
     
-    // Parse name servers
-    if (data.name_servers) {
-      result.nameServers = Array.isArray(data.name_servers) 
-        ? data.name_servers 
-        : [data.name_servers]
-    } else if (data.nameservers) {
-      result.nameServers = Array.isArray(data.nameservers) 
-        ? data.nameservers 
-        : [data.nameservers]
+    // Parse name servers - try multiple field names
+    const nameServers = data.name_servers || data.nameservers || data.nameServers || 
+                       data.ns || data.name_server || data.dns_servers
+    if (nameServers) {
+      result.nameServers = Array.isArray(nameServers) 
+        ? nameServers 
+        : [nameServers]
     }
     
     // Parse status
@@ -364,17 +409,48 @@ async function fetchDnsData(domain: string) {
 }
 
 function formatDate(dateString: string): string {
+  if (!dateString) return 'Unknown'
+  
   try {
-    const date = new Date(dateString)
+    // Handle various date formats
+    let date: Date
+    
+    // Try parsing as-is first
+    date = new Date(dateString)
+    
+    // If invalid, try common WHOIS date formats
     if (isNaN(date.getTime())) {
-      return dateString
+      // Try YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+        date = new Date(dateString)
+      }
+      // Try DD-MMM-YYYY format
+      else if (/^\d{2}-[A-Za-z]{3}-\d{4}/.test(dateString)) {
+        date = new Date(dateString)
+      }
+      // Try YYYY/MM/DD format
+      else if (/^\d{4}\/\d{2}\/\d{2}/.test(dateString)) {
+        date = new Date(dateString)
+      }
+      // Try parsing just the date part if there's extra text
+      else {
+        const dateMatch = dateString.match(/(\d{4}-\d{2}-\d{2})|(\d{2}-[A-Za-z]{3}-\d{4})|(\d{4}\/\d{2}\/\d{2})/)
+        if (dateMatch) {
+          date = new Date(dateMatch[0])
+        }
+      }
     }
+    
+    if (isNaN(date.getTime())) {
+      return dateString || 'Unknown'
+    }
+    
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     })
   } catch (error) {
-    return dateString
+    return dateString || 'Unknown'
   }
 }
