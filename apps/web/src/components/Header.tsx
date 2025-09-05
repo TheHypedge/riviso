@@ -36,28 +36,38 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link href="/features" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
-              Features
-            </Link>
-            <Link href="/services" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
-              Services
-            </Link>
-            <Link href="/pricing" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
-              Pricing
-            </Link>
-            <Link href="/resources-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
-              Resources Checker
-            </Link>
-            <Link href="/domain-history-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
-              Domain History
-            </Link>
-            <Link href="/onpage-optimization" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
-              On-Page SEO
-            </Link>
-            <Link href="/" className="btn btn-primary btn-sm hover-glow">
-              Start Free Audit
-            </Link>
+          <nav className="hidden md:flex items-center space-x-6">
+            <div className="flex space-x-8">
+              <Link href="/features" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                Features
+              </Link>
+              <Link href="/services" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                Services
+              </Link>
+              <Link href="/pricing" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                Pricing
+              </Link>
+              <Link href="/resources-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                Resources Checker
+              </Link>
+              <Link href="/domain-history-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                Domain History
+              </Link>
+              <Link href="/onpage-optimization" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                On-Page SEO
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link href="/login" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+                Login
+              </Link>
+              <Link href="/signup" className="btn btn-primary btn-sm hover-glow">
+                Sign Up
+              </Link>
+              <Link href="/" className="btn btn-secondary btn-sm hover-glow">
+                Start Free Audit
+              </Link>
+            </div>
           </nav>
 
           {/* Mobile menu button */}
@@ -122,13 +132,31 @@ export default function Header() {
               >
                 On-Page SEO
               </Link>
-              <Link
-                href="/"
-                className="block px-4 py-3 text-base font-medium text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 rounded-xl transition-all duration-200 shadow-lg text-center"
-                onClick={closeMobileMenu}
-              >
-                Start Free Audit
-              </Link>
+              
+              {/* Mobile Auth Links */}
+              <div className="border-t border-gray-200 pt-3 mt-3">
+                <Link
+                  href="/login"
+                  className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
+                  onClick={closeMobileMenu}
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block px-4 py-3 text-base font-medium text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 rounded-xl transition-all duration-200 shadow-lg text-center"
+                  onClick={closeMobileMenu}
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  href="/"
+                  className="block px-4 py-3 text-base font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 text-center"
+                  onClick={closeMobileMenu}
+                >
+                  Start Free Audit
+                </Link>
+              </div>
             </div>
           </div>
         )}
