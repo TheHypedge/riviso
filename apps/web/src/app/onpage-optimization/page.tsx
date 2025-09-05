@@ -126,6 +126,14 @@ export default function OnPageOptimizationPage() {
   const [result, setResult] = useState<OnPageResult | null>(null)
   const [error, setError] = useState('')
 
+  // Helper function to safely get analyzer data
+  const getAnalyzerData = (analyzerName: keyof OnPageResult['onPage']) => {
+    return result?.onPage?.[analyzerName] || {
+      status: 'fail' as const,
+      recommendation: 'No data available'
+    }
+  }
+
   const handleAnalyze = async () => {
     if (!url.trim()) {
       setError('Please enter a valid URL')
@@ -264,94 +272,100 @@ export default function OnPageOptimizationPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Overall Score</h2>
-                <div className={`text-4xl font-bold ${getScoreColor(result.score.value)}`}>
-                  {result.score.value}/100
+                <div className={`text-4xl font-bold ${getScoreColor(result.score?.value || 0)}`}>
+                  {result.score?.value || 0}/100
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
                   className={`h-3 rounded-full ${
-                    result.score.value >= 80 ? 'bg-green-500' : 
-                    result.score.value >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                    (result.score?.value || 0) >= 80 ? 'bg-green-500' : 
+                    (result.score?.value || 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                   }`}
-                  style={{ width: `${result.score.value}%` }}
+                  style={{ width: `${result.score?.value || 0}%` }}
                 />
               </div>
               <div className="mt-4 text-sm text-gray-600">
-                <p><strong>URL:</strong> {result.url}</p>
-                <p><strong>Final URL:</strong> {result.finalUrl}</p>
-                <p><strong>HTTP Status:</strong> {result.http.status}</p>
-                <p><strong>Redirects:</strong> {result.http.redirects}</p>
+                <p><strong>URL:</strong> {result.url || 'N/A'}</p>
+                <p><strong>Final URL:</strong> {result.finalUrl || 'N/A'}</p>
+                <p><strong>HTTP Status:</strong> {result.http?.status || 'N/A'}</p>
+                <p><strong>Redirects:</strong> {result.http?.redirects || 0}</p>
               </div>
             </div>
 
             {/* SEO Tests Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {result.onPage && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Title Test */}
-              <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(result.onPage.title.status)}`}>
+              <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(result.onPage.title?.status || 'fail')}`}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Meta Title</h3>
-                  {getStatusIcon(result.onPage.title.status)}
+                  {getStatusIcon(result.onPage.title?.status || 'fail')}
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">
-                    <strong>Length:</strong> {result.onPage.title.length} characters
+                    <strong>Length:</strong> {result.onPage.title?.length || 0} characters
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Text:</strong> {result.onPage.title.text || 'Not found'}
+                    <strong>Text:</strong> {result.onPage.title?.text || 'Not found'}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Status:</strong> {result.onPage.title.status.toUpperCase()}
+                    <strong>Status:</strong> {(result.onPage.title?.status || 'fail').toUpperCase()}
                   </p>
                 </div>
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{result.onPage.title.recommendation}</p>
+                  <p className="text-sm text-gray-700">{result.onPage.title?.recommendation || 'No data available'}</p>
                 </div>
               </div>
 
               {/* Meta Description Test */}
-              <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(result.onPage.metaDescription.status)}`}>
+              <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(result.onPage.metaDescription?.status || 'fail')}`}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Meta Description</h3>
-                  {getStatusIcon(result.onPage.metaDescription.status)}
+                  {getStatusIcon(result.onPage.metaDescription?.status || 'fail')}
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">
-                    <strong>Length:</strong> {result.onPage.metaDescription.length} characters
+                    <strong>Length:</strong> {result.onPage.metaDescription?.length || 0} characters
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Text:</strong> {result.onPage.metaDescription.text || 'Not found'}
+                    <strong>Text:</strong> {result.onPage.metaDescription?.text || 'Not found'}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Status:</strong> {result.onPage.metaDescription.status.toUpperCase()}
+                    <strong>Status:</strong> {(result.onPage.metaDescription?.status || 'fail').toUpperCase()}
                   </p>
                 </div>
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{result.onPage.metaDescription.recommendation}</p>
+                  <p className="text-sm text-gray-700">{result.onPage.metaDescription?.recommendation || 'No data available'}</p>
                 </div>
               </div>
 
               {/* Meta Robots Test */}
-              <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(result.onPage.metaRobots.status)}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Meta Robots</h3>
-                  {getStatusIcon(result.onPage.metaRobots.status)}
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600">
-                    <strong>Indexable:</strong> {result.onPage.metaRobots.indexable ? 'Yes' : 'No'}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Followable:</strong> {result.onPage.metaRobots.followable ? 'Yes' : 'No'}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Content:</strong> {result.onPage.metaRobots.content || 'Not found'}
-                  </p>
-                </div>
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-700">{result.onPage.metaRobots.recommendation}</p>
-                </div>
-              </div>
+              {(() => {
+                const data = getAnalyzerData('metaRobots')
+                return (
+                  <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(data.status)}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Meta Robots</h3>
+                      {getStatusIcon(data.status)}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <strong>Indexable:</strong> {(data as any).indexable ? 'Yes' : 'No'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Followable:</strong> {(data as any).followable ? 'Yes' : 'No'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Content:</strong> {(data as any).content || 'Not found'}
+                      </p>
+                    </div>
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-700">{data.recommendation}</p>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Canonical Test */}
               <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(result.onPage.canonical.status)}`}>
@@ -591,6 +605,7 @@ export default function OnPageOptimizationPage() {
                 </div>
               </div>
             </div>
+            )}
           </div>
         )}
       </div>
