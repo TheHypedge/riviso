@@ -308,45 +308,69 @@ function parseRdapData(data: any, domain: string): Partial<DomainInfo> {
       }
     }
 
-    // Parse registrar
-    if (data.registrar) {
-      result.registrar = {
-        name: data.registrar.name || data.registrar,
-        url: data.registrar.url,
-        whoisServer: data.registrar.whoisServer
+    // Parse registrar from entities array
+    if (data.entities && Array.isArray(data.entities)) {
+      const registrarEntity = data.entities.find((entity: any) => 
+        entity.roles && entity.roles.includes('registrar')
+      )
+      
+      if (registrarEntity) {
+        result.registrar = {
+          name: registrarEntity.vcardArray?.[1]?.find((vcard: any) => vcard[0] === 'fn')?.[3] || 'Unknown',
+          url: registrarEntity.links?.[0]?.href || '',
+          whoisServer: registrarEntity.publicIds?.find((id: any) => id.type === 'IANA Registrar ID')?.identifier || ''
+        }
       }
     }
 
-    // Parse registrant
-    if (data.registrant) {
-      result.registrant = {
-        name: data.registrant.name,
-        organization: data.registrant.organization,
-        email: data.registrant.email,
-        phone: data.registrant.phone,
-        address: data.registrant.address,
-        city: data.registrant.city,
-        state: data.registrant.state,
-        country: data.registrant.country,
-        zipCode: data.registrant.zipCode
+    // Parse registrant, admin, and tech contacts from entities array
+    if (data.entities && Array.isArray(data.entities)) {
+      // Find registrant entity
+      const registrantEntity = data.entities.find((entity: any) => 
+        entity.roles && entity.roles.includes('registrant')
+      )
+      
+      if (registrantEntity && registrantEntity.vcardArray) {
+        const vcard = registrantEntity.vcardArray[1]
+        result.registrant = {
+          name: vcard.find((item: any) => item[0] === 'fn')?.[3] || '',
+          organization: vcard.find((item: any) => item[0] === 'org')?.[3] || '',
+          email: vcard.find((item: any) => item[0] === 'email')?.[3] || '',
+          phone: vcard.find((item: any) => item[0] === 'tel')?.[3] || '',
+          address: vcard.find((item: any) => item[0] === 'adr')?.[3] || '',
+          city: vcard.find((item: any) => item[0] === 'locality')?.[3] || '',
+          state: vcard.find((item: any) => item[0] === 'region')?.[3] || '',
+          country: vcard.find((item: any) => item[0] === 'country-name')?.[3] || '',
+          zipCode: vcard.find((item: any) => item[0] === 'postal-code')?.[3] || ''
+        }
       }
-    }
 
-    // Parse admin contact
-    if (data.admin) {
-      result.adminContact = {
-        name: data.admin.name,
-        email: data.admin.email,
-        phone: data.admin.phone
+      // Find admin contact entity
+      const adminEntity = data.entities.find((entity: any) => 
+        entity.roles && entity.roles.includes('administrative')
+      )
+      
+      if (adminEntity && adminEntity.vcardArray) {
+        const vcard = adminEntity.vcardArray[1]
+        result.adminContact = {
+          name: vcard.find((item: any) => item[0] === 'fn')?.[3] || '',
+          email: vcard.find((item: any) => item[0] === 'email')?.[3] || '',
+          phone: vcard.find((item: any) => item[0] === 'tel')?.[3] || ''
+        }
       }
-    }
 
-    // Parse tech contact
-    if (data.tech) {
-      result.techContact = {
-        name: data.tech.name,
-        email: data.tech.email,
-        phone: data.tech.phone
+      // Find tech contact entity
+      const techEntity = data.entities.find((entity: any) => 
+        entity.roles && entity.roles.includes('technical')
+      )
+      
+      if (techEntity && techEntity.vcardArray) {
+        const vcard = techEntity.vcardArray[1]
+        result.techContact = {
+          name: vcard.find((item: any) => item[0] === 'fn')?.[3] || '',
+          email: vcard.find((item: any) => item[0] === 'email')?.[3] || '',
+          phone: vcard.find((item: any) => item[0] === 'tel')?.[3] || ''
+        }
       }
     }
 
