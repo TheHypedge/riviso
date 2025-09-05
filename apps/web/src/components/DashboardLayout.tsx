@@ -391,7 +391,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
         <div className="flex-1 lg:ml-64">
           {/* Desktop Header */}
           <header className="hidden lg:block bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-            <div className="px-6 py-3">
+            <div className="pl-0 pr-6 py-3">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
@@ -426,7 +426,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
           </header>
 
           {/* Tool Content */}
-          <main className="p-4 lg:p-6 min-h-screen">
+          <main className="p-4 lg:pl-0 lg:pr-6 lg:py-6 min-h-screen">
             {renderTool()}
           </main>
         </div>
