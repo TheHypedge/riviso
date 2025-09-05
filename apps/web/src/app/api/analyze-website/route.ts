@@ -203,7 +203,19 @@ export async function POST(request: NextRequest) {
     const desktopScore = desktopData.lighthouseResult?.categories?.performance?.score * 100 || 0
     const overallScore = Math.round((mobileScore + desktopScore) / 2)
 
-    // Extract Core Web Vitals
+    // Extract all category scores
+    const mobileCategories = mobileData.lighthouseResult?.categories || {}
+    const desktopCategories = desktopData.lighthouseResult?.categories || {}
+
+    const mobileAccessibilityScore = mobileCategories.accessibility?.score * 100 || 0
+    const mobileBestPracticesScore = mobileCategories['best-practices']?.score * 100 || 0
+    const mobileSeoScore = mobileCategories.seo?.score * 100 || 0
+
+    const desktopAccessibilityScore = desktopCategories.accessibility?.score * 100 || 0
+    const desktopBestPracticesScore = desktopCategories['best-practices']?.score * 100 || 0
+    const desktopSeoScore = desktopCategories.seo?.score * 100 || 0
+
+    // Extract Core Web Vitals and other metrics
     const mobileAudits = mobileData.lighthouseResult?.audits || {}
     const desktopAudits = desktopData.lighthouseResult?.audits || {}
 
@@ -216,21 +228,103 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Mobile metrics
     const mobileLCP = extractMetric(mobileAudits, 'largest-contentful-paint')
     const mobileFCP = extractMetric(mobileAudits, 'first-contentful-paint')
     const mobileCLS = extractMetric(mobileAudits, 'cumulative-layout-shift')
     const mobileFID = extractMetric(mobileAudits, 'max-potential-fid')
+    const mobileTTI = extractMetric(mobileAudits, 'interactive')
+    const mobileTBT = extractMetric(mobileAudits, 'total-blocking-time')
+    const mobileSpeedIndex = extractMetric(mobileAudits, 'speed-index')
+    const mobileFMP = extractMetric(mobileAudits, 'first-meaningful-paint')
 
+    // Desktop metrics
     const desktopLCP = extractMetric(desktopAudits, 'largest-contentful-paint')
     const desktopFCP = extractMetric(desktopAudits, 'first-contentful-paint')
     const desktopCLS = extractMetric(desktopAudits, 'cumulative-layout-shift')
     const desktopFID = extractMetric(desktopAudits, 'max-potential-fid')
+    const desktopTTI = extractMetric(desktopAudits, 'interactive')
+    const desktopTBT = extractMetric(desktopAudits, 'total-blocking-time')
+    const desktopSpeedIndex = extractMetric(desktopAudits, 'speed-index')
+    const desktopFMP = extractMetric(desktopAudits, 'first-meaningful-paint')
+
+    // Extract resource metrics
+    const mobileResourceMetrics = {
+      total_byte_weight: mobileAudits['total-byte-weight']?.numericValue || 0,
+      unused_css_rules: mobileAudits['unused-css-rules']?.numericValue || 0,
+      unused_javascript: mobileAudits['unused-javascript']?.numericValue || 0,
+      render_blocking_resources: mobileAudits['render-blocking-resources']?.numericValue || 0,
+      efficient_animated_content: mobileAudits['efficient-animated-content']?.numericValue || 0
+    }
+
+    const desktopResourceMetrics = {
+      total_byte_weight: desktopAudits['total-byte-weight']?.numericValue || 0,
+      unused_css_rules: desktopAudits['unused-css-rules']?.numericValue || 0,
+      unused_javascript: desktopAudits['unused-javascript']?.numericValue || 0,
+      render_blocking_resources: desktopAudits['render-blocking-resources']?.numericValue || 0,
+      efficient_animated_content: desktopAudits['efficient-animated-content']?.numericValue || 0
+    }
+
+    // Extract opportunities and diagnostics
+    const extractOpportunities = (audits: any) => {
+      const opportunities = []
+      const opportunityKeys = [
+        'unused-css-rules', 'unused-javascript', 'render-blocking-resources',
+        'unused-javascript', 'efficient-animated-content', 'uses-optimized-images',
+        'uses-webp-images', 'uses-text-compression', 'uses-responsive-images'
+      ]
+      
+      opportunityKeys.forEach(key => {
+        const audit = audits[key]
+        if (audit && audit.score < 1 && audit.numericValue > 0) {
+          opportunities.push({
+            id: key,
+            title: audit.title,
+            description: audit.description,
+            score: audit.score,
+            numericValue: audit.numericValue,
+            displayValue: audit.displayValue,
+            wastedMs: audit.details?.overallSavingsMs || 0
+          })
+        }
+      })
+      
+      return opportunities.slice(0, 10)
+    }
+
+    const extractDiagnostics = (audits: any) => {
+      const diagnostics = []
+      const diagnosticKeys = [
+        'render-blocking-resources', 'uses-optimized-images', 'uses-text-compression',
+        'uses-webp-images', 'uses-responsive-images', 'efficient-animated-content'
+      ]
+      
+      diagnosticKeys.forEach(key => {
+        const audit = audits[key]
+        if (audit) {
+          diagnostics.push({
+            id: key,
+            title: audit.title,
+            description: audit.description,
+            score: audit.score,
+            displayValue: audit.displayValue
+          })
+        }
+      })
+      
+      return diagnostics.slice(0, 10)
+    }
+
+    const mobileOpportunities = extractOpportunities(mobileAudits)
+    const mobileDiagnostics = extractDiagnostics(mobileAudits)
+    const desktopOpportunities = extractOpportunities(desktopAudits)
+    const desktopDiagnostics = extractDiagnostics(desktopAudits)
 
     return NextResponse.json({
       status: 'success',
       website_info: {
         url: fullUrl,
-        final_url: fullUrl,
+        final_url: mobileData.lighthouseResult?.finalUrl || fullUrl,
         title: `Website Analysis - ${fullUrl}`,
         description: `Comprehensive performance analysis for ${fullUrl}`,
         favicon: `https://www.google.com/s2/favicons?domain=${new URL(fullUrl).hostname}`,
@@ -240,33 +334,77 @@ export async function POST(request: NextRequest) {
         status: 'success',
         url: fullUrl,
         performance_score: Math.round(mobileScore),
+        accessibility_score: Math.round(mobileAccessibilityScore),
+        best_practices_score: Math.round(mobileBestPracticesScore),
+        seo_score: Math.round(mobileSeoScore),
         first_contentful_paint: mobileFCP.value,
         largest_contentful_paint: mobileLCP.value,
         cumulative_layout_shift: mobileCLS.value,
         first_input_delay: mobileFID.value,
+        time_to_interactive: mobileTTI.value,
+        total_blocking_time: mobileTBT.value,
+        speed_index: mobileSpeedIndex.value,
+        first_meaningful_paint: mobileFMP.value,
+        lcp_score: mobileLCP.score,
+        fcp_score: mobileFCP.score,
+        cls_score: mobileCLS.score,
+        fid_score: mobileFID.score,
         display_values: {
           first_contentful_paint: mobileFCP.displayValue,
           largest_contentful_paint: mobileLCP.displayValue,
           cumulative_layout_shift: mobileCLS.displayValue,
-          first_input_delay: mobileFID.displayValue
+          first_input_delay: mobileFID.displayValue,
+          total_blocking_time: mobileTBT.displayValue,
+          speed_index: mobileSpeedIndex.displayValue,
+          time_to_interactive: mobileTTI.displayValue,
+          first_meaningful_paint: mobileFMP.displayValue
         },
-        strategy: 'mobile'
+        resource_metrics: mobileResourceMetrics,
+        opportunities: mobileOpportunities,
+        diagnostics: mobileDiagnostics,
+        strategy: 'mobile',
+        data_source: 'Google PageSpeed Insights API',
+        fetch_time: mobileData.lighthouseResult?.fetchTime || new Date().toISOString(),
+        final_url: mobileData.lighthouseResult?.finalUrl || fullUrl,
+        requested_url: mobileData.lighthouseResult?.requestedUrl || fullUrl
       },
       desktop_data: {
         status: 'success',
         url: fullUrl,
         performance_score: Math.round(desktopScore),
+        accessibility_score: Math.round(desktopAccessibilityScore),
+        best_practices_score: Math.round(desktopBestPracticesScore),
+        seo_score: Math.round(desktopSeoScore),
         first_contentful_paint: desktopFCP.value,
         largest_contentful_paint: desktopLCP.value,
         cumulative_layout_shift: desktopCLS.value,
         first_input_delay: desktopFID.value,
+        time_to_interactive: desktopTTI.value,
+        total_blocking_time: desktopTBT.value,
+        speed_index: desktopSpeedIndex.value,
+        first_meaningful_paint: desktopFMP.value,
+        lcp_score: desktopLCP.score,
+        fcp_score: desktopFCP.score,
+        cls_score: desktopCLS.score,
+        fid_score: desktopFID.score,
         display_values: {
           first_contentful_paint: desktopFCP.displayValue,
           largest_contentful_paint: desktopLCP.displayValue,
           cumulative_layout_shift: desktopCLS.displayValue,
-          first_input_delay: desktopFID.displayValue
+          first_input_delay: desktopFID.displayValue,
+          total_blocking_time: desktopTBT.displayValue,
+          speed_index: desktopSpeedIndex.displayValue,
+          time_to_interactive: desktopTTI.displayValue,
+          first_meaningful_paint: desktopFMP.displayValue
         },
-        strategy: 'desktop'
+        resource_metrics: desktopResourceMetrics,
+        opportunities: desktopOpportunities,
+        diagnostics: desktopDiagnostics,
+        strategy: 'desktop',
+        data_source: 'Google PageSpeed Insights API',
+        fetch_time: desktopData.lighthouseResult?.fetchTime || new Date().toISOString(),
+        final_url: desktopData.lighthouseResult?.finalUrl || fullUrl,
+        requested_url: desktopData.lighthouseResult?.requestedUrl || fullUrl
       },
       analysis_timestamp: new Date().toISOString()
     })
