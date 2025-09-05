@@ -242,6 +242,25 @@ export default function WebsiteAnalyzer() {
         </form>
       </div>
 
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Analyzing Website</h3>
+              <p className="text-gray-600 mb-4">Fetching real-time data from Google PageSpeed Insights...</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div className="bg-primary-600 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+              </div>
+              <p className="text-sm text-gray-500">This may take 10-30 seconds for comprehensive analysis</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -834,7 +853,13 @@ export default function WebsiteAnalyzer() {
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-gray-500" />
                 <span className="text-gray-600">Data Source:</span>
-                <span className="font-mono">{result.mobile_data?.data_source || result.desktop_data?.data_source || 'Unknown'}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  result.mobile_data?.data_source === 'Google PageSpeed Insights API' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {result.mobile_data?.data_source || result.desktop_data?.data_source || 'Unknown'}
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <ExternalLink className="h-4 w-4 text-gray-500" />

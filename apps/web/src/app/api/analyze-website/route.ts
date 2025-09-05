@@ -189,8 +189,12 @@ export async function POST(request: NextRequest) {
     )
 
     if (!mobileResponse.ok || !desktopResponse.ok) {
+      const mobileError = !mobileResponse.ok ? `Mobile: ${mobileResponse.status} ${mobileResponse.statusText}` : ''
+      const desktopError = !desktopResponse.ok ? `Desktop: ${desktopResponse.status} ${desktopResponse.statusText}` : ''
+      const errorMessage = `Failed to fetch PageSpeed Insights data. ${mobileError} ${desktopError}`.trim()
+      
       return NextResponse.json(
-        { error: 'Failed to fetch PageSpeed Insights data' },
+        { error: errorMessage },
         { status: 500 }
       )
     }
