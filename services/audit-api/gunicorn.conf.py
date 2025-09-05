@@ -5,7 +5,7 @@ import os
 bind = f"0.0.0.0:{os.getenv('PORT', '8000')}"
 backlog = 2048
 
-# Worker processes - Use single worker for Railway free tier
+# Worker processes - Use single worker for Render free tier
 workers = 1
 worker_class = "uvicorn.workers.UvicornWorker"
 worker_connections = 1000
@@ -32,6 +32,6 @@ user = None
 group = None
 tmp_upload_dir = None
 
-# SSL (not used in Railway)
+# SSL (not used in Render)
 keyfile = None
 certfile = None

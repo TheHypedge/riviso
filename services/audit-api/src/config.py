@@ -41,7 +41,7 @@ class Settings(BaseSettings):
         "127.0.0.1",
         "www.riviso.com",
         "riviso.com",
-        "riviso-production.up.railway.app",
+        "riviso.onrender.com",
         "riviso-git-main-hypedges-projects.vercel.app",
         "riviso-izf1efhmn-hypedges-projects.vercel.app"
     ]

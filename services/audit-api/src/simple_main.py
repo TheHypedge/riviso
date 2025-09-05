@@ -1,5 +1,5 @@
 """
-Simplified FastAPI app for Railway deployment testing.
+Simplified FastAPI app for Render deployment testing.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -15,7 +15,7 @@ import json
 app = FastAPI(
     title="RIVISO Analytics API",
     version="1.0.0",
-    description="Simplified version for Railway deployment"
+    description="Simplified version for Render deployment"
 )
 
 # Simple in-memory storage for audits

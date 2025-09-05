@@ -3,9 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 // Try multiple backend URLs in order of preference
 const BACKEND_URLS = [
   process.env.BACKEND_URL,
-  process.env.RAILWAY_BACKEND_URL,
+  process.env.RENDER_BACKEND_URL,
   'https://riviso.onrender.com', // Render backend URL
-  'https://riviso-production.up.railway.app', // Common Railway URL pattern
   'http://localhost:8000' // Fallback for local development
 ].filter(Boolean)
 

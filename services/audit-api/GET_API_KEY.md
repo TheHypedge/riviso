@@ -38,7 +38,7 @@ python setup_api_key.py
 export PAGESPEED_API_KEY="your_api_key_here"
 ```
 
-**For Production (Render/Railway):**
+**For Production (Render):**
 - Add environment variable in your deployment platform
 - Variable name: `PAGESPEED_API_KEY`
 - Value: Your API key

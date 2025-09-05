@@ -15,7 +15,7 @@ export async function POST(
     }
 
     // Get the backend URL from environment
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://riviso-api-production.up.railway.app'
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://riviso.onrender.com'
     
     // Call the backend API to get performance metrics
     const response = await fetch(`${backendUrl}/audits/${auditId}/performance`, {

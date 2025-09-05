@@ -285,7 +285,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Simple health check endpoint for Railway."""
+    """Simple health check endpoint for Render."""
     if FULL_APP_AVAILABLE:
         try:
             # Try to check database connection
