@@ -190,30 +190,6 @@ export default function DomainHistoryChecker() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2">
-                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
-                }} />
-                <span className="text-xl font-bold text-gray-900">RIVISO</span>
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/features" className="text-gray-600 hover:text-gray-900">Features</Link>
-              <Link href="/services" className="text-gray-600 hover:text-gray-900">Services</Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">Pricing</Link>
-              <Link href="/resources-checker" className="text-gray-600 hover:text-gray-900">Resources Checker</Link>
-              <Link href="/domain-history-checker" className="text-blue-600 font-medium">Domain History</Link>
-              <Link href="/" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Start Free Audit
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -591,48 +567,6 @@ export default function DomainHistoryChecker() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
-                }} />
-                <span className="text-xl font-bold">RIVISO</span>
-              </div>
-              <p className="text-gray-400">Advanced SEO analysis and website optimization tools for better online presence.</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Tools</h3>
-              <ul className="space-y-2">
-                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">SEO Audit</Link></li>
-                <li><Link href="/resources-checker" className="text-gray-400 hover:text-white transition-colors">Resources Checker</Link></li>
-                <li><Link href="/domain-history-checker" className="text-gray-400 hover:text-white transition-colors">Domain History</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/services" className="text-gray-400 hover:text-white transition-colors">Services</Link></li>
-                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Support</h3>
-              <ul className="space-y-2">
-                <li><Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms-conditions" className="text-gray-400 hover:text-white transition-colors">Terms & Conditions</Link></li>
-                <li><Link href="/refund-cancellation" className="text-gray-400 hover:text-white transition-colors">Refund Policy</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 RIVISO. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
