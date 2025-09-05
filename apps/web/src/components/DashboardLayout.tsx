@@ -217,11 +217,11 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <div className={`
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
-          lg:translate-x-0 
-          fixed lg:relative 
-          inset-y-0 left-0 z-50 
-          w-80 lg:w-72 
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0
+          fixed lg:relative
+          inset-y-0 left-0 z-50
+          w-80 lg:w-64 
           bg-white shadow-xl lg:shadow-lg 
           transform transition-transform duration-300 ease-in-out
           flex flex-col
@@ -241,7 +241,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
           </div>
 
           {/* User Info Section */}
-          <div className="px-6 py-5 border-b border-gray-200">
+          <div className="px-4 py-4 border-b border-gray-200">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg">
                 <span className="text-lg font-bold text-white">
@@ -269,7 +269,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2">
               SEO Tools
             </div>
@@ -326,7 +326,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
           </nav>
 
           {/* Bottom Section */}
-          <div className="px-4 py-5 border-t border-gray-200 space-y-1">
+          <div className="px-3 py-4 border-t border-gray-200 space-y-1">
             {/* Help & Support */}
             <button className="w-full flex items-center px-3 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
               <HelpCircle className="h-5 w-5 mr-3" />
@@ -388,10 +388,10 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
         )}
 
         {/* Main Content */}
-        <div className="flex-1 lg:ml-72">
+        <div className="flex-1 lg:ml-64">
           {/* Desktop Header */}
           <header className="hidden lg:block bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-            <div className="px-6 py-4">
+            <div className="px-6 py-3">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
@@ -426,7 +426,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
           </header>
 
           {/* Tool Content */}
-          <main className="p-4 lg:p-8 min-h-screen">
+          <main className="p-4 lg:p-6 min-h-screen">
             {renderTool()}
           </main>
         </div>
