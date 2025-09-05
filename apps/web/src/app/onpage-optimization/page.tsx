@@ -302,17 +302,17 @@ export default function OnPageOptimizationPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Overall Score</h2>
-                <div className={`text-4xl font-bold ${getScoreColor(result.score?.value || 0)}`}>
-                  {result.score?.value || 0}/100
+                <div className={`text-4xl font-bold ${getScoreColor(result.score || 0)}`}>
+                  {result.score || 0}/100
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
                   className={`h-3 rounded-full ${
-                    (result.score?.value || 0) >= 80 ? 'bg-green-500' : 
-                    (result.score?.value || 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                    (result.score || 0) >= 80 ? 'bg-green-500' : 
+                    (result.score || 0) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                   }`}
-                  style={{ width: `${result.score?.value || 0}%` }}
+                  style={{ width: `${result.score || 0}%` }}
                 />
               </div>
               <div className="mt-4 text-sm text-gray-600">
@@ -392,7 +392,7 @@ export default function OnPageOptimizationPage() {
                             <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                               <span>📅 {new Date().toLocaleDateString()}</span>
                               <span>🔗 {result?.finalUrl || 'URL'}</span>
-                              <span>📊 SEO Score: {result?.score?.value || 0}/100</span>
+                              <span>📊 SEO Score: {result?.score || 0}/100</span>
                             </div>
                           </div>
                         </div>
@@ -465,7 +465,7 @@ export default function OnPageOptimizationPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Analysis Summary</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{result?.score?.value || 0}</div>
+                      <div className="text-2xl font-bold text-blue-600">{result?.score || 0}</div>
                       <div className="text-sm text-gray-600">Overall Score</div>
                     </div>
                     <div className="text-center">

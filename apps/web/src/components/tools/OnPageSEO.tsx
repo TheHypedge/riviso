@@ -55,7 +55,6 @@ export default function OnPageSEO() {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('API Response:', data)
         setResult(data)
       } else {
         setError(data.message || 'An error occurred while analyzing the page')
@@ -90,6 +89,14 @@ export default function OnPageSEO() {
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getCardBackgroundColor = (status: string) => {
+    switch (status) {
+      case 'warn': return 'bg-yellow-50'
+      case 'fail': return 'bg-red-50'
+      default: return 'bg-gray-50' // Default for pass and other statuses
     }
   }
 
@@ -337,7 +344,7 @@ export default function OnPageSEO() {
               </div>
               <div className="text-center">
                 <div className={`text-6xl font-bold ${getScoreColor(result.score)} mb-2`}>
-                  {typeof result.score === 'object' ? JSON.stringify(result.score) : result.score}
+                  {result.score}
                 </div>
                 <div className="text-lg text-gray-600 mb-4">out of 100</div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
@@ -359,7 +366,7 @@ export default function OnPageSEO() {
               <h3 className="text-lg font-semibold text-gray-900 mb-6">SEO Analysis Results</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(result.checks).map(([key, check]) => (
-                  <div key={key} className="bg-gray-50 rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                  <div key={key} className={`${getCardBackgroundColor(check.status)} rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow`}>
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-900 capitalize text-sm">
