@@ -309,22 +309,57 @@ export default function OnPageOptimizationPage() {
                 {/* Title Test */}
                 {(() => {
                   const data = getAnalyzerData('title')
+                  const titleText = (data as any).text || 'No title found'
+                  const titleLength = (data as any).length || 0
                   return (
                     <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(data.status)}`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Meta Title</h3>
                         {getStatusIcon(data.status)}
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600">
-                          <strong>Length:</strong> {(data as any).length || 0} characters
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <strong>Text:</strong> {(data as any).text || 'Not found'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <strong>Status:</strong> {data.status.toUpperCase()}
-                        </p>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600">
+                            <strong>Length:</strong> {titleLength} characters
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <strong>Status:</strong> {data.status.toUpperCase()}
+                          </p>
+                        </div>
+                        
+                        {/* Google SERP Preview */}
+                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">Google SERP Preview:</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-start space-x-2">
+                              <div className="w-4 h-4 mt-1">
+                                {result?.finalUrl ? (
+                                  <img 
+                                    src={`${result.finalUrl}/favicon.ico`} 
+                                    alt="Site favicon" 
+                                    className="w-4 h-4"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                      e.currentTarget.nextElementSibling.style.display = 'block'
+                                    }}
+                                  />
+                                ) : null}
+                                <div 
+                                  className="w-4 h-4 bg-gray-300 rounded-sm"
+                                  style={{ display: result?.finalUrl ? 'none' : 'block' }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-blue-600 text-lg leading-tight hover:underline cursor-pointer">
+                                  {titleText}
+                                </div>
+                                <div className="text-green-700 text-sm">
+                                  {result?.finalUrl || 'URL not available'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-700">{data.recommendation}</p>
@@ -336,22 +371,60 @@ export default function OnPageOptimizationPage() {
                 {/* Meta Description Test */}
                 {(() => {
                   const data = getAnalyzerData('metaDescription')
+                  const descriptionText = (data as any).text || 'No description found'
+                  const descriptionLength = (data as any).length || 0
                   return (
                     <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(data.status)}`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Meta Description</h3>
                         {getStatusIcon(data.status)}
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600">
-                          <strong>Length:</strong> {(data as any).length || 0} characters
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <strong>Text:</strong> {(data as any).text || 'Not found'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <strong>Status:</strong> {data.status.toUpperCase()}
-                        </p>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600">
+                            <strong>Length:</strong> {descriptionLength} characters
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <strong>Status:</strong> {data.status.toUpperCase()}
+                          </p>
+                        </div>
+                        
+                        {/* Google SERP Preview */}
+                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">Google SERP Preview:</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-start space-x-2">
+                              <div className="w-4 h-4 mt-1">
+                                {result?.finalUrl ? (
+                                  <img 
+                                    src={`${result.finalUrl}/favicon.ico`} 
+                                    alt="Site favicon" 
+                                    className="w-4 h-4"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                      e.currentTarget.nextElementSibling.style.display = 'block'
+                                    }}
+                                  />
+                                ) : null}
+                                <div 
+                                  className="w-4 h-4 bg-gray-300 rounded-sm"
+                                  style={{ display: result?.finalUrl ? 'none' : 'block' }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-blue-600 text-lg leading-tight hover:underline cursor-pointer">
+                                  {(result?.onPage?.title as any)?.text || 'Page Title'}
+                                </div>
+                                <div className="text-green-700 text-sm mb-1">
+                                  {result?.finalUrl || 'URL not available'}
+                                </div>
+                                <div className="text-gray-600 text-sm leading-relaxed">
+                                  {descriptionText}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-700">{data.recommendation}</p>
@@ -650,16 +723,41 @@ export default function OnPageOptimizationPage() {
                 {/* Favicon Test */}
                 {(() => {
                   const data = getAnalyzerData('favicon')
+                  const faviconUrl = result?.finalUrl ? `${result.finalUrl}/favicon.ico` : null
                   return (
                     <div className={`bg-white rounded-lg shadow-sm border p-6 ${getStatusColor(data.status)}`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Favicon</h3>
                         {getStatusIcon(data.status)}
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <p className="text-sm text-gray-600">
                           <strong>Present:</strong> {(data as any).present ? 'Yes' : 'No'}
                         </p>
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm text-gray-600"><strong>Preview:</strong></span>
+                          <div className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center bg-gray-50">
+                            {faviconUrl ? (
+                              <img 
+                                src={faviconUrl} 
+                                alt="Favicon" 
+                                className="w-6 h-6"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  e.currentTarget.nextElementSibling.style.display = 'block'
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="w-6 h-6 text-gray-400 flex items-center justify-center"
+                              style={{ display: faviconUrl ? 'none' : 'block' }}
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-700">{data.recommendation}</p>
