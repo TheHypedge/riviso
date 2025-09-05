@@ -35,34 +35,105 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get backend URL from environment
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'https://placeholder.railway.app'
-
-    // Fetch comprehensive website analysis from our backend
-    const analysisResponse = await fetch(`${backendUrl}/audits/website-analyzer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: fullUrl })
-    })
-
-    if (!analysisResponse.ok) {
-      const errorData = await analysisResponse.json()
+    // Get PageSpeed Insights API key
+    const apiKey = process.env.PAGESPEED_API_KEY
+    if (!apiKey) {
       return NextResponse.json(
-        { error: errorData.detail || 'Failed to analyze website' },
-        { status: analysisResponse.status }
+        { error: 'PageSpeed Insights API key not configured' },
+        { status: 500 }
       )
     }
 
-    const analysisData = await analysisResponse.json()
+    // Call Google PageSpeed Insights API directly
+    const mobileResponse = await fetch(
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&strategy=mobile&key=${apiKey}`
+    )
+    
+    const desktopResponse = await fetch(
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&strategy=desktop&key=${apiKey}`
+    )
+
+    if (!mobileResponse.ok || !desktopResponse.ok) {
+      return NextResponse.json(
+        { error: 'Failed to fetch PageSpeed Insights data' },
+        { status: 500 }
+      )
+    }
+
+    const mobileData = await mobileResponse.json()
+    const desktopData = await desktopResponse.json()
+
+    // Extract performance scores
+    const mobileScore = mobileData.lighthouseResult?.categories?.performance?.score * 100 || 0
+    const desktopScore = desktopData.lighthouseResult?.categories?.performance?.score * 100 || 0
+    const overallScore = Math.round((mobileScore + desktopScore) / 2)
+
+    // Extract Core Web Vitals
+    const mobileAudits = mobileData.lighthouseResult?.audits || {}
+    const desktopAudits = desktopData.lighthouseResult?.audits || {}
+
+    const extractMetric = (audits: any, metric: string) => {
+      const audit = audits[metric]
+      return {
+        value: audit?.numericValue || 0,
+        displayValue: audit?.displayValue || 'N/A',
+        score: audit?.score || 0
+      }
+    }
+
+    const mobileLCP = extractMetric(mobileAudits, 'largest-contentful-paint')
+    const mobileFCP = extractMetric(mobileAudits, 'first-contentful-paint')
+    const mobileCLS = extractMetric(mobileAudits, 'cumulative-layout-shift')
+    const mobileFID = extractMetric(mobileAudits, 'max-potential-fid')
+
+    const desktopLCP = extractMetric(desktopAudits, 'largest-contentful-paint')
+    const desktopFCP = extractMetric(desktopAudits, 'first-contentful-paint')
+    const desktopCLS = extractMetric(desktopAudits, 'cumulative-layout-shift')
+    const desktopFID = extractMetric(desktopAudits, 'max-potential-fid')
 
     return NextResponse.json({
       status: 'success',
-      website_info: analysisData.website_info,
-      mobile_data: analysisData.mobile_data,
-      desktop_data: analysisData.desktop_data,
-      analysis_timestamp: analysisData.analysis_timestamp
+      website_info: {
+        url: fullUrl,
+        final_url: fullUrl,
+        title: `Website Analysis - ${fullUrl}`,
+        description: `Comprehensive performance analysis for ${fullUrl}`,
+        favicon: `https://www.google.com/s2/favicons?domain=${new URL(fullUrl).hostname}`,
+        score: overallScore
+      },
+      mobile_data: {
+        status: 'success',
+        url: fullUrl,
+        performance_score: Math.round(mobileScore),
+        first_contentful_paint: mobileFCP.value,
+        largest_contentful_paint: mobileLCP.value,
+        cumulative_layout_shift: mobileCLS.value,
+        first_input_delay: mobileFID.value,
+        display_values: {
+          first_contentful_paint: mobileFCP.displayValue,
+          largest_contentful_paint: mobileLCP.displayValue,
+          cumulative_layout_shift: mobileCLS.displayValue,
+          first_input_delay: mobileFID.displayValue
+        },
+        strategy: 'mobile'
+      },
+      desktop_data: {
+        status: 'success',
+        url: fullUrl,
+        performance_score: Math.round(desktopScore),
+        first_contentful_paint: desktopFCP.value,
+        largest_contentful_paint: desktopLCP.value,
+        cumulative_layout_shift: desktopCLS.value,
+        first_input_delay: desktopFID.value,
+        display_values: {
+          first_contentful_paint: desktopFCP.displayValue,
+          largest_contentful_paint: desktopLCP.displayValue,
+          cumulative_layout_shift: desktopCLS.displayValue,
+          first_input_delay: desktopFID.displayValue
+        },
+        strategy: 'desktop'
+      },
+      analysis_timestamp: new Date().toISOString()
     })
 
   } catch (error) {
