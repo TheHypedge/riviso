@@ -20,34 +20,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get backend URL from environment
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-    // Fetch comprehensive website analysis from our backend
-    const analysisResponse = await fetch(`${backendUrl}/audits/website-analyzer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: url.trim() })
-    })
-
-    if (!analysisResponse.ok) {
-      const errorData = await analysisResponse.json()
-      return NextResponse.json(
-        { error: errorData.detail || 'Failed to analyze website' },
-        { status: analysisResponse.status }
-      )
-    }
-
-    const analysisData = await analysisResponse.json()
-
+    // Simple test response for now
     return NextResponse.json({
       status: 'success',
-      website_info: analysisData.website_info,
-      mobile_data: analysisData.mobile_data,
-      desktop_data: analysisData.desktop_data,
-      analysis_timestamp: analysisData.analysis_timestamp
+      message: 'POST method is working',
+      receivedUrl: url,
+      timestamp: new Date().toISOString(),
+      test: true
     })
 
   } catch (error) {
