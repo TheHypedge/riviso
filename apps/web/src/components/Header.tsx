@@ -16,13 +16,13 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <header className="glass sticky top-0 z-50 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold text-orange-600 flex items-center">
-              <div className="w-8 h-8 bg-orange-600 rounded-lg mr-2 flex items-center justify-center">
+            <Link href="/" className="text-2xl font-bold text-primary-600 flex items-center hover-scale">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl mr-3 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">R</span>
               </div>
               RIVISO
@@ -31,25 +31,25 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link href="/features" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link href="/features" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
               Features
             </Link>
-            <Link href="/services" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link href="/services" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
               Services
             </Link>
-            <Link href="/pricing" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link href="/pricing" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
               Pricing
             </Link>
-            <Link href="/resources-checker" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link href="/resources-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
               Resources Checker
             </Link>
-            <Link href="/domain-history-checker" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link href="/domain-history-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
               Domain History
             </Link>
-            <Link href="/onpage-optimization" className="text-gray-700 hover:text-orange-600 transition-colors">
+            <Link href="/onpage-optimization" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
               On-Page SEO
             </Link>
-            <Link href="/" className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+            <Link href="/" className="btn btn-primary btn-sm hover-glow">
               Start Free Audit
             </Link>
           </nav>
@@ -58,7 +58,7 @@ export default function Header() {
           <div className="md:hidden">
             <button
               onClick={toggleMobileMenu}
-              className="text-gray-700 hover:text-orange-600 focus:outline-none focus:text-orange-600"
+              className="text-gray-700 hover:text-primary-600 focus:outline-none focus:text-primary-600 focus-ring p-2 rounded-lg"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
@@ -72,53 +72,53 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
+          <div className="md:hidden animate-slide-up">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white/95 backdrop-blur-sm border-t border-gray-200 rounded-b-2xl shadow-lg">
               <Link
                 href="/features"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
               >
                 Features
               </Link>
               <Link
                 href="/services"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
               >
                 Services
               </Link>
               <Link
                 href="/pricing"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
               >
                 Pricing
               </Link>
               <Link
                 href="/resources-checker"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
               >
                 Resources Checker
               </Link>
               <Link
                 href="/domain-history-checker"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
               >
                 Domain History
               </Link>
               <Link
                 href="/onpage-optimization"
-                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-orange-600 hover:bg-gray-50 rounded-md transition-colors"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
               >
                 On-Page SEO
               </Link>
               <Link
                 href="/"
-                className="block px-3 py-2 text-base font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors text-center"
+                className="block px-4 py-3 text-base font-medium text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 rounded-xl transition-all duration-200 shadow-lg text-center"
                 onClick={closeMobileMenu}
               >
                 Start Free Audit

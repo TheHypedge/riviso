@@ -235,7 +235,7 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8 animate-fade-in-up">
+            <div className="badge badge-primary text-sm font-semibold mb-8 animate-fade-in-up px-6 py-3">
               <Sparkles className="h-4 w-4 mr-2" />
               India's #1 All-in-One SEO Platform
             </div>
@@ -266,14 +266,14 @@ export default function HomePage() {
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                       placeholder="Enter your domain (e.g., example.com)"
-                      className="w-full pl-12 pr-4 py-4 border-0 bg-gray-50/50 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-300 text-lg placeholder-gray-400"
+                      className="input input-lg pl-12 focus-ring hover-glow"
                       disabled={isLoading}
                     />
                   </div>
                   <button
                     onClick={handleSubmit}
                     disabled={isLoading || !url}
-                    className="bg-gradient-to-r from-primary-600 to-secondary-500 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-primary-700 hover:to-secondary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center shadow-lg"
+                    className="btn btn-primary btn-lg hover-glow"
                   >
                     {isLoading ? (
                       <>
@@ -301,27 +301,27 @@ export default function HomePage() {
 
             {/* Animated Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto animate-fade-in-up animation-delay-800">
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/80 transition-all duration-300">
+              <div className="card-elevated p-6 hover-lift">
                 <div className="flex items-center justify-center mb-3">
-                  <div className="w-12 h-12 bg-success-100 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-success-100 rounded-full flex items-center justify-center animate-glow">
                     <CheckCircle className="h-6 w-6 text-success-600" />
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 mb-1">100% Free</div>
                 <div className="text-sm text-gray-600">Complete Analysis</div>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/80 transition-all duration-300">
+              <div className="card-elevated p-6 hover-lift">
                 <div className="flex items-center justify-center mb-3">
-                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center animate-glow animation-delay-500">
                     <Clock className="h-6 w-6 text-primary-600" />
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 mb-1">2 Minutes</div>
                 <div className="text-sm text-gray-600">Quick Results</div>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/80 transition-all duration-300">
+              <div className="card-elevated p-6 hover-lift">
                 <div className="flex items-center justify-center mb-3">
-                  <div className="w-12 h-12 bg-info-100 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-info-100 rounded-full flex items-center justify-center animate-glow animation-delay-1000">
                     <Shield className="h-6 w-6 text-info-600" />
                   </div>
                 </div>
