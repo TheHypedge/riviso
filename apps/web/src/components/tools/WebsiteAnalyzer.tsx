@@ -76,10 +76,30 @@ export default function WebsiteAnalyzer() {
         return
       }
 
-      // Fetch PageSpeed Insights data for both mobile and desktop
+      // Fetch PageSpeed Insights data from backend API
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://riviso-api-production.up.railway.app'
+      
       const [mobileResponse, desktopResponse] = await Promise.all([
-        fetch(`/api/pagespeed?url=${encodeURIComponent(fullUrl)}&strategy=mobile`),
-        fetch(`/api/pagespeed?url=${encodeURIComponent(fullUrl)}&strategy=desktop`)
+        fetch(`${backendUrl}/pagespeed`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: fullUrl,
+            strategy: 'mobile'
+          })
+        }),
+        fetch(`${backendUrl}/pagespeed`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: fullUrl,
+            strategy: 'desktop'
+          })
+        })
       ])
 
       const mobileData = await mobileResponse.json()

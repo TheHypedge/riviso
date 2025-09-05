@@ -15,12 +15,13 @@ class PageSpeedInsightsProvider:
         self.api_key = api_key
         self.base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
-    async def get_metrics(self, url: str) -> Dict[str, Any]:
+    async def get_metrics(self, url: str, strategy: str = "mobile") -> Dict[str, Any]:
         """
         Get PageSpeed Insights metrics for a URL.
         
         Args:
             url: URL to analyze
+            strategy: Analysis strategy (mobile or desktop)
             
         Returns:
             Dict containing performance metrics
@@ -35,8 +36,8 @@ class PageSpeedInsightsProvider:
             params = {
                 "url": url,
                 "key": self.api_key,
-                "strategy": "mobile",
-                "category": "performance"
+                "strategy": strategy,
+                "category": ["performance", "accessibility", "best-practices", "seo"]
             }
             
             logger.info("Fetching PageSpeed Insights data", url=url)
@@ -60,6 +61,7 @@ class PageSpeedInsightsProvider:
         try:
             lighthouse_result = data.get("lighthouseResult", {})
             audits = lighthouse_result.get("audits", {})
+            categories = lighthouse_result.get("categories", {})
             
             # Core Web Vitals
             lcp = audits.get("largest-contentful-paint", {}).get("numericValue", 0) / 1000
@@ -68,11 +70,17 @@ class PageSpeedInsightsProvider:
             fid = audits.get("max-potential-fid", {}).get("numericValue", 0)
             tti = audits.get("interactive", {}).get("numericValue", 0) / 1000
             
-            # Performance scores
-            performance_score = lighthouse_result.get("categories", {}).get("performance", {}).get("score", 0) * 100
+            # All category scores
+            performance_score = categories.get("performance", {}).get("score", 0) * 100
+            accessibility_score = categories.get("accessibility", {}).get("score", 0) * 100
+            best_practices_score = categories.get("best-practices", {}).get("score", 0) * 100
+            seo_score = categories.get("seo", {}).get("score", 0) * 100
             
             return {
                 "performance_score": round(performance_score),
+                "accessibility_score": round(accessibility_score),
+                "best_practices_score": round(best_practices_score),
+                "seo_score": round(seo_score),
                 "first_contentful_paint": round(fcp, 2),
                 "largest_contentful_paint": round(lcp, 2),
                 "cumulative_layout_shift": round(cls, 3),
