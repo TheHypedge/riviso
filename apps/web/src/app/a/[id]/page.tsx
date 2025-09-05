@@ -2553,51 +2553,6 @@ export default function AuditDetailPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <img src="/riviso.png" alt="RIVISO" className="h-8 w-auto" onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNjM2NkY3Ii8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UklWSVNPPC90ZXh0Pgo8L3N2Zz4K'
-                    }} />
-                <span className="text-2xl font-bold text-white">RIVISO</span>
-              </div>
-              <p className="text-gray-400 mb-6 max-w-md">
-                India's leading all-in-one SEO platform. Transform your website's search performance 
-                with comprehensive analytics and actionable insights.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Services</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="/services" className="hover:text-white transition-colors">Website Audit</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">Competitor Analysis</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">Keyword Research</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">On-Page SEO</a></li>
-                <li><a href="/services" className="hover:text-white transition-colors">DA/PA Analysis</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="/refund-cancellation" className="hover:text-white transition-colors">Refund Policy</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 RIVISO. All rights reserved. Made with ❤️ in India.</p>
-          </div>
-      </div>
-      </footer>
     </div>
   )
 }

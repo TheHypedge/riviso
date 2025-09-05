@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import logoImage from '@/assets/riviso.png'
 
 export default function Footer() {
   return (
@@ -8,9 +10,13 @@ export default function Footer() {
           {/* Company Info */}
           <div className="space-y-6">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl mr-3 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">R</span>
-              </div>
+              <Image 
+                src={logoImage} 
+                alt="RIVISO" 
+                width={40} 
+                height={40} 
+                className="mr-3 rounded-lg shadow-lg"
+              />
               <span className="text-3xl font-bold text-primary-500">RIVISO</span>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">

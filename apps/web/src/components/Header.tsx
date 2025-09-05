@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Menu, X, Search } from 'lucide-react'
+import logoImage from '@/assets/riviso.png'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -22,9 +24,13 @@ export default function Header() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="text-2xl font-bold text-primary-600 flex items-center hover-scale">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl mr-3 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">R</span>
-              </div>
+              <Image 
+                src={logoImage} 
+                alt="RIVISO" 
+                width={32} 
+                height={32} 
+                className="mr-3 rounded-lg shadow-lg"
+              />
               RIVISO
             </Link>
           </div>
