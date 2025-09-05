@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     queue_max_retries: int = 3
     queue_retry_delay: int = 60
     
+    # External APIs
+    pagespeed_api_key: Optional[str] = None
+    
     # Observability
     sentry_dsn: Optional[str] = None
     otel_service_name: str = "riviso-analytics-api"

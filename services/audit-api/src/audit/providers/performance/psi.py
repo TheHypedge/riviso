@@ -4,6 +4,7 @@ PageSpeed Insights provider for performance metrics.
 
 from typing import Dict, Any, Optional
 import structlog
+from config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -12,7 +13,7 @@ class PageSpeedInsightsProvider:
     """Provider for Google PageSpeed Insights API."""
     
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key
+        self.api_key = api_key or settings.pagespeed_api_key
         self.base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
     async def get_metrics(self, url: str, strategy: str = "mobile") -> Dict[str, Any]:

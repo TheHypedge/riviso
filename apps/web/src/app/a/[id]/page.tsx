@@ -156,7 +156,7 @@ interface AuditResult {
   }
   real_data?: boolean
   data_source?: string
-  metadata?: {
+  page_metadata?: {
     page_title?: string
     meta_description?: string
     h1_count?: number
@@ -166,14 +166,28 @@ interface AuditResult {
     word_count?: number
     loading_time?: number
     performance?: {
-      performance_score?: number
-      first_contentful_paint?: number
-      largest_contentful_paint?: number
-      cumulative_layout_shift?: number
-      first_input_delay?: number
-      time_to_interactive?: number
-      total_blocking_time?: number
-      speed_index?: number
+      mobile?: {
+        performance_score?: number
+        first_contentful_paint?: number
+        largest_contentful_paint?: number
+        cumulative_layout_shift?: number
+        first_input_delay?: number
+        time_to_interactive?: number
+        total_blocking_time?: number
+        speed_index?: number
+        data_source?: string
+      }
+      desktop?: {
+        performance_score?: number
+        first_contentful_paint?: number
+        largest_contentful_paint?: number
+        cumulative_layout_shift?: number
+        first_input_delay?: number
+        time_to_interactive?: number
+        total_blocking_time?: number
+        speed_index?: number
+        data_source?: string
+      }
       data_source?: string
     }
   }
@@ -277,8 +291,8 @@ export default function AuditDetailPage() {
       // Update audit with performance data
       setAudit(prev => prev ? {
         ...prev,
-        metadata: {
-          ...prev.metadata,
+        page_metadata: {
+          ...prev.page_metadata,
           performance: data.performance_metrics
         }
       } : null)
@@ -1165,7 +1179,7 @@ export default function AuditDetailPage() {
               <div className="mb-6 md:mb-8">
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                   <h3 className="text-lg md:text-xl font-semibold text-gray-900">Core Web Vitals</h3>
-                  {!audit.metadata?.performance && (
+                  {!audit.page_metadata?.performance?.mobile && !audit.page_metadata?.performance?.desktop && (
                     <button
                       onClick={loadPerformanceMetrics}
                       disabled={loadingPerformance}
@@ -1181,7 +1195,7 @@ export default function AuditDetailPage() {
                   )}
                 </div>
                 
-                {audit.metadata?.performance ? (
+                {(audit.page_metadata?.performance?.mobile || audit.page_metadata?.performance?.desktop) ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
                   {/* LCP */}
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 text-center">
@@ -1216,7 +1230,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">LCP</div>
                     <div className="text-xs text-gray-500 mb-2">Largest Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.metadata?.performance?.largest_contentful_paint || audit.technical_audit.device_previews[activeDevice].lcp}s
+                      {audit.page_metadata?.performance?.[activeDevice]?.largest_contentful_paint || audit.technical_audit.device_previews[activeDevice].lcp}s
                     </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('lcp', audit.technical_audit.device_previews[activeDevice].lcp, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1260,7 +1274,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">FCP</div>
                     <div className="text-xs text-gray-500 mb-2">First Contentful Paint</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.metadata?.performance?.first_contentful_paint || audit.technical_audit.device_previews[activeDevice].fcp}s
+                      {audit.page_metadata?.performance?.[activeDevice]?.first_contentful_paint || audit.technical_audit.device_previews[activeDevice].fcp}s
                             </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('fcp', audit.technical_audit.device_previews[activeDevice].fcp, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1304,7 +1318,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">CLS</div>
                     <div className="text-xs text-gray-500 mb-2">Cumulative Layout Shift</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.metadata?.performance?.cumulative_layout_shift || audit.technical_audit.device_previews[activeDevice].cls}
+                      {audit.page_metadata?.performance?.[activeDevice]?.cumulative_layout_shift || audit.technical_audit.device_previews[activeDevice].cls}
                   </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('cls', audit.technical_audit.device_previews[activeDevice].cls, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1348,7 +1362,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">FID</div>
                     <div className="text-xs text-gray-500 mb-2">First Input Delay</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.metadata?.performance?.first_input_delay || audit.technical_audit.device_previews[activeDevice].fid}ms
+                      {audit.page_metadata?.performance?.[activeDevice]?.first_input_delay || audit.technical_audit.device_previews[activeDevice].fid}ms
                     </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('fid', audit.technical_audit.device_previews[activeDevice].fid, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1392,7 +1406,7 @@ export default function AuditDetailPage() {
                     <div className="text-sm font-medium text-gray-700 mb-1">TTI</div>
                     <div className="text-xs text-gray-500 mb-2">Time to Interactive</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {audit.metadata?.performance?.time_to_interactive || audit.technical_audit.device_previews[activeDevice].tti}s
+                      {audit.page_metadata?.performance?.[activeDevice]?.time_to_interactive || audit.technical_audit.device_previews[activeDevice].tti}s
                     </div>
                     <div className={`text-xs font-medium ${
                       getCoreWebVitalScore('tti', audit.technical_audit.device_previews[activeDevice].tti, activeDevice) >= 90 ? 'text-success-600' : 
@@ -1543,19 +1557,19 @@ export default function AuditDetailPage() {
                       <Info className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-sm text-gray-700 mb-3">
-                      {audit.metadata?.page_title ? 
+                      {audit.page_metadata?.page_title ? 
                         `This webpage is using a title tag.` : 
                         `This webpage is missing a title tag.`
                       }
                     </div>
-                    {audit.metadata?.page_title && (
+                    {audit.page_metadata?.page_title && (
                       <div className="bg-gray-50 rounded-lg p-3 mb-3">
                         <div className="text-xs text-gray-600 mb-1">Title:</div>
                         <div className="text-sm font-medium text-gray-900 break-words">
-                          {audit.metadata.page_title}
+                          {audit.page_metadata.page_title}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
-                          {audit.metadata.page_title.length} characters
+                          {audit.page_metadata.page_title.length} characters
                         </div>
                       </div>
                     )}
@@ -1594,19 +1608,19 @@ export default function AuditDetailPage() {
                       <Info className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-sm text-gray-700 mb-3">
-                      {audit.metadata?.meta_description ? 
+                      {audit.page_metadata?.meta_description ? 
                         `This webpage is using a meta description tag.` : 
                         `This webpage is missing a meta description tag.`
                       }
                     </div>
-                    {audit.metadata?.meta_description && (
+                    {audit.page_metadata?.meta_description && (
                       <div className="bg-gray-50 rounded-lg p-3 mb-3">
                         <div className="text-xs text-gray-600 mb-1">Description:</div>
                         <div className="text-sm font-medium text-gray-900 break-words">
-                          {audit.metadata.meta_description}
+                          {audit.page_metadata.meta_description}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
-                          {audit.metadata.meta_description.length} characters
+                          {audit.page_metadata.meta_description.length} characters
                         </div>
                       </div>
                     )}
@@ -1642,10 +1656,10 @@ export default function AuditDetailPage() {
                         <div className="bg-gray-50 rounded-lg p-3 border">
                           <div className="text-xs text-blue-600 mb-1">{audit.url}</div>
                           <div className="text-sm font-medium text-blue-900 mb-1">
-                            {audit.metadata?.page_title || 'No title available'}
+                            {audit.page_metadata?.page_title || 'No title available'}
                           </div>
                           <div className="text-xs text-gray-600">
-                            {audit.metadata?.meta_description || 'No description available'}
+                            {audit.page_metadata?.meta_description || 'No description available'}
                           </div>
                         </div>
                       </div>
@@ -1654,10 +1668,10 @@ export default function AuditDetailPage() {
                         <div className="bg-gray-50 rounded-lg p-3 border">
                           <div className="text-xs text-blue-600 mb-1">{audit.url}</div>
                           <div className="text-sm font-medium text-blue-900 mb-1">
-                            {audit.metadata?.page_title || 'No title available'}
+                            {audit.page_metadata?.page_title || 'No title available'}
                           </div>
                           <div className="text-xs text-gray-600">
-                            {(audit.metadata?.meta_description || 'No description available').substring(0, 100)}...
+                            {(audit.page_metadata?.meta_description || 'No description available').substring(0, 100)}...
                           </div>
                         </div>
                       </div>
@@ -1735,12 +1749,12 @@ export default function AuditDetailPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-3 ${
-                          (audit.metadata?.images_without_alt || 0) === 0 ? 'bg-success-100' :
-                          (audit.metadata?.images_without_alt || 0) <= 2 ? 'bg-warning-100' : 'bg-error-100'
+                          (audit.page_metadata?.images_without_alt || 0) === 0 ? 'bg-success-100' :
+                          (audit.page_metadata?.images_without_alt || 0) <= 2 ? 'bg-warning-100' : 'bg-error-100'
                         }`}>
-                          {(audit.metadata?.images_without_alt || 0) === 0 ? 
+                          {(audit.page_metadata?.images_without_alt || 0) === 0 ? 
                             <CheckCircle className="h-5 w-5 text-success-600" /> :
-                            (audit.metadata?.images_without_alt || 0) <= 2 ?
+                            (audit.page_metadata?.images_without_alt || 0) <= 2 ?
                             <AlertTriangle className="h-5 w-5 text-warning-600" /> :
                             <XCircle className="h-5 w-5 text-error-600" />
                           }
@@ -1753,12 +1767,12 @@ export default function AuditDetailPage() {
                       <Info className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-sm text-gray-700 mb-3">
-                      {(audit.metadata?.images_without_alt || 0) === 0 ? 
+                      {(audit.page_metadata?.images_without_alt || 0) === 0 ? 
                         `All images have proper alt text attributes.` :
-                        `This webpage has ${audit.metadata?.images_without_alt || 0} images with missing or empty 'alt' attributes!`
+                        `This webpage has ${audit.page_metadata?.images_without_alt || 0} images with missing or empty 'alt' attributes!`
                       }
                     </div>
-                    {(audit.metadata?.images_without_alt || 0) > 0 && (
+                    {(audit.page_metadata?.images_without_alt || 0) > 0 && (
                       <div className="flex gap-2">
                         <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                           See full list

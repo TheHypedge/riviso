@@ -287,14 +287,24 @@ async def get_performance_metrics(
         # Import PageSpeed Insights provider
         from audit.providers.performance.psi import PageSpeedInsightsProvider
         
-        # Get performance metrics
+        # Get performance metrics for both mobile and desktop
         psi_provider = PageSpeedInsightsProvider()
-        performance_data = await psi_provider.get_metrics(audit.url)
+        
+        # Fetch mobile and desktop metrics concurrently
+        mobile_data = await psi_provider.get_metrics(audit.url, strategy="mobile")
+        desktop_data = await psi_provider.get_metrics(audit.url, strategy="desktop")
+        
+        # Combine the data
+        performance_data = {
+            "mobile": mobile_data,
+            "desktop": desktop_data,
+            "data_source": "Google PageSpeed Insights API"
+        }
         
         # Update audit with performance data
-        if not audit.metadata:
-            audit.metadata = {}
-        audit.metadata["performance"] = performance_data
+        if not audit.page_metadata:
+            audit.page_metadata = {}
+        audit.page_metadata["performance"] = performance_data
         db.commit()
         
         logger.info(
