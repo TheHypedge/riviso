@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 interface DomainInfo {
   domain: string
-  status: string
+  status: string | string[]
   registered: boolean
   registrationDate?: string
   expirationDate?: string
@@ -61,7 +61,19 @@ export async function POST(request: NextRequest) {
     // Fetch domain data using RDAP (primary) and WHOIS (fallback)
     const domainInfo = await fetchDomainData(cleanDomain)
     
-    return NextResponse.json(domainInfo)
+    // Map the response to match frontend expectations
+    const response = {
+      status: 'success',
+      domain: domainInfo.domain,
+      registration_date: domainInfo.registrationDate,
+      expiration_date: domainInfo.expirationDate,
+      registrar: domainInfo.registrar?.name,
+      nameservers: domainInfo.nameServers,
+      domain_status: domainInfo.status,
+      error: domainInfo.error
+    }
+    
+    return NextResponse.json(response)
     
   } catch (error) {
     console.error('Domain history API error:', error)
@@ -381,7 +393,7 @@ function parseRdapData(data: any, domain: string): Partial<DomainInfo> {
 
     // Parse status
     if (data.status && Array.isArray(data.status)) {
-      result.status = data.status.join(', ')
+      result.status = data.status
     }
 
     return result

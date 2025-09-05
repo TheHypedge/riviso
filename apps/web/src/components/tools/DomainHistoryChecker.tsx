@@ -10,7 +10,7 @@ interface DomainHistoryResponse {
   expiration_date?: string
   registrar?: string
   nameservers?: string[]
-  status?: string[]
+  domain_status?: string | string[]
   error?: string
 }
 
@@ -226,15 +226,21 @@ export default function DomainHistoryChecker() {
           )}
 
           {/* Domain Status */}
-          {result.status && result.status.length > 0 && (
+          {result.domain_status && (
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Domain Status</h3>
               <div className="flex flex-wrap gap-2">
-                {result.status.map((status, index) => (
-                  <span key={index} className="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full">
-                    {status.replace(/_/g, ' ').toLowerCase()}
+                {Array.isArray(result.domain_status) ? (
+                  result.domain_status.map((status, index) => (
+                    <span key={index} className="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full">
+                      {status.replace(/_/g, ' ').toLowerCase()}
+                    </span>
+                  ))
+                ) : (
+                  <span className="px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full">
+                    {result.domain_status.replace(/_/g, ' ').toLowerCase()}
                   </span>
-                ))}
+                )}
               </div>
             </div>
           )}
