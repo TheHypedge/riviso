@@ -54,33 +54,125 @@ export async function POST(request: NextRequest) {
           status: 'success',
           url: fullUrl,
           performance_score: 82,
+          accessibility_score: 95,
+          best_practices_score: 90,
+          seo_score: 88,
           first_contentful_paint: 1.2,
           largest_contentful_paint: 2.1,
           cumulative_layout_shift: 0.05,
           first_input_delay: 50,
+          time_to_interactive: 3.2,
+          total_blocking_time: 150,
+          speed_index: 2.8,
+          first_meaningful_paint: 1.5,
+          lcp_score: 0.8,
+          fcp_score: 0.9,
+          cls_score: 0.95,
+          fid_score: 0.85,
           display_values: {
             first_contentful_paint: '1.2 s',
             largest_contentful_paint: '2.1 s',
             cumulative_layout_shift: '0.05',
-            first_input_delay: '50 ms'
+            first_input_delay: '50 ms',
+            total_blocking_time: '150 ms',
+            speed_index: '2.8 s',
+            time_to_interactive: '3.2 s',
+            first_meaningful_paint: '1.5 s'
           },
-          strategy: 'mobile'
+          resource_metrics: {
+            total_byte_weight: 1024000,
+            unused_css_rules: 15,
+            unused_javascript: 8,
+            render_blocking_resources: 3,
+            efficient_animated_content: 2
+          },
+          opportunities: [
+            {
+              id: 'unused-css-rules',
+              title: 'Remove unused CSS',
+              description: 'Remove unused CSS rules to reduce file size',
+              score: 0.8,
+              numericValue: 15000,
+              displayValue: '15 kB',
+              wastedMs: 200
+            }
+          ],
+          diagnostics: [
+            {
+              id: 'render-blocking-resources',
+              title: 'Eliminate render-blocking resources',
+              description: 'Resources are blocking the first paint of your page',
+              score: 0.7,
+              displayValue: '3 resources'
+            }
+          ],
+          strategy: 'mobile',
+          data_source: 'Mock Data',
+          fetch_time: new Date().toISOString(),
+          final_url: fullUrl,
+          requested_url: fullUrl
         },
         desktop_data: {
           status: 'success',
           url: fullUrl,
           performance_score: 88,
+          accessibility_score: 98,
+          best_practices_score: 92,
+          seo_score: 90,
           first_contentful_paint: 0.8,
           largest_contentful_paint: 1.5,
           cumulative_layout_shift: 0.02,
           first_input_delay: 30,
+          time_to_interactive: 2.1,
+          total_blocking_time: 80,
+          speed_index: 1.8,
+          first_meaningful_paint: 1.0,
+          lcp_score: 0.95,
+          fcp_score: 0.98,
+          cls_score: 0.98,
+          fid_score: 0.92,
           display_values: {
             first_contentful_paint: '0.8 s',
             largest_contentful_paint: '1.5 s',
             cumulative_layout_shift: '0.02',
-            first_input_delay: '30 ms'
+            first_input_delay: '30 ms',
+            total_blocking_time: '80 ms',
+            speed_index: '1.8 s',
+            time_to_interactive: '2.1 s',
+            first_meaningful_paint: '1.0 s'
           },
-          strategy: 'desktop'
+          resource_metrics: {
+            total_byte_weight: 850000,
+            unused_css_rules: 8,
+            unused_javascript: 5,
+            render_blocking_resources: 2,
+            efficient_animated_content: 1
+          },
+          opportunities: [
+            {
+              id: 'unused-css-rules',
+              title: 'Remove unused CSS',
+              description: 'Remove unused CSS rules to reduce file size',
+              score: 0.9,
+              numericValue: 8000,
+              displayValue: '8 kB',
+              wastedMs: 100
+            }
+          ],
+          diagnostics: [
+            {
+              id: 'render-blocking-resources',
+              title: 'Eliminate render-blocking resources',
+              description: 'Resources are blocking the first paint of your page',
+              score: 0.8,
+              displayValue: '2 resources'
+            }
+          ],
+          strategy: 'desktop',
+          data_source: 'Mock Data',
+          fetch_time: new Date().toISOString(),
+          final_url: fullUrl,
+          requested_url: fullUrl
         },
         analysis_timestamp: new Date().toISOString(),
         note: 'Mock data - PageSpeed API key not configured'
