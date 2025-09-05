@@ -303,10 +303,170 @@ export default function OnPageOptimizationPage() {
               </div>
             </div>
 
-            {/* SEO Tests Grid */}
+            {/* Google SERP Result Preview */}
             {result.onPage && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Title Test */}
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">How Your Site Appears in Google Search Results</h2>
+                
+                {/* Desktop View */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clipRule="evenodd" />
+                    </svg>
+                    Desktop View
+                  </h3>
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <div className="max-w-4xl">
+                      {/* Google Search Header */}
+                      <div className="flex items-center mb-4 pb-4 border-b border-gray-200">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">G</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="bg-gray-100 rounded-full px-4 py-2">
+                              <span className="text-gray-600">{(result.onPage.title as any)?.text || 'Page Title'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Search Result */}
+                      <div className="space-y-4">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-4 h-4 mt-1 flex-shrink-0">
+                            {result?.finalUrl ? (
+                              <img 
+                                src={`${result.finalUrl}/favicon.ico`} 
+                                alt="Site favicon" 
+                                className="w-4 h-4"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  e.currentTarget.nextElementSibling.style.display = 'block'
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="w-4 h-4 bg-gray-300 rounded-sm"
+                              style={{ display: result?.finalUrl ? 'none' : 'block' }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-blue-600 text-xl leading-tight hover:underline cursor-pointer mb-1">
+                              {(result.onPage.title as any)?.text || 'Page Title'}
+                            </div>
+                            <div className="text-green-700 text-sm mb-2">
+                              {result?.finalUrl || 'URL not available'}
+                            </div>
+                            <div className="text-gray-600 text-sm leading-relaxed">
+                              {(result.onPage.metaDescription as any)?.text || 'No description available'}
+                            </div>
+                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                              <span>📅 {new Date().toLocaleDateString()}</span>
+                              <span>🔗 {result?.finalUrl || 'URL'}</span>
+                              <span>📊 SEO Score: {result?.score?.value || 0}/100</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile View */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.666.804 4.348A1 1 0 0113 21H7a1 1 0 01-.985-1.986l.804-4.348L6.22 15H4a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
+                    </svg>
+                    Mobile View
+                  </h3>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm max-w-sm mx-auto">
+                    <div className="space-y-3">
+                      {/* Mobile Search Header */}
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">G</span>
+                        </div>
+                        <div className="flex-1 bg-gray-100 rounded-full px-3 py-1">
+                          <span className="text-gray-600 text-sm">{(result.onPage.title as any)?.text || 'Page Title'}</span>
+                        </div>
+                      </div>
+
+                      {/* Mobile Search Result */}
+                      <div className="space-y-2">
+                        <div className="flex items-start space-x-2">
+                          <div className="w-3 h-3 mt-1 flex-shrink-0">
+                            {result?.finalUrl ? (
+                              <img 
+                                src={`${result.finalUrl}/favicon.ico`} 
+                                alt="Site favicon" 
+                                className="w-3 h-3"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                  e.currentTarget.nextElementSibling.style.display = 'block'
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="w-3 h-3 bg-gray-300 rounded-sm"
+                              style={{ display: result?.finalUrl ? 'none' : 'block' }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-blue-600 text-sm leading-tight hover:underline cursor-pointer mb-1">
+                              {(result.onPage.title as any)?.text || 'Page Title'}
+                            </div>
+                            <div className="text-green-700 text-xs mb-1">
+                              {result?.finalUrl || 'URL not available'}
+                            </div>
+                            <div className="text-gray-600 text-xs leading-relaxed">
+                              {(result.onPage.metaDescription as any)?.text || 'No description available'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SEO Analysis Summary */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Analysis Summary</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{result?.score?.value || 0}</div>
+                      <div className="text-sm text-gray-600">Overall Score</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {Object.values(result.onPage).filter((check: any) => check.status === 'pass').length}
+                      </div>
+                      <div className="text-sm text-gray-600">Passed Checks</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {Object.values(result.onPage).filter((check: any) => check.status === 'fail').length}
+                      </div>
+                      <div className="text-sm text-gray-600">Failed Checks</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Detailed SEO Tests Grid */}
+            {result.onPage && (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed SEO Analysis</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Title Test */}
                 {(() => {
                   const data = getAnalyzerData('title')
                   const titleText = (data as any).text || 'No title found'
@@ -327,39 +487,9 @@ export default function OnPageOptimizationPage() {
                           </p>
                         </div>
                         
-                        {/* Google SERP Preview */}
-                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                          <h4 className="text-sm font-medium text-gray-700 mb-3">Google SERP Preview:</h4>
-                          <div className="space-y-2">
-                            <div className="flex items-start space-x-2">
-                              <div className="w-4 h-4 mt-1">
-                                {result?.finalUrl ? (
-                                  <img 
-                                    src={`${result.finalUrl}/favicon.ico`} 
-                                    alt="Site favicon" 
-                                    className="w-4 h-4"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none'
-                                      e.currentTarget.nextElementSibling.style.display = 'block'
-                                    }}
-                                  />
-                                ) : null}
-                                <div 
-                                  className="w-4 h-4 bg-gray-300 rounded-sm"
-                                  style={{ display: result?.finalUrl ? 'none' : 'block' }}
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-blue-600 text-lg leading-tight hover:underline cursor-pointer">
-                                  {titleText}
-                                </div>
-                                <div className="text-green-700 text-sm">
-                                  {result?.finalUrl || 'URL not available'}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        <p className="text-sm text-gray-600">
+                          <strong>Text:</strong> {titleText}
+                        </p>
                       </div>
                       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-700">{data.recommendation}</p>
@@ -389,42 +519,9 @@ export default function OnPageOptimizationPage() {
                           </p>
                         </div>
                         
-                        {/* Google SERP Preview */}
-                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                          <h4 className="text-sm font-medium text-gray-700 mb-3">Google SERP Preview:</h4>
-                          <div className="space-y-2">
-                            <div className="flex items-start space-x-2">
-                              <div className="w-4 h-4 mt-1">
-                                {result?.finalUrl ? (
-                                  <img 
-                                    src={`${result.finalUrl}/favicon.ico`} 
-                                    alt="Site favicon" 
-                                    className="w-4 h-4"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none'
-                                      e.currentTarget.nextElementSibling.style.display = 'block'
-                                    }}
-                                  />
-                                ) : null}
-                                <div 
-                                  className="w-4 h-4 bg-gray-300 rounded-sm"
-                                  style={{ display: result?.finalUrl ? 'none' : 'block' }}
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-blue-600 text-lg leading-tight hover:underline cursor-pointer">
-                                  {(result?.onPage?.title as any)?.text || 'Page Title'}
-                                </div>
-                                <div className="text-green-700 text-sm mb-1">
-                                  {result?.finalUrl || 'URL not available'}
-                                </div>
-                                <div className="text-gray-600 text-sm leading-relaxed">
-                                  {descriptionText}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        <p className="text-sm text-gray-600">
+                          <strong>Text:</strong> {descriptionText}
+                        </p>
                       </div>
                       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-700">{data.recommendation}</p>
@@ -807,6 +904,7 @@ export default function OnPageOptimizationPage() {
                     </div>
                   )
                 })()}
+                </div>
               </div>
             )}
           </div>
