@@ -78,7 +78,7 @@ export default function WebsiteAnalyzer() {
       }
 
       // Fetch PageSpeed Insights data from backend API
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://riviso-api-production.up.railway.app'
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://riviso-production.up.railway.app'
       
       const [mobileResponse, desktopResponse] = await Promise.all([
         fetch(`${backendUrl}/pagespeed`, {

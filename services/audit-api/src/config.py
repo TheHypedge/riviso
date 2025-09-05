@@ -28,8 +28,23 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # CORS
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:3001"]
-    allowed_hosts: List[str] = ["localhost", "127.0.0.1"]
+    cors_origins: List[str] = [
+        "http://localhost:3000", 
+        "http://localhost:3001",
+        "https://www.riviso.com",
+        "https://riviso.com",
+        "https://riviso-git-main-hypedges-projects.vercel.app",
+        "https://riviso-izf1efhmn-hypedges-projects.vercel.app"
+    ]
+    allowed_hosts: List[str] = [
+        "localhost", 
+        "127.0.0.1",
+        "www.riviso.com",
+        "riviso.com",
+        "riviso-production.up.railway.app",
+        "riviso-git-main-hypedges-projects.vercel.app",
+        "riviso-izf1efhmn-hypedges-projects.vercel.app"
+    ]
     
     # External Services
     audit_api_url: str = "http://localhost:8000"
