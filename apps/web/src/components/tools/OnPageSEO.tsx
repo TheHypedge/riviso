@@ -55,6 +55,7 @@ export default function OnPageSEO() {
       const data = await response.json()
 
       if (response.ok) {
+        console.log('API Response:', data)
         setResult(data)
       } else {
         setError(data.message || 'An error occurred while analyzing the page')
@@ -336,7 +337,7 @@ export default function OnPageSEO() {
               </div>
               <div className="text-center">
                 <div className={`text-6xl font-bold ${getScoreColor(result.score)} mb-2`}>
-                  {result.score}
+                  {typeof result.score === 'object' ? JSON.stringify(result.score) : result.score}
                 </div>
                 <div className="text-lg text-gray-600 mb-4">out of 100</div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
