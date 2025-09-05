@@ -704,8 +704,20 @@ async function detectTools(url: string) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         }
 
-        const data = await response.json()
-        htmlContent = data.contents || data
+        const responseText = await response.text()
+        
+        // Try to parse as JSON first
+        try {
+          const data = JSON.parse(responseText)
+          htmlContent = data.contents || data
+        } catch (jsonError) {
+          // If not JSON, check if it's HTML content
+          if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+            htmlContent = responseText
+          } else {
+            throw new Error('Response is neither JSON nor HTML')
+          }
+        }
         
         if (htmlContent && htmlContent.length > 100) {
           console.log('Successfully fetched content, length:', htmlContent.length)
