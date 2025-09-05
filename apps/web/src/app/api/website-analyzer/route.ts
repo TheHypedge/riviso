@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET() {
   return NextResponse.json({ 
     status: 'success', 
-    message: 'Website Analyzer API is working',
+    message: 'Website Analyzer API is working - Updated',
     methods: ['POST'],
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: '1.0.1'
   })
 }
 
