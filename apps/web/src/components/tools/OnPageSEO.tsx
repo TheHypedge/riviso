@@ -107,7 +107,7 @@ export default function OnPageSEO() {
   }
 
   const getRecommendation = (key: string, status: string, value?: string) => {
-    const recommendations: { [key: string]: { pass: string; warn: string; fail: string } } = {
+    const recommendations: Record<string, { pass: string; warn: string; fail: string }> = {
       title: {
         pass: "Great approach! You are using title tags properly with optimal length.",
         warn: "Recommendation: Title tag length should be 50-60 characters for optimal SEO.",
@@ -180,7 +180,11 @@ export default function OnPageSEO() {
       }
     }
 
-    return recommendations[key]?.[status] || "Review this element for optimal SEO performance."
+    const recommendation = recommendations[key]
+    if (recommendation && status in recommendation) {
+      return recommendation[status as keyof typeof recommendation]
+    }
+    return "Review this element for optimal SEO performance."
   }
 
   return (

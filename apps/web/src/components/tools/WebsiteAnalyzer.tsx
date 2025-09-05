@@ -41,6 +41,7 @@ interface WebsiteAnalysisResponse {
   title?: string
   description?: string
   favicon?: string
+  score?: number
   mobileData?: PageSpeedData
   desktopData?: PageSpeedData
   error?: string
@@ -105,8 +106,19 @@ export default function WebsiteAnalyzer() {
       const mobileData = await mobileResponse.json()
       const desktopData = await desktopResponse.json()
 
+      // Calculate overall score from PageSpeed data
+      let overallScore = 0
+      if (mobileResponse.ok && mobileData.scores) {
+        const scores = mobileData.scores
+        overallScore = Math.round((scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4)
+      } else if (desktopResponse.ok && desktopData.scores) {
+        const scores = desktopData.scores
+        overallScore = Math.round((scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4)
+      }
+
       setResult({
         ...onPageData,
+        score: overallScore,
         mobileData: mobileResponse.ok ? mobileData : undefined,
         desktopData: desktopResponse.ok ? desktopData : undefined
       })
