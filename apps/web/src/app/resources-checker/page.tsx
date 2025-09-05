@@ -51,13 +51,19 @@ export default function ResourcesChecker() {
     setResult(null)
 
     try {
-      console.log('Submitting URL for analysis:', url.trim())
+      // Convert simple domain to full URL if needed
+      let fullUrl = url.trim()
+      if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+        fullUrl = `https://${fullUrl}`
+      }
+      
+      console.log('Submitting URL for analysis:', fullUrl)
       const response = await fetch('/api/resources-checker', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: fullUrl }),
       })
 
       console.log('Response status:', response.status)
@@ -136,60 +142,89 @@ export default function ResourcesChecker() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Globe className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Resources Checker</h1>
-                <p className="text-sm text-gray-600">Discover tools, platforms, and technologies used by any website</p>
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full opacity-20"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-100 rounded-full opacity-20"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8">
+              <Globe className="h-4 w-4 mr-2" />
+              India's #1 Website Resources Checker
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
+              Discover Website
+              <span className="text-primary-600 block">Technologies</span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+              Analyze any website to discover the tools, platforms, and technologies it uses. 
+              Get instant insights about analytics, CMS, frameworks, and more.
+            </p>
+
+            {/* Search Form */}
+            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto mb-12">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter domain (e.g., example.com)"
+                    className="w-full px-6 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-lg"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading || !url.trim()}
+                  className="px-8 py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-lg font-semibold shadow-lg"
+                >
+                  {loading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <Search className="h-6 w-6" />
+                  )}
+                  {loading ? 'Analyzing...' : 'Analyze →'}
+                </button>
+              </div>
+            </form>
+
+            {/* Feature Highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Comprehensive Detection</h3>
+                <p className="text-gray-600 text-sm">Identifies analytics, CMS, frameworks, e-commerce platforms, and more using advanced fingerprinting techniques.</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <Zap className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Fast Analysis</h3>
+                <p className="text-gray-600 text-sm">Get instant results in seconds. No waiting for complex SEO audits - just the tools you need to know about.</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <BarChart3 className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Detailed Insights</h3>
+                <p className="text-gray-600 text-sm">See confidence scores, detection methods, and evidence for each tool found on the website.</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Form */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Analyze Website Resources</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Enter any website URL to discover the tools, platforms, and technologies it uses. 
-              Get detailed insights about analytics, CMS, frameworks, and more.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading || !url.trim()}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Search className="h-5 w-5" />
-                )}
-                {loading ? 'Analyzing...' : 'Analyze'}
-              </button>
-            </div>
-          </form>
-        </div>
 
         {/* Error State */}
         {error && (

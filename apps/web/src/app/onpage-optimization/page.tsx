@@ -151,7 +151,13 @@ export default function OnPageOptimizationPage() {
     setResult(null)
 
     try {
-      const response = await fetch(`/api/onpage?url=${encodeURIComponent(url)}`)
+      // Convert simple domain to full URL if needed
+      let fullUrl = url.trim()
+      if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
+        fullUrl = `https://${fullUrl}`
+      }
+      
+      const response = await fetch(`/api/onpage?url=${encodeURIComponent(fullUrl)}`)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -200,52 +206,94 @@ export default function OnPageOptimizationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full opacity-20"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-100 rounded-full opacity-20"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-100 text-primary-800 text-sm font-medium mb-8">
+              <Search className="h-4 w-4 mr-2" />
+              India's #1 On-Page SEO Analyzer
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
+              Optimize Your
+              <span className="text-primary-600 block">On-Page SEO</span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+              Analyze your website's on-page SEO elements including meta tags, headings, images, 
+              structured data, and more. Get actionable recommendations to improve your search rankings.
+            </p>
+
+            {/* Search Form */}
+            <div className="max-w-2xl mx-auto mb-12">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter domain (e.g., example.com)"
+                    className="w-full px-6 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-lg"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
+                  />
+                </div>
+                <button
+                  onClick={handleAnalyze}
+                  disabled={loading}
+                  className="px-8 py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-lg font-semibold shadow-lg"
+                >
+                  {loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <Search className="w-6 h-6" />
+                  )}
+                  {loading ? 'Analyzing...' : 'Analyze →'}
+                </button>
+              </div>
+              {error && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-700">{error}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Feature Highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <CheckCircle className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Comprehensive Analysis</h3>
+                <p className="text-gray-600 text-sm">Analyze 15+ on-page SEO factors including meta tags, headings, images, and structured data.</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Actionable Recommendations</h3>
+                <p className="text-gray-600 text-sm">Get specific, actionable recommendations to improve your search engine rankings.</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div className="bg-primary-100 rounded-xl w-12 h-12 flex items-center justify-center mx-auto mb-4 text-primary-600">
+                  <ExternalLink className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Google SERP Preview</h3>
+                <p className="text-gray-600 text-sm">See exactly how your page appears in Google search results with desktop and mobile previews.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            On-Page SEO Optimization
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Analyze your website's on-page SEO elements including meta tags, headings, images, 
-            structured data, and more. Get actionable recommendations to improve your search rankings.
-          </p>
-        </div>
-
-        {/* Search Form */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter website URL (e.g., https://example.com)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
-              />
-            </div>
-            <button
-              onClick={handleAnalyze}
-              disabled={loading}
-              className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Search className="w-5 h-5" />
-              )}
-              {loading ? 'Analyzing...' : 'Analyze'}
-            </button>
-          </div>
-          {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
-        </div>
 
         {/* Results */}
         {result && (
