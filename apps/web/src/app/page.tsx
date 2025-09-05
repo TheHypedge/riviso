@@ -240,6 +240,7 @@ export default function HomePage() {
                 <Link href="/features" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Features</Link>
                 <Link href="/services" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Services</Link>
                 <Link href="/resources-checker" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Resources Checker</Link>
+                <Link href="/domain-history-checker" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Domain History</Link>
                 <Link href="/pricing" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</Link>
                 
                 {isAuthenticated ? (
@@ -649,6 +650,7 @@ export default function HomePage() {
                 <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="/services" className="hover:text-white transition-colors">Services</a></li>
                 <li><a href="/resources-checker" className="hover:text-white transition-colors">Resources Checker</a></li>
+                <li><a href="/domain-history-checker" className="hover:text-white transition-colors">Domain History</a></li>
                 <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
                 <li><a href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms-conditions" className="hover:text-white transition-colors">Terms of Service</a></li>
