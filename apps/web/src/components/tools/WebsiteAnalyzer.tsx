@@ -664,19 +664,19 @@ export default function WebsiteAnalyzer() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Total Byte Weight</span>
-                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data.resource_metrics.total_byte_weight)}</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data?.resource_metrics?.total_byte_weight || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Unused CSS Rules</span>
-                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data.resource_metrics.unused_css_rules)}</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data?.resource_metrics?.unused_css_rules || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Unused JavaScript</span>
-                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data.resource_metrics.unused_javascript)}</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data?.resource_metrics?.unused_javascript || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Render Blocking Resources</span>
-                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.resource_metrics.render_blocking_resources} ms</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data?.resource_metrics?.render_blocking_resources || 0} ms</span>
                     </div>
                   </div>
                 </div>
@@ -692,19 +692,19 @@ export default function WebsiteAnalyzer() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Total Byte Weight</span>
-                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data.resource_metrics.total_byte_weight)}</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data?.resource_metrics?.total_byte_weight || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Unused CSS Rules</span>
-                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data.resource_metrics.unused_css_rules)}</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data?.resource_metrics?.unused_css_rules || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Unused JavaScript</span>
-                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data.resource_metrics.unused_javascript)}</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data?.resource_metrics?.unused_javascript || 0)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Render Blocking Resources</span>
-                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.resource_metrics.render_blocking_resources} ms</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data?.resource_metrics?.render_blocking_resources || 0} ms</span>
                     </div>
                   </div>
                 </div>

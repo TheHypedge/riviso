@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
           requested_url: fullUrl
         },
         analysis_timestamp: new Date().toISOString(),
-        note: 'Mock data - PageSpeed API key not configured'
+        note: 'Mock data - PageSpeed API key not configured - Updated'
       })
     }
 
