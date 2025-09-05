@@ -388,7 +388,7 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
         )}
 
         {/* Main Content */}
-        <div className="flex-1 lg:ml-64">
+        <div className="flex-1 lg:ml-0">
           {/* Desktop Header */}
           <header className="hidden lg:block bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
             <div className="pl-0 pr-6 py-3">
