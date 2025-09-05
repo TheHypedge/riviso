@@ -534,3 +534,44 @@ async def run_audit_task(audit_id: str, url: str, options: Dict[str, Any]) -> No
         db.close()
 
 
+@router.post("/pagespeed")
+async def get_pagespeed_insights(request: Dict[str, Any], http_request: Request = None):
+    """Get PageSpeed Insights data for a URL."""
+    try:
+        url = request.get("url")
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        # Import PageSpeed Insights provider
+        from audit.providers.performance.psi import PageSpeedInsightsProvider
+        
+        # Get performance metrics
+        psi_provider = PageSpeedInsightsProvider()
+        performance_data = await psi_provider.get_metrics(url)
+        
+        logger.info(
+            "PageSpeed Insights data retrieved",
+            url=url,
+            request_id=getattr(http_request.state, "request_id", None) if http_request else None,
+        )
+        
+        return {
+            "status": "success",
+            "performance": performance_data,
+            "url": url
+        }
+        
+    except Exception as e:
+        logger.error(
+            "Failed to get PageSpeed Insights data",
+            url=request.get("url"),
+            error=str(e),
+            request_id=getattr(http_request.state, "request_id", None) if http_request else None,
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get PageSpeed Insights data: {str(e)}"
+        )
+
+
