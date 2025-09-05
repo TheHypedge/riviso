@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
       finalUrl: fullUrl
     }
 
-    // Fetch PageSpeed Insights data from our backend
-    const pagespeedResponse = await fetch(`${backendUrl}/audits/pagespeed`, {
+    // Fetch comprehensive website analysis from our backend
+    const analysisResponse = await fetch(`${backendUrl}/audits/website-analyzer`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,28 +46,22 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ url: fullUrl })
     })
 
-    let pagespeedData = null
-    if (pagespeedResponse.ok) {
-      pagespeedData = await pagespeedResponse.json()
+    if (!analysisResponse.ok) {
+      const errorData = await analysisResponse.json()
+      return NextResponse.json(
+        { error: errorData.detail || 'Failed to analyze website' },
+        { status: analysisResponse.status }
+      )
     }
 
-    // Calculate overall score
-    let overallScore = 0
-    if (pagespeedData?.performance) {
-      const performance = pagespeedData.performance
-      overallScore = Math.round((performance.performance_score + performance.accessibility_score + performance.best_practices_score + performance.seo_score) / 4)
-    }
+    const analysisData = await analysisResponse.json()
 
     return NextResponse.json({
       status: 'success',
-      url: fullUrl,
-      finalUrl: onPageData.finalUrl,
-      title: onPageData.title,
-      description: onPageData.description,
-      favicon: onPageData.favicon,
-      score: overallScore,
-      onPageData,
-      pagespeedData
+      website_info: analysisData.website_info,
+      mobile_data: analysisData.mobile_data,
+      desktop_data: analysisData.desktop_data,
+      analysis_timestamp: analysisData.analysis_timestamp
     })
 
   } catch (error) {

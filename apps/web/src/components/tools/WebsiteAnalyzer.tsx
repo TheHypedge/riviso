@@ -1,49 +1,101 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, Loader2, CheckCircle, AlertCircle, ExternalLink, Globe, Clock, Shield, Smartphone, Monitor, Eye } from 'lucide-react'
+import { 
+  BarChart3, 
+  Loader2, 
+  CheckCircle, 
+  AlertCircle, 
+  ExternalLink, 
+  Globe, 
+  Clock, 
+  Shield, 
+  Smartphone, 
+  Monitor, 
+  Eye,
+  Zap,
+  TrendingUp,
+  Target,
+  Award,
+  AlertTriangle,
+  Info,
+  ArrowRight,
+  Download,
+  RefreshCw
+} from 'lucide-react'
 
 interface PageSpeedData {
   status: 'success' | 'error'
   url: string
-  strategy: 'mobile' | 'desktop'
-  scores: {
-    performance: number
-    accessibility: number
-    bestPractices: number
-    seo: number
+  performance_score: number
+  accessibility_score: number
+  best_practices_score: number
+  seo_score: number
+  first_contentful_paint: number
+  largest_contentful_paint: number
+  cumulative_layout_shift: number
+  first_input_delay: number
+  time_to_interactive: number
+  total_blocking_time: number
+  speed_index: number
+  first_meaningful_paint: number
+  lcp_score: number
+  fcp_score: number
+  cls_score: number
+  fid_score: number
+  display_values: {
+    first_contentful_paint: string
+    largest_contentful_paint: string
+    cumulative_layout_shift: string
+    first_input_delay: string
+    total_blocking_time: string
+    speed_index: string
+    time_to_interactive: string
+    first_meaningful_paint: string
   }
-  metrics: {
-    firstContentfulPaint: number
-    largestContentfulPaint: number
-    cumulativeLayoutShift: number
-    firstInputDelay: number
-    totalBlockingTime: number
-    speedIndex: number
-    interactive: number
+  resource_metrics: {
+    total_byte_weight: number
+    unused_css_rules: number
+    unused_javascript: number
+    render_blocking_resources: number
+    efficient_animated_content: number
   }
-  displayValues: {
-    firstContentfulPaint: string
-    largestContentfulPaint: string
-    cumulativeLayoutShift: string
-    firstInputDelay: string
-    totalBlockingTime: string
-    speedIndex: string
-    interactive: string
-  }
-  error?: string
+  opportunities: Array<{
+    id: string
+    title: string
+    description: string
+    score: number
+    numericValue: number
+    displayValue: string
+    wastedMs: number
+  }>
+  diagnostics: Array<{
+    id: string
+    title: string
+    description: string
+    score: number
+    displayValue: string
+  }>
+  strategy: string
+  data_source: string
+  fetch_time: string
+  final_url: string
+  requested_url: string
 }
 
 interface WebsiteAnalysisResponse {
   status: 'success' | 'error'
-  url: string
-  finalUrl?: string
-  title?: string
-  description?: string
-  favicon?: string
-  score?: number
-  mobileData?: PageSpeedData
-  desktopData?: PageSpeedData
+  website_info: {
+    url: string
+    final_url: string
+    title: string
+    description: string
+    favicon: string
+    score: number
+  }
+  mobile_data: PageSpeedData
+  desktop_data: PageSpeedData
+  analysis_timestamp: string
   error?: string
 }
 
@@ -68,87 +120,24 @@ export default function WebsiteAnalyzer() {
         fullUrl = `https://${fullUrl}`
       }
 
-      // Check if Google PageSpeed API key is configured
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PAGESPEED_API_KEY
-      if (!apiKey || apiKey === 'your_api_key_here') {
-        setError('Google PageSpeed Insights API key not configured. Please contact support.')
-        return
-      }
-
-      // Fetch PageSpeed data directly from Google API
-      const [mobileResponse, desktopResponse] = await Promise.all([
-        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&key=${apiKey}&strategy=mobile`),
-        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&key=${apiKey}&strategy=desktop`)
-      ])
-
-      if (!mobileResponse.ok || !desktopResponse.ok) {
-        const errorText = await mobileResponse.text()
-        setError(`Failed to fetch PageSpeed data: ${errorText}`)
-        return
-      }
-
-      const mobileData = await mobileResponse.json()
-      const desktopData = await desktopResponse.json()
-
-      // Process PageSpeed data from Google API
-      const processPageSpeedData = (data: any, strategy: 'mobile' | 'desktop') => {
-        if (!data || data.error) return null
-        
-        const lighthouse = data.lighthouseResult
-        const audits = lighthouse.audits
-        
-        return {
-          status: 'success' as const,
-          url: fullUrl,
-          strategy: strategy,
-          scores: {
-            performance: Math.round(lighthouse.categories.performance.score * 100),
-            accessibility: Math.round(lighthouse.categories.accessibility.score * 100),
-            bestPractices: Math.round(lighthouse.categories['best-practices'].score * 100),
-            seo: Math.round(lighthouse.categories.seo.score * 100)
-          },
-          metrics: {
-            firstContentfulPaint: audits['first-contentful-paint']?.numericValue || 0,
-            largestContentfulPaint: audits['largest-contentful-paint']?.numericValue || 0,
-            cumulativeLayoutShift: audits['cumulative-layout-shift']?.numericValue || 0,
-            firstInputDelay: audits['max-potential-fid']?.numericValue || 0,
-            totalBlockingTime: audits['total-blocking-time']?.numericValue || 0,
-            speedIndex: audits['speed-index']?.numericValue || 0,
-            interactive: audits['interactive']?.numericValue || 0
-          },
-          displayValues: {
-            firstContentfulPaint: audits['first-contentful-paint']?.displayValue || 'N/A',
-            largestContentfulPaint: audits['largest-contentful-paint']?.displayValue || 'N/A',
-            cumulativeLayoutShift: audits['cumulative-layout-shift']?.displayValue || 'N/A',
-            firstInputDelay: audits['max-potential-fid']?.displayValue || 'N/A',
-            totalBlockingTime: audits['total-blocking-time']?.displayValue || 'N/A',
-            speedIndex: audits['speed-index']?.displayValue || 'N/A',
-            interactive: audits['interactive']?.displayValue || 'N/A'
-          }
-        }
-      }
-
-      const processedMobileData = processPageSpeedData(mobileData, 'mobile')
-      const processedDesktopData = processPageSpeedData(desktopData, 'desktop')
-
-      // Calculate overall score
-      const overallScore = processedMobileData && processedDesktopData ? 
-        Math.round((processedMobileData.scores.performance + processedDesktopData.scores.performance) / 2) : 
-        (processedMobileData?.scores.performance || processedDesktopData?.scores.performance || 0)
-
-      setResult({
-        status: 'success',
-        url: fullUrl,
-        finalUrl: mobileData.lighthouseResult?.finalUrl || fullUrl,
-        title: mobileData.lighthouseResult?.configSettings?.formFactor || 'Website Analysis',
-        description: `Performance analysis for ${fullUrl}`,
-        favicon: `https://www.google.com/s2/favicons?domain=${new URL(fullUrl).hostname}`,
-        score: overallScore,
-        mobileData: processedMobileData || undefined,
-        desktopData: processedDesktopData || undefined
+      // Call backend API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/audits/website-analyzer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: fullUrl }),
       })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to analyze website')
+      }
+
+      const data = await response.json()
+      setResult(data)
     } catch (err) {
-      setError('Failed to analyze website. Please check the URL and try again.')
+      setError(err instanceof Error ? err.message : 'Failed to analyze website. Please check the URL and try again.')
     } finally {
       setLoading(false)
     }
@@ -168,8 +157,27 @@ export default function WebsiteAnalyzer() {
     return 'Poor'
   }
 
+  const getCoreWebVitalStatus = (score: number) => {
+    if (score >= 0.9) return { status: 'Good', color: 'text-green-600 bg-green-100' }
+    if (score >= 0.5) return { status: 'Needs Improvement', color: 'text-yellow-600 bg-yellow-100' }
+    return { status: 'Poor', color: 'text-red-600 bg-red-100' }
+  }
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatTime = (ms: number) => {
+    if (ms < 1000) return `${Math.round(ms)} ms`
+    return `${(ms / 1000).toFixed(2)} s`
+  }
+
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
@@ -178,7 +186,7 @@ export default function WebsiteAnalyzer() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Website Analyzer</h2>
-            <p className="text-gray-600">Comprehensive website analysis and optimization</p>
+            <p className="text-gray-600">Comprehensive website analysis with Google PageSpeed Insights</p>
           </div>
         </div>
       </div>
@@ -257,12 +265,12 @@ export default function WebsiteAnalyzer() {
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <div className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-600">
-                      {result.url}
+                      {result.website_info.url}
                     </div>
                   </div>
                   <div className="h-64 bg-white flex items-center justify-center">
                     <iframe
-                      src={result.url}
+                      src={result.website_info.url}
                       className="w-full h-full border-0"
                       title="Desktop Preview"
                       sandbox="allow-scripts allow-same-origin"
@@ -283,12 +291,12 @@ export default function WebsiteAnalyzer() {
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <div className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-600 truncate">
-                      {result.url}
+                      {result.website_info.url}
                     </div>
                   </div>
                   <div className="h-64 bg-white flex items-center justify-center">
                     <iframe
-                      src={result.url}
+                      src={result.website_info.url}
                       className="w-full h-full border-0"
                       title="Mobile Preview"
                       sandbox="allow-scripts allow-same-origin"
@@ -298,114 +306,6 @@ export default function WebsiteAnalyzer() {
               </div>
             </div>
           </div>
-
-          {/* Mobile vs Desktop Performance */}
-          {(result.mobileData || result.desktopData) && (
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Comparison</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Mobile Performance */}
-                {result.mobileData && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Smartphone className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-gray-900">Mobile Performance</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.mobileData.scores.performance).split(' ')[0]}`}>
-                          {result.mobileData.scores.performance}
-                        </div>
-                        <div className="text-sm text-gray-600">Performance</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.mobileData.scores.accessibility).split(' ')[0]}`}>
-                          {result.mobileData.scores.accessibility}
-                        </div>
-                        <div className="text-sm text-gray-600">Accessibility</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.mobileData.scores.bestPractices).split(' ')[0]}`}>
-                          {result.mobileData.scores.bestPractices}
-                        </div>
-                        <div className="text-sm text-gray-600">Best Practices</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.mobileData.scores.seo).split(' ')[0]}`}>
-                          {result.mobileData.scores.seo}
-                        </div>
-                        <div className="text-sm text-gray-600">SEO</div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">First Contentful Paint:</span>
-                        <span className="font-mono">{result.mobileData.displayValues.firstContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Largest Contentful Paint:</span>
-                        <span className="font-mono">{result.mobileData.displayValues.largestContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Cumulative Layout Shift:</span>
-                        <span className="font-mono">{result.mobileData.displayValues.cumulativeLayoutShift}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Desktop Performance */}
-                {result.desktopData && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Monitor className="h-5 w-5 text-green-600" />
-                      <h4 className="font-semibold text-gray-900">Desktop Performance</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.desktopData.scores.performance).split(' ')[0]}`}>
-                          {result.desktopData.scores.performance}
-                        </div>
-                        <div className="text-sm text-gray-600">Performance</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.desktopData.scores.accessibility).split(' ')[0]}`}>
-                          {result.desktopData.scores.accessibility}
-                        </div>
-                        <div className="text-sm text-gray-600">Accessibility</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.desktopData.scores.bestPractices).split(' ')[0]}`}>
-                          {result.desktopData.scores.bestPractices}
-                        </div>
-                        <div className="text-sm text-gray-600">Best Practices</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className={`text-2xl font-bold ${getScoreColor(result.desktopData.scores.seo).split(' ')[0]}`}>
-                          {result.desktopData.scores.seo}
-                        </div>
-                        <div className="text-sm text-gray-600">SEO</div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">First Contentful Paint:</span>
-                        <span className="font-mono">{result.desktopData.displayValues.firstContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Largest Contentful Paint:</span>
-                        <span className="font-mono">{result.desktopData.displayValues.largestContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Cumulative Layout Shift:</span>
-                        <span className="font-mono">{result.desktopData.displayValues.cumulativeLayoutShift}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Overall Score */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
@@ -417,94 +317,520 @@ export default function WebsiteAnalyzer() {
               </div>
             </div>
             <div className="text-center">
-              <div className={`text-6xl font-bold ${getScoreColor(result.score || 0).split(' ')[0]} mb-2`}>
-                {result.score || 0}
+              <div className={`text-6xl font-bold ${getScoreColor(result.website_info.score).split(' ')[0]} mb-2`}>
+                {result.website_info.score}
               </div>
               <div className="text-lg text-gray-600 mb-4">out of 100</div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div 
                   className={`h-3 rounded-full transition-all duration-500 ${
-                    (result.score || 0) >= 90 ? 'bg-green-500' : 
-                    (result.score || 0) >= 70 ? 'bg-yellow-500' : 
-                    (result.score || 0) >= 50 ? 'bg-orange-500' : 'bg-red-500'
+                    result.website_info.score >= 90 ? 'bg-green-500' : 
+                    result.website_info.score >= 70 ? 'bg-yellow-500' : 
+                    result.website_info.score >= 50 ? 'bg-orange-500' : 'bg-red-500'
                   }`}
-                  style={{ width: `${result.score || 0}%` }}
+                  style={{ width: `${result.website_info.score}%` }}
                 />
               </div>
             </div>
           </div>
 
+          {/* Performance Comparison */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Comparison</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mobile Performance */}
+              {result.mobile_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Smartphone className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900">Mobile Performance</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.performance_score).split(' ')[0]}`}>
+                        {result.mobile_data.performance_score}
+                      </div>
+                      <div className="text-sm text-gray-600">Performance</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.accessibility_score).split(' ')[0]}`}>
+                        {result.mobile_data.accessibility_score}
+                      </div>
+                      <div className="text-sm text-gray-600">Accessibility</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.best_practices_score).split(' ')[0]}`}>
+                        {result.mobile_data.best_practices_score}
+                      </div>
+                      <div className="text-sm text-gray-600">Best Practices</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.seo_score).split(' ')[0]}`}>
+                        {result.mobile_data.seo_score}
+                      </div>
+                      <div className="text-sm text-gray-600">SEO</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop Performance */}
+              {result.desktop_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Monitor className="h-5 w-5 text-green-600" />
+                    <h4 className="font-semibold text-gray-900">Desktop Performance</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.performance_score).split(' ')[0]}`}>
+                        {result.desktop_data.performance_score}
+                      </div>
+                      <div className="text-sm text-gray-600">Performance</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.accessibility_score).split(' ')[0]}`}>
+                        {result.desktop_data.accessibility_score}
+                      </div>
+                      <div className="text-sm text-gray-600">Accessibility</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.best_practices_score).split(' ')[0]}`}>
+                        {result.desktop_data.best_practices_score}
+                      </div>
+                      <div className="text-sm text-gray-600">Best Practices</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.seo_score).split(' ')[0]}`}>
+                        {result.desktop_data.seo_score}
+                      </div>
+                      <div className="text-sm text-gray-600">SEO</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Core Web Vitals */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Core Web Vitals</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mobile Core Web Vitals */}
+              {result.mobile_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Smartphone className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900">Mobile Core Web Vitals</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Zap className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">Largest Contentful Paint</div>
+                          <div className="text-sm text-gray-600">Loading performance</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.largest_contentful_paint}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.lcp_score).color}`}>
+                          {getCoreWebVitalStatus(result.mobile_data.lcp_score).status}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Clock className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">First Input Delay</div>
+                          <div className="text-sm text-gray-600">Interactivity</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.first_input_delay}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.fid_score).color}`}>
+                          {getCoreWebVitalStatus(result.mobile_data.fid_score).status}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Target className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">Cumulative Layout Shift</div>
+                          <div className="text-sm text-gray-600">Visual stability</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.cumulative_layout_shift}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.cls_score).color}`}>
+                          {getCoreWebVitalStatus(result.mobile_data.cls_score).status}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop Core Web Vitals */}
+              {result.desktop_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Monitor className="h-5 w-5 text-green-600" />
+                    <h4 className="font-semibold text-gray-900">Desktop Core Web Vitals</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Zap className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">Largest Contentful Paint</div>
+                          <div className="text-sm text-gray-600">Loading performance</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.largest_contentful_paint}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.lcp_score).color}`}>
+                          {getCoreWebVitalStatus(result.desktop_data.lcp_score).status}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Clock className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">First Input Delay</div>
+                          <div className="text-sm text-gray-600">Interactivity</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.first_input_delay}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.fid_score).color}`}>
+                          {getCoreWebVitalStatus(result.desktop_data.fid_score).status}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Target className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">Cumulative Layout Shift</div>
+                          <div className="text-sm text-gray-600">Visual stability</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.cumulative_layout_shift}</div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.cls_score).color}`}>
+                          {getCoreWebVitalStatus(result.desktop_data.cls_score).status}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Detailed Performance Metrics */}
-          {(result.mobileData || result.desktopData) && (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Detailed Performance Metrics</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mobile Metrics */}
+              {result.mobile_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Smartphone className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900">Mobile Metrics</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">First Contentful Paint</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.first_contentful_paint}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Largest Contentful Paint</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.largest_contentful_paint}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Cumulative Layout Shift</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.cumulative_layout_shift}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">First Input Delay</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.first_input_delay}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Total Blocking Time</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.total_blocking_time}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Speed Index</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.speed_index}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Time to Interactive</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.time_to_interactive}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">First Meaningful Paint</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.display_values.first_meaningful_paint}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop Metrics */}
+              {result.desktop_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Monitor className="h-5 w-5 text-green-600" />
+                    <h4 className="font-semibold text-gray-900">Desktop Metrics</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">First Contentful Paint</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.first_contentful_paint}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Largest Contentful Paint</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.largest_contentful_paint}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Cumulative Layout Shift</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.cumulative_layout_shift}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">First Input Delay</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.first_input_delay}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Total Blocking Time</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.total_blocking_time}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Speed Index</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.speed_index}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Time to Interactive</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.time_to_interactive}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">First Meaningful Paint</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.display_values.first_meaningful_paint}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Resource Metrics */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Resource Analysis</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mobile Resources */}
+              {result.mobile_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Smartphone className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-semibold text-gray-900">Mobile Resources</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Total Byte Weight</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data.resource_metrics.total_byte_weight)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Unused CSS Rules</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data.resource_metrics.unused_css_rules)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Unused JavaScript</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.mobile_data.resource_metrics.unused_javascript)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Render Blocking Resources</span>
+                      <span className="text-sm font-mono text-gray-900">{result.mobile_data.resource_metrics.render_blocking_resources} ms</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Desktop Resources */}
+              {result.desktop_data && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Monitor className="h-5 w-5 text-green-600" />
+                    <h4 className="font-semibold text-gray-900">Desktop Resources</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Total Byte Weight</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data.resource_metrics.total_byte_weight)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Unused CSS Rules</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data.resource_metrics.unused_css_rules)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Unused JavaScript</span>
+                      <span className="text-sm font-mono text-gray-900">{formatBytes(result.desktop_data.resource_metrics.unused_javascript)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Render Blocking Resources</span>
+                      <span className="text-sm font-mono text-gray-900">{result.desktop_data.resource_metrics.render_blocking_resources} ms</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Opportunities */}
+          {(result.mobile_data?.opportunities?.length > 0 || result.desktop_data?.opportunities?.length > 0) && (
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Detailed Performance Metrics</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Optimization Opportunities</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Mobile Metrics */}
-                {result.mobileData && (
+                {/* Mobile Opportunities */}
+                {result.mobile_data?.opportunities?.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2 mb-4">
                       <Smartphone className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-gray-900">Mobile Metrics</h4>
+                      <h4 className="font-semibold text-gray-900">Mobile Opportunities</h4>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">First Contentful Paint</span>
-                        <span className="text-sm font-mono text-gray-900">{result.mobileData.displayValues.firstContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Largest Contentful Paint</span>
-                        <span className="text-sm font-mono text-gray-900">{result.mobileData.displayValues.largestContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Cumulative Layout Shift</span>
-                        <span className="text-sm font-mono text-gray-900">{result.mobileData.displayValues.cumulativeLayoutShift}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">First Input Delay</span>
-                        <span className="text-sm font-mono text-gray-900">{result.mobileData.displayValues.firstInputDelay}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Total Blocking Time</span>
-                        <span className="text-sm font-mono text-gray-900">{result.mobileData.displayValues.totalBlockingTime}</span>
-                      </div>
+                      {result.mobile_data.opportunities.slice(0, 5).map((opportunity, index) => (
+                        <div key={index} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-orange-900">{opportunity.title}</h5>
+                            <span className="text-sm font-mono text-orange-700">{opportunity.displayValue}</span>
+                          </div>
+                          <p className="text-sm text-orange-800 mb-2">{opportunity.description}</p>
+                          {opportunity.wastedMs > 0 && (
+                            <div className="text-xs text-orange-600">
+                              Potential savings: {formatTime(opportunity.wastedMs)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Desktop Metrics */}
-                {result.desktopData && (
+                {/* Desktop Opportunities */}
+                {result.desktop_data?.opportunities?.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2 mb-4">
                       <Monitor className="h-5 w-5 text-green-600" />
-                      <h4 className="font-semibold text-gray-900">Desktop Metrics</h4>
+                      <h4 className="font-semibold text-gray-900">Desktop Opportunities</h4>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">First Contentful Paint</span>
-                        <span className="text-sm font-mono text-gray-900">{result.desktopData.displayValues.firstContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Largest Contentful Paint</span>
-                        <span className="text-sm font-mono text-gray-900">{result.desktopData.displayValues.largestContentfulPaint}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Cumulative Layout Shift</span>
-                        <span className="text-sm font-mono text-gray-900">{result.desktopData.displayValues.cumulativeLayoutShift}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">First Input Delay</span>
-                        <span className="text-sm font-mono text-gray-900">{result.desktopData.displayValues.firstInputDelay}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Total Blocking Time</span>
-                        <span className="text-sm font-mono text-gray-900">{result.desktopData.displayValues.totalBlockingTime}</span>
-                      </div>
+                      {result.desktop_data.opportunities.slice(0, 5).map((opportunity, index) => (
+                        <div key={index} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-orange-900">{opportunity.title}</h5>
+                            <span className="text-sm font-mono text-orange-700">{opportunity.displayValue}</span>
+                          </div>
+                          <p className="text-sm text-orange-800 mb-2">{opportunity.description}</p>
+                          {opportunity.wastedMs > 0 && (
+                            <div className="text-xs text-orange-600">
+                              Potential savings: {formatTime(opportunity.wastedMs)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
             </div>
           )}
+
+          {/* Diagnostics */}
+          {(result.mobile_data?.diagnostics?.length > 0 || result.desktop_data?.diagnostics?.length > 0) && (
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Diagnostics</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Mobile Diagnostics */}
+                {result.mobile_data?.diagnostics?.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Smartphone className="h-5 w-5 text-blue-600" />
+                      <h4 className="font-semibold text-gray-900">Mobile Diagnostics</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {result.mobile_data.diagnostics.slice(0, 5).map((diagnostic, index) => (
+                        <div key={index} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-blue-900">{diagnostic.title}</h5>
+                            <span className="text-sm font-mono text-blue-700">{diagnostic.displayValue}</span>
+                          </div>
+                          <p className="text-sm text-blue-800">{diagnostic.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Desktop Diagnostics */}
+                {result.desktop_data?.diagnostics?.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Monitor className="h-5 w-5 text-green-600" />
+                      <h4 className="font-semibold text-gray-900">Desktop Diagnostics</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {result.desktop_data.diagnostics.slice(0, 5).map((diagnostic, index) => (
+                        <div key={index} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-blue-900">{diagnostic.title}</h5>
+                            <span className="text-sm font-mono text-blue-700">{diagnostic.displayValue}</span>
+                          </div>
+                          <p className="text-sm text-blue-800">{diagnostic.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Analysis Info */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Analysis Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">Analysis Time:</span>
+                <span className="font-mono">{new Date(result.analysis_timestamp).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">Data Source:</span>
+                <span className="font-mono">{result.mobile_data?.data_source || result.desktop_data?.data_source || 'Unknown'}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <ExternalLink className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">Final URL:</span>
+                <span className="font-mono truncate">{result.website_info.final_url}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

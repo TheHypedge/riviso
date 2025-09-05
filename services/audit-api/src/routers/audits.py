@@ -13,6 +13,7 @@ import structlog
 from db import get_db
 from models import Audit, AuditStatus, Job, JobStatus
 from audit.audit_engine import AuditEngine
+from audit.providers.performance.psi import PageSpeedInsightsProvider
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -331,6 +332,79 @@ async def get_performance_metrics(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get performance metrics: {str(e)}"
+        )
+
+@router.post("/website-analyzer")
+async def analyze_website(request: Dict[str, Any]):
+    """Comprehensive website analysis using PageSpeed Insights."""
+    try:
+        url = request.get("url")
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        # Validate URL
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            if not parsed.scheme or not parsed.netloc:
+                raise ValueError("Invalid URL")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid URL format")
+        
+        # Get performance metrics for both mobile and desktop
+        psi_provider = PageSpeedInsightsProvider()
+        
+        # Fetch mobile and desktop metrics concurrently
+        mobile_data = await psi_provider.get_metrics(url, strategy="mobile")
+        desktop_data = await psi_provider.get_metrics(url, strategy="desktop")
+        
+        # Calculate overall score
+        overall_score = 0
+        if mobile_data and desktop_data:
+            overall_score = round((mobile_data.get("performance_score", 0) + desktop_data.get("performance_score", 0)) / 2)
+        elif mobile_data:
+            overall_score = mobile_data.get("performance_score", 0)
+        elif desktop_data:
+            overall_score = desktop_data.get("performance_score", 0)
+        
+        # Extract basic website info
+        website_info = {
+            "url": url,
+            "final_url": mobile_data.get("final_url", url) if mobile_data else desktop_data.get("final_url", url),
+            "title": f"Website Analysis - {url}",
+            "description": f"Comprehensive performance analysis for {url}",
+            "favicon": f"https://www.google.com/s2/favicons?domain={urlparse(url).netloc}",
+            "score": overall_score
+        }
+        
+        logger.info(
+            "Website analysis completed",
+            url=url,
+            mobile_score=mobile_data.get("performance_score", 0) if mobile_data else 0,
+            desktop_score=desktop_data.get("performance_score", 0) if desktop_data else 0,
+            overall_score=overall_score,
+            request_id=getattr(request, "request_id", None),
+        )
+        
+        return {
+            "status": "success",
+            "website_info": website_info,
+            "mobile_data": mobile_data,
+            "desktop_data": desktop_data,
+            "analysis_timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(
+            "Failed to analyze website",
+            url=request.get("url", ""),
+            error=str(e),
+            request_id=getattr(request, "request_id", None),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to analyze website: {str(e)}"
         )
 
 @router.post("/detect-tools")
