@@ -267,7 +267,15 @@ export async function POST(request: NextRequest) {
 
     // Extract opportunities and diagnostics
     const extractOpportunities = (audits: any) => {
-      const opportunities = []
+      const opportunities: Array<{
+        id: string
+        title: string
+        description: string
+        score: number
+        numericValue: number
+        displayValue: string
+        wastedMs: number
+      }> = []
       const opportunityKeys = [
         'unused-css-rules', 'unused-javascript', 'render-blocking-resources',
         'unused-javascript', 'efficient-animated-content', 'uses-optimized-images',
@@ -293,7 +301,13 @@ export async function POST(request: NextRequest) {
     }
 
     const extractDiagnostics = (audits: any) => {
-      const diagnostics = []
+      const diagnostics: Array<{
+        id: string
+        title: string
+        description: string
+        score: number
+        displayValue: string
+      }> = []
       const diagnosticKeys = [
         'render-blocking-resources', 'uses-optimized-images', 'uses-text-compression',
         'uses-webp-images', 'uses-responsive-images', 'efficient-animated-content'
