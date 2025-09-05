@@ -273,11 +273,19 @@ export default function DomainHistoryChecker() {
                       <div className="flex items-center space-x-2">
                         {domainInfo.registered ? (
                           <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : domainInfo.status === 'available' ? (
+                          <XCircle className="h-5 w-5 text-blue-500" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-red-500" />
+                          <XCircle className="h-5 w-5 text-gray-500" />
                         )}
-                        <span className={`text-sm font-medium ${domainInfo.registered ? 'text-green-700' : 'text-red-700'}`}>
-                          {domainInfo.registered ? 'Registered' : 'Not Registered'}
+                        <span className={`text-sm font-medium ${
+                          domainInfo.registered ? 'text-green-700' : 
+                          domainInfo.status === 'available' ? 'text-blue-700' : 
+                          'text-gray-700'
+                        }`}>
+                          {domainInfo.registered ? 'Registered' : 
+                           domainInfo.status === 'available' ? 'Available for Registration' : 
+                           'Status Unknown'}
                         </span>
                       </div>
                       {domainInfo.ipAddress && (
@@ -304,7 +312,14 @@ export default function DomainHistoryChecker() {
                 {expandedSections.has('basic') && (
                   <div className="p-6 space-y-4">
                     <InfoRow label="Domain" value={domainInfo.domain} />
-                    <InfoRow label="Status" value={domainInfo.status} />
+                    <InfoRow 
+                      label="Status" 
+                      value={
+                        domainInfo.registered ? 'Registered' : 
+                        domainInfo.status === 'available' ? 'Available for Registration' : 
+                        domainInfo.status || 'Unknown'
+                      } 
+                    />
                     <InfoRow label="IP Address" value={domainInfo.ipAddress} copyable />
                     {domainInfo.domainStatus && domainInfo.domainStatus.length > 0 && (
                       <div className="py-2">
@@ -330,9 +345,22 @@ export default function DomainHistoryChecker() {
                 <SectionHeader title="Important Dates" section="dates" icon={Calendar} />
                 {expandedSections.has('dates') && (
                   <div className="p-6 space-y-4">
-                    <InfoRow label="Registration Date" value={formatDate(domainInfo.registrationDate)} />
-                    <InfoRow label="Expiration Date" value={formatDate(domainInfo.expirationDate)} />
-                    <InfoRow label="Last Updated" value={formatDate(domainInfo.lastUpdated)} />
+                    {domainInfo.registered ? (
+                      <>
+                        <InfoRow label="Registration Date" value={formatDate(domainInfo.registrationDate)} />
+                        <InfoRow label="Expiration Date" value={formatDate(domainInfo.expirationDate)} />
+                        <InfoRow label="Last Updated" value={formatDate(domainInfo.lastUpdated)} />
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">
+                          {domainInfo.status === 'available' 
+                            ? 'This domain is available for registration' 
+                            : 'Registration information not available'}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -340,12 +368,23 @@ export default function DomainHistoryChecker() {
               {/* Registrar Information */}
               <div className="border-b border-gray-200">
                 <SectionHeader title="Registrar Information" section="registrar" icon={Building} />
-                {expandedSections.has('registrar') && domainInfo.registrar && (
-                  <div className="p-6 space-y-4">
-                    <InfoRow label="Registrar" value={domainInfo.registrar.name} />
-                    <InfoRow label="Registrar URL" value={domainInfo.registrar.url} copyable />
-                    <InfoRow label="WHOIS Server" value={domainInfo.registrar.whoisServer} copyable />
-                  </div>
+                {expandedSections.has('registrar') && (
+                  domainInfo.registrar ? (
+                    <div className="p-6 space-y-4">
+                      <InfoRow label="Registrar" value={domainInfo.registrar.name} />
+                      <InfoRow label="Registrar URL" value={domainInfo.registrar.url} copyable />
+                      <InfoRow label="WHOIS Server" value={domainInfo.registrar.whoisServer} copyable />
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">
+                        {domainInfo.status === 'available' 
+                          ? 'No registrar information available for unregistered domain' 
+                          : 'Registrar information not available'}
+                      </p>
+                    </div>
+                  )
                 )}
               </div>
 

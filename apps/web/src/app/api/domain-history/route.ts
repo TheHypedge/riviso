@@ -78,22 +78,29 @@ export async function POST(request: NextRequest) {
 
 async function fetchDomainInfo(domain: string): Promise<DomainInfo> {
   try {
-    // Use multiple WHOIS APIs for better coverage
-    const whoisData = await fetchWhoisData(domain)
+    // First check if domain is accessible via DNS
     const dnsData = await fetchDnsData(domain)
+    const hasDnsRecords = dnsData.A?.length > 0 || dnsData.AAAA?.length > 0 || dnsData.MX?.length > 0
+    
+    // Try to get WHOIS data
+    const whoisData = await fetchWhoisData(domain)
+    
+    // Determine if domain is registered based on WHOIS data or DNS records
+    const isRegistered = whoisData.registered || hasDnsRecords
     
     return {
       domain,
+      status: isRegistered ? 'active' : 'available',
+      registered: isRegistered,
       ...whoisData,
-      dnsRecords: dnsData,
-      registered: whoisData.registered || false
+      dnsRecords: dnsData
     }
     
   } catch (error) {
     console.error('Error fetching domain info:', error)
     return {
       domain,
-      status: 'error',
+      status: 'unavailable',
       registered: false,
       error: 'Failed to fetch domain information'
     }
@@ -102,7 +109,7 @@ async function fetchDomainInfo(domain: string): Promise<DomainInfo> {
 
 async function fetchWhoisData(domain: string) {
   try {
-    // Try multiple WHOIS APIs
+    // Use a more reliable approach with multiple APIs
     const apis = [
       `https://api.whoisjson.com/v1/whois/${domain}`,
       `https://whoisjson.com/api/v1/whois/${domain}`,
@@ -113,13 +120,17 @@ async function fetchWhoisData(domain: string) {
       try {
         const response = await fetch(apiUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; SEO-Audit/1.0)'
+            'User-Agent': 'Mozilla/5.0 (compatible; SEO-Audit/1.0)',
+            'Accept': 'application/json'
           }
         })
         
         if (response.ok) {
           const data = await response.json()
-          return parseWhoisData(data)
+          const parsed = parseWhoisData(data)
+          if (parsed.registered !== undefined) {
+            return parsed
+          }
         }
       } catch (e) {
         console.log(`WHOIS API failed: ${apiUrl}`)
@@ -127,48 +138,45 @@ async function fetchWhoisData(domain: string) {
       }
     }
     
-    // Fallback to manual WHOIS parsing
-    return await fetchManualWhois(domain)
+    // Fallback to a simple domain availability check
+    return await checkDomainAvailability(domain)
     
   } catch (error) {
     console.error('WHOIS fetch error:', error)
     return {
-      status: 'error',
+      status: 'unavailable',
       registered: false,
-      error: 'Failed to fetch WHOIS data'
+      error: 'WHOIS data not available'
     }
   }
 }
 
-async function fetchManualWhois(domain: string) {
+async function checkDomainAvailability(domain: string) {
   try {
-    // Use a CORS proxy to fetch WHOIS data
-    const proxyUrl = 'https://api.allorigins.win/raw?url='
-    const whoisUrl = `https://whoisjson.com/api/v1/whois/${domain}`
+    // Use a simple DNS lookup to check if domain exists
+    const dnsResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=A`)
+    const dnsData = await dnsResponse.json()
     
-    const response = await fetch(proxyUrl + encodeURIComponent(whoisUrl), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SEO-Audit/1.0)'
+    if (dnsData.Answer && dnsData.Answer.length > 0) {
+      return {
+        status: 'active',
+        registered: true,
+        registrationDate: 'Unknown',
+        expirationDate: 'Unknown'
       }
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      return parseWhoisData(data)
+    } else {
+      return {
+        status: 'available',
+        registered: false,
+        registrationDate: undefined,
+        expirationDate: undefined
+      }
     }
-    
-    return {
-      status: 'error',
-      registered: false,
-      error: 'WHOIS data not available'
-    }
-    
   } catch (error) {
-    console.error('Manual WHOIS fetch error:', error)
     return {
-      status: 'error',
+      status: 'unavailable',
       registered: false,
-      error: 'Failed to fetch WHOIS data'
+      error: 'Unable to determine domain status'
     }
   }
 }
@@ -180,19 +188,39 @@ function parseWhoisData(data: any) {
       registered: true
     }
     
+    // Check if domain is registered based on common indicators
+    if (data.error || data.message || data.status === 'error') {
+      return {
+        status: 'available',
+        registered: false,
+        registrationDate: undefined,
+        expirationDate: undefined
+      }
+    }
+    
     // Parse registration date
     if (data.creation_date) {
       result.registrationDate = formatDate(data.creation_date)
+    } else if (data.created_date) {
+      result.registrationDate = formatDate(data.created_date)
+    } else if (data.registered) {
+      result.registrationDate = formatDate(data.registered)
     }
     
     // Parse expiration date
     if (data.expiration_date) {
       result.expirationDate = formatDate(data.expiration_date)
+    } else if (data.expires) {
+      result.expirationDate = formatDate(data.expires)
+    } else if (data.expiry) {
+      result.expirationDate = formatDate(data.expiry)
     }
     
     // Parse last updated
     if (data.updated_date) {
       result.lastUpdated = formatDate(data.updated_date)
+    } else if (data.updated) {
+      result.lastUpdated = formatDate(data.updated)
     }
     
     // Parse registrar
@@ -242,6 +270,10 @@ function parseWhoisData(data: any) {
       result.nameServers = Array.isArray(data.name_servers) 
         ? data.name_servers 
         : [data.name_servers]
+    } else if (data.nameservers) {
+      result.nameServers = Array.isArray(data.nameservers) 
+        ? data.nameservers 
+        : [data.nameservers]
     }
     
     // Parse status
@@ -261,7 +293,7 @@ function parseWhoisData(data: any) {
   } catch (error) {
     console.error('Error parsing WHOIS data:', error)
     return {
-      status: 'error',
+      status: 'unavailable',
       registered: false,
       error: 'Failed to parse WHOIS data'
     }
@@ -270,7 +302,7 @@ function parseWhoisData(data: any) {
 
 async function fetchDnsData(domain: string) {
   try {
-    // Use multiple DNS APIs
+    // Use Google's DNS API for reliable DNS lookups
     const dnsApis = [
       `https://dns.google/resolve?name=${domain}&type=A`,
       `https://dns.google/resolve?name=${domain}&type=AAAA`,
@@ -303,7 +335,7 @@ async function fetchDnsData(domain: string) {
                 break
               case 'MX':
                 dnsRecords.MX = data.Answer.map((record: any) => ({
-                  priority: record.data.split(' ')[0],
+                  priority: parseInt(record.data.split(' ')[0]),
                   exchange: record.data.split(' ')[1]
                 }))
                 break
@@ -334,6 +366,9 @@ async function fetchDnsData(domain: string) {
 function formatDate(dateString: string): string {
   try {
     const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return dateString
+    }
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
