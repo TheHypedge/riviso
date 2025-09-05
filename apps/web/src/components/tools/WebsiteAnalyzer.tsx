@@ -68,53 +68,50 @@ export default function WebsiteAnalyzer() {
         fullUrl = `https://${fullUrl}`
       }
 
-      // Fetch basic website info
-      const onPageResponse = await fetch(`/api/onpage?url=${encodeURIComponent(fullUrl)}`)
-      const onPageData = await onPageResponse.json()
-
-      if (!onPageResponse.ok) {
-        setError(onPageData.message || 'Failed to analyze website')
-        return
-      }
-
-      // Fetch PageSpeed Insights data directly from Google API
+      // Check if Google PageSpeed API key is configured
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PAGESPEED_API_KEY
-      
-      if (!apiKey) {
-        setError('Google PageSpeed Insights API key not configured')
+      if (!apiKey || apiKey === 'your_api_key_here') {
+        setError('Google PageSpeed Insights API key not configured. Please contact support.')
         return
       }
 
+      // Fetch PageSpeed data directly from Google API
       const [mobileResponse, desktopResponse] = await Promise.all([
-        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&key=${apiKey}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo`),
-        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&key=${apiKey}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo`)
+        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&key=${apiKey}&strategy=mobile`),
+        fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&key=${apiKey}&strategy=desktop`)
       ])
+
+      if (!mobileResponse.ok || !desktopResponse.ok) {
+        const errorText = await mobileResponse.text()
+        setError(`Failed to fetch PageSpeed data: ${errorText}`)
+        return
+      }
 
       const mobileData = await mobileResponse.json()
       const desktopData = await desktopResponse.json()
 
-      // Process PageSpeed data
-      const processPageSpeedData = (data: any, strategy: string) => {
-        if (!data.lighthouseResult) return null
+      // Process PageSpeed data from Google API
+      const processPageSpeedData = (data: any, strategy: 'mobile' | 'desktop') => {
+        if (!data || data.error) return null
         
-        const categories = data.lighthouseResult.categories
-        const audits = data.lighthouseResult.audits
+        const lighthouse = data.lighthouseResult
+        const audits = lighthouse.audits
         
         return {
-          status: 'success',
+          status: 'success' as const,
           url: fullUrl,
           strategy: strategy,
           scores: {
-            performance: Math.round((categories.performance?.score || 0) * 100),
-            accessibility: Math.round((categories.accessibility?.score || 0) * 100),
-            bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
-            seo: Math.round((categories.seo?.score || 0) * 100)
+            performance: Math.round(lighthouse.categories.performance.score * 100),
+            accessibility: Math.round(lighthouse.categories.accessibility.score * 100),
+            bestPractices: Math.round(lighthouse.categories['best-practices'].score * 100),
+            seo: Math.round(lighthouse.categories.seo.score * 100)
           },
           metrics: {
             firstContentfulPaint: audits['first-contentful-paint']?.numericValue || 0,
             largestContentfulPaint: audits['largest-contentful-paint']?.numericValue || 0,
             cumulativeLayoutShift: audits['cumulative-layout-shift']?.numericValue || 0,
-            firstInputDelay: audits['first-input-delay']?.numericValue || 0,
+            firstInputDelay: audits['max-potential-fid']?.numericValue || 0,
             totalBlockingTime: audits['total-blocking-time']?.numericValue || 0,
             speedIndex: audits['speed-index']?.numericValue || 0,
             interactive: audits['interactive']?.numericValue || 0
@@ -123,7 +120,7 @@ export default function WebsiteAnalyzer() {
             firstContentfulPaint: audits['first-contentful-paint']?.displayValue || 'N/A',
             largestContentfulPaint: audits['largest-contentful-paint']?.displayValue || 'N/A',
             cumulativeLayoutShift: audits['cumulative-layout-shift']?.displayValue || 'N/A',
-            firstInputDelay: audits['first-input-delay']?.displayValue || 'N/A',
+            firstInputDelay: audits['max-potential-fid']?.displayValue || 'N/A',
             totalBlockingTime: audits['total-blocking-time']?.displayValue || 'N/A',
             speedIndex: audits['speed-index']?.displayValue || 'N/A',
             interactive: audits['interactive']?.displayValue || 'N/A'
@@ -131,27 +128,27 @@ export default function WebsiteAnalyzer() {
         }
       }
 
-      const processedMobileData = mobileResponse.ok ? processPageSpeedData(mobileData, 'mobile') : null
-      const processedDesktopData = desktopResponse.ok ? processPageSpeedData(desktopData, 'desktop') : null
+      const processedMobileData = processPageSpeedData(mobileData, 'mobile')
+      const processedDesktopData = processPageSpeedData(desktopData, 'desktop')
 
-      // Calculate overall score from PageSpeed data
-      let overallScore = 0
-      if (processedMobileData?.scores) {
-        const scores = processedMobileData.scores
-        overallScore = Math.round((scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4)
-      } else if (processedDesktopData?.scores) {
-        const scores = processedDesktopData.scores
-        overallScore = Math.round((scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4)
-      }
+      // Calculate overall score
+      const overallScore = processedMobileData && processedDesktopData ? 
+        Math.round((processedMobileData.scores.performance + processedDesktopData.scores.performance) / 2) : 
+        (processedMobileData?.scores.performance || processedDesktopData?.scores.performance || 0)
 
       setResult({
-        ...onPageData,
+        status: 'success',
+        url: fullUrl,
+        finalUrl: mobileData.lighthouseResult?.finalUrl || fullUrl,
+        title: mobileData.lighthouseResult?.configSettings?.formFactor || 'Website Analysis',
+        description: `Performance analysis for ${fullUrl}`,
+        favicon: `https://www.google.com/s2/favicons?domain=${new URL(fullUrl).hostname}`,
         score: overallScore,
-        mobileData: processedMobileData,
-        desktopData: processedDesktopData
+        mobileData: processedMobileData || undefined,
+        desktopData: processedDesktopData || undefined
       })
     } catch (err) {
-      setError('Failed to connect to the server. Please try again.')
+      setError('Failed to analyze website. Please check the URL and try again.')
     } finally {
       setLoading(false)
     }
