@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get backend URL from environment
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
     // For now, we'll skip on-page data and focus on PageSpeed Insights
     const onPageData = {

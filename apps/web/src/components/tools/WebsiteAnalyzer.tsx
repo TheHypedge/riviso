@@ -120,8 +120,8 @@ export default function WebsiteAnalyzer() {
         fullUrl = `https://${fullUrl}`
       }
 
-      // Call backend API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/audits/website-analyzer`, {
+      // Call frontend API route (which will call backend)
+      const response = await fetch('/api/website-analyzer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
