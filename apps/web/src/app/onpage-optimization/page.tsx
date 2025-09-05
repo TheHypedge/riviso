@@ -368,7 +368,9 @@ export default function OnPageOptimizationPage() {
                                 className="w-4 h-4"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
-                                  e.currentTarget.nextElementSibling.style.display = 'block'
+                                  if (e.currentTarget.nextElementSibling) {
+                                    (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                                  }
                                 }}
                               />
                             ) : null}
@@ -430,7 +432,9 @@ export default function OnPageOptimizationPage() {
                                 className="w-3 h-3"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
-                                  e.currentTarget.nextElementSibling.style.display = 'block'
+                                  if (e.currentTarget.nextElementSibling) {
+                                    (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                                  }
                                 }}
                               />
                             ) : null}
@@ -861,7 +865,9 @@ export default function OnPageOptimizationPage() {
                                 className="w-6 h-6"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none'
-                                  e.currentTarget.nextElementSibling.style.display = 'block'
+                                  if (e.currentTarget.nextElementSibling) {
+                                    (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                                  }
                                 }}
                               />
                             ) : null}

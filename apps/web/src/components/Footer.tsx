@@ -86,29 +86,29 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-white">Company</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/about" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   About Us
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   Contact
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/careers" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   Careers
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/blog" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   Blog
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/press" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   Press
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -118,9 +118,9 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-white">Support & Legal</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/help" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   Help Center
-                </Link>
+                </a>
               </li>
               <li>
                 <Link href="/privacy-policy" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
@@ -138,9 +138,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
+                <a href="#" className="text-gray-300 hover:text-primary-400 transition-colors text-sm hover-lift block py-1">
                   Security
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -159,9 +159,9 @@ export default function Footer() {
               <Link href="/terms-conditions" className="text-gray-400 hover:text-primary-400 transition-colors text-sm hover-lift">
                 Terms
               </Link>
-              <Link href="/cookies" className="text-gray-400 hover:text-primary-400 transition-colors text-sm hover-lift">
+              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors text-sm hover-lift">
                 Cookies
-              </Link>
+              </a>
             </div>
           </div>
         </div>
