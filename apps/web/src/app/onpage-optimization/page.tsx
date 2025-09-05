@@ -201,34 +201,6 @@ export default function OnPageOptimizationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-orange-600">
-                RIVISO
-              </Link>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/features" className="text-gray-700 hover:text-orange-600">
-                Features
-              </Link>
-              <Link href="/services" className="text-gray-700 hover:text-orange-600">
-                Services
-              </Link>
-              <Link href="/pricing" className="text-gray-700 hover:text-orange-600">
-                Pricing
-              </Link>
-              <Link
-                href="/"
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
-              >
-                Start Free Audit
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
