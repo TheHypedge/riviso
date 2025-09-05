@@ -50,7 +50,8 @@ export const imagesCheck: Analyzer = async ({ $, finalUrl }) => {
   let status: 'pass' | 'warn' | 'fail' = 'pass';
   const ratio = total ? (missingAlt / total) : 0;
   
-  if (total >= 10 && ratio > 0.10) {
+  // Fail if significant missing alt text or large images
+  if ((total >= 10 && ratio > 0.10) || (total >= 5 && ratio > 0.20) || large.length > 3) {
     status = 'fail';
   } else if (missingAlt > 0 || large.length > 0) {
     status = 'warn';
