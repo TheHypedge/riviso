@@ -98,6 +98,83 @@ export default function OnPageSEO() {
     return 'text-red-600'
   }
 
+  const getRecommendation = (key: string, status: string, value?: string) => {
+    const recommendations: { [key: string]: { pass: string; warn: string; fail: string } } = {
+      title: {
+        pass: "Great approach! You are using title tags properly with optimal length.",
+        warn: "Recommendation: Title tag length should be 50-60 characters for optimal SEO.",
+        fail: "Recommendation: Add a title tag with 50-60 characters to improve search visibility."
+      },
+      description: {
+        pass: "Great approach! You are using meta descriptions properly with optimal length.",
+        warn: "Recommendation: Meta description length should be 150-160 characters for better click-through rates.",
+        fail: "Recommendation: Add a meta description with 150-160 characters to improve search snippets."
+      },
+      metaRobots: {
+        pass: "Great approach! You are using meta robots tags properly for search engine control.",
+        warn: "Recommendation: Review your meta robots tags to ensure proper indexing directives.",
+        fail: "Recommendation: Add proper meta robots tags to control search engine crawling and indexing."
+      },
+      canonical: {
+        pass: "Great approach! You are using canonical URLs properly to avoid duplicate content issues.",
+        warn: "Recommendation: Ensure your canonical URL points to the preferred version of this page.",
+        fail: "Recommendation: Add a canonical URL to prevent duplicate content penalties."
+      },
+      headings: {
+        pass: "Great approach! You are using heading structure properly with good hierarchy.",
+        warn: "Recommendation: Avoid skipping heading levels (e.g., H2 to H4). Use proper hierarchical structure H1-H6.",
+        fail: "Recommendation: Add proper heading structure with H1-H6 tags in logical order."
+      },
+      openGraph: {
+        pass: "Great approach! You are using Open Graph tags properly for social media sharing.",
+        warn: "Recommendation: Complete your Open Graph tags with all recommended properties.",
+        fail: "Recommendation: Add Open Graph meta tags to improve social media sharing appearance."
+      },
+      twitter: {
+        pass: "Great approach! You are using Twitter Cards properly for enhanced social sharing.",
+        warn: "Recommendation: Complete your Twitter Card implementation with all recommended tags.",
+        fail: "Recommendation: Add Twitter Card meta tags to enhance your content's appearance on Twitter."
+      },
+      images: {
+        pass: "Great approach! You are using images properly with alt text and optimized file sizes.",
+        warn: "Recommendation: Add meaningful alt text to images and keep large assets under 300 KB.",
+        fail: "Recommendation: Add alt text to all images and optimize file sizes for better performance."
+      },
+      links: {
+        pass: "Great approach! You are using internal and external links properly for SEO value.",
+        warn: "Recommendation: Review your link structure and ensure proper anchor text usage.",
+        fail: "Recommendation: Add relevant internal and external links to improve page authority."
+      },
+      hreflang: {
+        pass: "Great approach! You are using hreflang tags properly for international SEO.",
+        warn: "Recommendation: Review your hreflang implementation for proper language targeting.",
+        fail: "Recommendation: Add hreflang tags if you have multilingual content for better international targeting."
+      },
+      structuredData: {
+        pass: "Great approach! You are using structured data properly to help search engines understand your content.",
+        warn: "Recommendation: Complete your structured data implementation with all relevant schema types.",
+        fail: "Recommendation: Add structured data markup to help search engines better understand your content."
+      },
+      favicon: {
+        pass: "Great approach! You are using favicons properly for better brand recognition.",
+        warn: "Recommendation: Ensure your favicon is properly sized and displays correctly across all devices.",
+        fail: "Recommendation: Add a favicon to improve brand recognition and user experience."
+      },
+      language: {
+        pass: "Great approach! You are using language attributes properly for accessibility and SEO.",
+        warn: "Recommendation: Ensure your language attribute matches your content language.",
+        fail: "Recommendation: Add a language attribute to your HTML tag for better accessibility and SEO."
+      },
+      charset: {
+        pass: "Great approach! You are using charset declaration properly for proper text encoding.",
+        warn: "Recommendation: Ensure your charset is declared early in the document head.",
+        fail: "Recommendation: Add a charset declaration to ensure proper text encoding."
+      }
+    }
+
+    return recommendations[key]?.[status] || "Review this element for optimal SEO performance."
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
@@ -278,24 +355,53 @@ export default function OnPageSEO() {
           {/* SEO Checks */}
           {result.checks && (
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Analysis Results</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">SEO Analysis Results</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(result.checks).map(([key, check]) => (
-                  <div key={key} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 capitalize">
+                  <div key={key} className="bg-gray-50 rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-gray-900 capitalize text-sm">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
                       </h4>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(check.status)}`}>
-                        {check.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{check.message}</p>
-                    {check.value && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded font-mono">
-                        {check.value}
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(check.status)}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(check.status)}`}>
+                          {check.status}
+                        </span>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Current Status */}
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-700 mb-2">{check.message}</p>
+                      {check.value && (
+                        <div className="text-xs text-gray-600 bg-white p-3 rounded-lg border font-mono break-all">
+                          {check.value}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Recommendation Section */}
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex items-start space-x-2">
+                        <div className="flex-shrink-0 mt-0.5">
+                          {check.status === 'pass' ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-gray-900 mb-1">
+                            {check.status === 'pass' ? 'Great Approach' : 'Recommendation'}
+                          </p>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            {getRecommendation(key, check.status, check.value)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
