@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import RoleBasedDashboard from '@/components/RoleBasedDashboard'
+import DashboardLayout from '@/components/DashboardLayout'
 import { useState, useEffect } from 'react'
 
 interface Audit {
@@ -47,10 +47,8 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <RoleBasedDashboard 
+      <DashboardLayout 
         user={user}
-        audits={audits}
-        loading={loading}
         logout={logout}
       />
     </ProtectedRoute>

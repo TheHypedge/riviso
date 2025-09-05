@@ -177,3 +177,34 @@
 2025-09-05T15:48:05.245840Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
 2025-09-05T15:48:23.835352Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/Header.tsx")}
 2025-09-05T15:48:23.835384Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:57:59.535291Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/DashboardLayout.tsx")}
+2025-09-05T15:57:59.536512Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:57:59.824960Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/DashboardLayout.tsx")}
+2025-09-05T15:57:59.824980Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:58:45.525416Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/ResourcesChecker.tsx"), AnchoredSystemPathBuf("apps/web/src/components/tools")}
+2025-09-05T15:58:45.525460Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:58:45.723783Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/ResourcesChecker.tsx")}
+2025-09-05T15:58:45.723801Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:59:37.825633Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/DomainHistoryChecker.tsx")}
+2025-09-05T15:59:37.825658Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:59:38.526039Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/DomainHistoryChecker.tsx")}
+2025-09-05T15:59:38.526692Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:59:38.653146Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/DomainHistoryChecker.tsx")}
+2025-09-05T15:59:38.653170Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T15:59:38.653349Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-09-05T16:00:55.425882Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/OnPageSEO.tsx")}
+2025-09-05T16:00:55.425926Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:00:55.725734Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/OnPageSEO.tsx")}
+2025-09-05T16:00:55.725744Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:02:20.427440Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/WebsiteAnalyzer.tsx")}
+2025-09-05T16:02:20.427481Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:02:20.727851Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/tools/WebsiteAnalyzer.tsx")}
+2025-09-05T16:02:20.727861Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:02:33.925271Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/dashboard/page.tsx")}
+2025-09-05T16:02:33.925343Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:02:44.328050Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/Header.tsx")}
+2025-09-05T16:02:44.328101Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:02:53.227023Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/Header.tsx")}
+2025-09-05T16:02:53.227062Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-09-05T16:03:06.428395Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/Header.tsx")}
+2025-09-05T16:03:06.428432Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@riviso/web"), path: AnchoredSystemPathBuf("apps/web") }}))
