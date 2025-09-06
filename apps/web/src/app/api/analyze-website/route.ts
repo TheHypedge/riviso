@@ -181,11 +181,11 @@ export async function POST(request: NextRequest) {
 
     // Call Google PageSpeed Insights API directly
     const mobileResponse = await fetch(
-      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&strategy=mobile&key=${apiKey}`
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&strategy=mobile&key=${apiKey}&_t=${Date.now()}`
     )
     
     const desktopResponse = await fetch(
-      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&strategy=desktop&key=${apiKey}`
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(fullUrl)}&strategy=desktop&key=${apiKey}&_t=${Date.now()}`
     )
 
     if (!mobileResponse.ok || !desktopResponse.ok) {
@@ -338,7 +338,7 @@ export async function POST(request: NextRequest) {
     const desktopOpportunities = extractOpportunities(desktopAudits)
     const desktopDiagnostics = extractDiagnostics(desktopAudits)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       status: 'success',
       website_info: {
         url: fullUrl,
@@ -426,6 +426,13 @@ export async function POST(request: NextRequest) {
       },
       analysis_timestamp: new Date().toISOString()
     })
+
+    // Add cache-busting headers
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
 
   } catch (error) {
     console.error('Website Analysis API error:', error)

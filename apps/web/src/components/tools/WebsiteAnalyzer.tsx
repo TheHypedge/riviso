@@ -120,26 +120,28 @@ export default function WebsiteAnalyzer() {
         fullUrl = `https://${fullUrl}`
       }
 
-      // Call frontend API route (which will call backend)
-      let response
-      try {
-        response = await fetch('/api/analyze-website', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url: fullUrl }),
-        })
-      } catch (error) {
-        // Fallback to original API route
-        response = await fetch('/api/website-analyzer', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url: fullUrl }),
-        })
-      }
+              // Call frontend API route (which will call backend)
+        let response
+        try {
+          response = await fetch(`/api/analyze-website?_t=${Date.now()}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
+            },
+            body: JSON.stringify({ url: fullUrl }),
+          })
+        } catch (error) {
+          // Fallback to original API route
+          response = await fetch(`/api/website-analyzer?_t=${Date.now()}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
+            },
+            body: JSON.stringify({ url: fullUrl }),
+          })
+        }
 
       if (!response.ok) {
         const errorData = await response.json()
