@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
     apple: '/favicon.ico',
   },
+  manifest: '/manifest.json',
   openGraph: {
     title: 'RIVISO - Advanced SEO Analytics Platform',
     description: 'Professional SEO audit and analytics tool for comprehensive website analysis and optimization',
@@ -51,6 +52,89 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
         {/* End Google Tag Manager */}
+
+        {/* Structured Data - Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "RIVISO",
+              "description": "Advanced SEO Analytics Platform for comprehensive website analysis and optimization",
+              "url": "https://www.riviso.com",
+              "logo": "https://www.riviso.com/logo.png",
+              "foundingDate": "2024",
+              "founder": {
+                "@type": "Person",
+                "name": "Akhilesh Soni",
+                "email": "akhilesh@riviso.com"
+              },
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "IN"
+              },
+              "sameAs": [
+                "https://github.com/TheHypedge/riviso"
+              ],
+              "offers": {
+                "@type": "Offer",
+                "name": "SEO Analytics Services",
+                "description": "Professional SEO audit and analytics tools",
+                "category": "SEO Services"
+              }
+            })
+          }}
+        />
+
+        {/* Structured Data - WebSite */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "RIVISO",
+              "url": "https://www.riviso.com",
+              "description": "Professional SEO audit and analytics tool for comprehensive website analysis and optimization",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://www.riviso.com/resources-checker?url={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
+
+        {/* Structured Data - SoftwareApplication */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "RIVISO SEO Analytics Platform",
+              "description": "Advanced SEO analytics and website audit tool",
+              "url": "https://www.riviso.com",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Web Browser",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Free SEO analysis tools"
+              },
+              "featureList": [
+                "Website Performance Analysis",
+                "Core Web Vitals Testing",
+                "SEO Audit Tools",
+                "Domain History Checker",
+                "On-Page Optimization",
+                "Keyword Testing"
+              ]
+            })
+          }}
+        />
       </head>
       <body className={`${inter.className} h-full`}>
         {/* Google Tag Manager (noscript) */}
