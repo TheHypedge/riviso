@@ -52,6 +52,20 @@ if (db) {
       FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
     )
   `)
+
+  // Create daily_audit_usage table to track daily audit limits
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS daily_audit_usage (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      date TEXT NOT NULL,
+      auditCount INTEGER NOT NULL DEFAULT 0,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
+      UNIQUE(userId, date)
+    )
+  `)
 }
 
 // In-memory user store for production (when SQLite is not available)
@@ -190,6 +204,35 @@ export const auditQueries = db ? {
   updateStatus: { run: () => {} },
   getAll: { all: () => [] },
   delete: { run: () => {} }
+}
+
+export const dailyAuditUsageQueries = db ? {
+  create: db.prepare(`
+    INSERT INTO daily_audit_usage (id, userId, date, auditCount, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `),
+  
+  findByUserAndDate: db.prepare(`
+    SELECT * FROM daily_audit_usage WHERE userId = ? AND date = ?
+  `),
+  
+  incrementAuditCount: db.prepare(`
+    UPDATE daily_audit_usage SET auditCount = auditCount + 1, updatedAt = ? WHERE userId = ? AND date = ?
+  `),
+  
+  getTodayUsage: db.prepare(`
+    SELECT auditCount FROM daily_audit_usage WHERE userId = ? AND date = ?
+  `),
+  
+  resetDailyUsage: db.prepare(`
+    DELETE FROM daily_audit_usage WHERE date < ?
+  `)
+} : {
+  create: { run: () => {} },
+  findByUserAndDate: { get: () => null },
+  incrementAuditCount: { run: () => {} },
+  getTodayUsage: { get: () => null },
+  resetDailyUsage: { run: () => {} }
 }
 
 // Initialize with your SUPER_ADMIN account if it doesn't exist

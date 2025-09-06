@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   BarChart3, 
   Loader2, 
@@ -23,6 +23,8 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react'
+import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Circular Progress Component
 const CircularProgress = ({ score, size = 120, strokeWidth = 8, label }: { 
@@ -159,14 +161,21 @@ interface WebsiteAnalysisResponse {
 }
 
 export default function WebsiteAnalyzer() {
-  const [url, setUrl] = useState('')
+  const { globalUrl, isValidUrl } = useGlobalSearch()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<WebsiteAnalysisResponse | null>(null)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!url.trim()) return
+  // Auto-run analysis when global URL is valid
+  useEffect(() => {
+    if (isValidUrl && globalUrl) {
+      handleAnalysis()
+    }
+  }, [globalUrl, isValidUrl])
+
+  const handleAnalysis = async () => {
+    if (!globalUrl || !isValidUrl) return
 
     setLoading(true)
     setError('')
@@ -174,7 +183,7 @@ export default function WebsiteAnalyzer() {
 
     try {
       // Convert simple domain to full URL
-      let fullUrl = url.trim()
+      let fullUrl = globalUrl.trim()
       if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
         fullUrl = `https://${fullUrl}`
       }
@@ -188,7 +197,7 @@ export default function WebsiteAnalyzer() {
               'Content-Type': 'application/json',
               'Cache-Control': 'no-cache',
             },
-            body: JSON.stringify({ url: fullUrl }),
+            body: JSON.stringify({ url: fullUrl, userId: user?.id }),
           })
         } catch (error) {
           // Fallback to original API route
@@ -198,7 +207,7 @@ export default function WebsiteAnalyzer() {
               'Content-Type': 'application/json',
               'Cache-Control': 'no-cache',
             },
-            body: JSON.stringify({ url: fullUrl }),
+            body: JSON.stringify({ url: fullUrl, userId: user?.id }),
           })
         }
 
@@ -264,26 +273,25 @@ export default function WebsiteAnalyzer() {
         </div>
       </div>
 
-      {/* Search Form */}
+      {/* Global URL Display */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div>
-            <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-              Website URL
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Analyzing URL
             </label>
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                id="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter website URL (e.g., example.com or https://example.com)"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                disabled={loading}
-              />
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span className="text-gray-900 font-mono">
+                    {globalUrl ? (globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`) : 'No URL selected'}
+                  </span>
+                </div>
+              </div>
               <button
-                type="submit"
-                disabled={loading || !url.trim()}
+                onClick={handleAnalysis}
+                disabled={loading || !isValidUrl}
                 className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >
                 {loading ? (
@@ -300,7 +308,13 @@ export default function WebsiteAnalyzer() {
               </button>
             </div>
           </div>
-        </form>
+          {!globalUrl && (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Please enter a URL in the global search above to start analyzing.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Loading Overlay */}
@@ -463,14 +477,14 @@ export default function WebsiteAnalyzer() {
           </div>
 
           {/* Core Web Vitals */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Core Web Vitals</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Mobile Core Web Vitals */}
               {result.mobile_data && (
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Smartphone className="h-5 w-5 text-blue-600" />
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Smartphone className="h-5 w-5 text-blue-600" />
                     <h4 className="font-semibold text-gray-900">Mobile Core Web Vitals</h4>
                   </div>
                   <div className="space-y-3">
@@ -478,7 +492,7 @@ export default function WebsiteAnalyzer() {
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <Zap className="h-4 w-4 text-blue-600" />
-                        </div>
+                    </div>
                         <div>
                           <div className="font-medium text-gray-900">Largest Contentful Paint</div>
                           <div className="text-sm text-gray-600">Loading performance</div>
@@ -522,18 +536,18 @@ export default function WebsiteAnalyzer() {
                         <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.cumulative_layout_shift}</div>
                         <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.cls_score).color}`}>
                           {getCoreWebVitalStatus(result.mobile_data.cls_score).status}
-                        </div>
+                      </div>
+                      </div>
                       </div>
                     </div>
-              </div>
-            </div>
-          )}
+                  </div>
+                )}
 
               {/* Desktop Core Web Vitals */}
               {result.desktop_data && (
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Monitor className="h-5 w-5 text-green-600" />
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Monitor className="h-5 w-5 text-green-600" />
                     <h4 className="font-semibold text-gray-900">Desktop Core Web Vitals</h4>
                   </div>
                   <div className="space-y-3">
@@ -541,7 +555,7 @@ export default function WebsiteAnalyzer() {
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <Zap className="h-4 w-4 text-blue-600" />
-                        </div>
+                    </div>
                         <div>
                           <div className="font-medium text-gray-900">Largest Contentful Paint</div>
                           <div className="text-sm text-gray-600">Loading performance</div>
@@ -575,17 +589,17 @@ export default function WebsiteAnalyzer() {
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-purple-100 rounded-lg">
                           <Target className="h-4 w-4 text-purple-600" />
-                        </div>
+                      </div>
                         <div>
                           <div className="font-medium text-gray-900">Cumulative Layout Shift</div>
                           <div className="text-sm text-gray-600">Visual stability</div>
-                        </div>
+                      </div>
                       </div>
                       <div className="text-right">
                         <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.cumulative_layout_shift}</div>
                         <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.cls_score).color}`}>
                           {getCoreWebVitalStatus(result.desktop_data.cls_score).status}
-                        </div>
+                  </div>
               </div>
             </div>
               </div>

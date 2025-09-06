@@ -15,9 +15,17 @@ interface User {
   role: 'super_admin' | 'admin' | 'manager' | 'user'
 }
 
+interface AuditUsageStats {
+  usedToday: number
+  remainingToday: number
+  dailyLimit: number
+  isUnlimited: boolean
+}
+
 interface AuthContextType {
   user: User | null
   token: string | null
+  auditUsage: AuditUsageStats | null
   login: (email: string, password: string) => Promise<boolean>
   signup: (userData: {
     firstName: string
@@ -28,6 +36,7 @@ interface AuthContextType {
   logout: () => void
   loading: boolean
   isAuthenticated: boolean
+  refreshAuditUsage: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -35,8 +44,47 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [auditUsage, setAuditUsage] = useState<AuditUsageStats | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  // Function to refresh audit usage
+  const refreshAuditUsage = async () => {
+    if (!user) return
+    
+    try {
+      // Try backend API first
+      const backendUrls = [
+        process.env.NEXT_PUBLIC_BACKEND_URL,
+        process.env.NEXT_PUBLIC_RENDER_BACKEND_URL,
+        'https://riviso.onrender.com',
+        'http://localhost:8000'
+      ].filter(Boolean)
+      
+      const backendUrl = backendUrls[0] || 'https://riviso.onrender.com'
+      
+      const response = await fetch(`${backendUrl}/audits/usage?user_id=${user.id}`)
+      if (response.ok) {
+        const usageStats = await response.json()
+        setAuditUsage({
+          usedToday: usageStats.used_today,
+          remainingToday: usageStats.remaining_today,
+          dailyLimit: usageStats.daily_limit,
+          isUnlimited: false
+        })
+        return
+      }
+      
+      // Fallback to local API
+      const localResponse = await fetch(`/api/audit/usage?userId=${user.id}`)
+      if (localResponse.ok) {
+        const usageStats = await localResponse.json()
+        setAuditUsage(usageStats)
+      }
+    } catch (error) {
+      console.error('Error fetching audit usage:', error)
+    }
+  }
 
   // Check for existing authentication on mount
   useEffect(() => {
@@ -55,6 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setLoading(false)
   }, [])
+
+  // Refresh audit usage when user changes
+  useEffect(() => {
+    if (user) {
+      refreshAuditUsage()
+    } else {
+      setAuditUsage(null)
+    }
+  }, [user])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -126,11 +183,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     token,
+    auditUsage,
     login,
     signup,
     logout,
     loading,
-    isAuthenticated: !!user && !!token
+    isAuthenticated: !!user && !!token,
+    refreshAuditUsage
   }
 
   return (

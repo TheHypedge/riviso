@@ -39,6 +39,9 @@ class Audit(Base):
     url = Column(String(2048), nullable=False, index=True)
     status = Column(Enum(AuditStatus), nullable=False, default=AuditStatus.PENDING)
     
+    # User tracking
+    user_id = Column(String(255), nullable=True, index=True)  # User ID from frontend
+    
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     started_at = Column(DateTime, nullable=True)

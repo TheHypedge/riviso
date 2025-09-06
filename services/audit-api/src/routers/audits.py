@@ -14,6 +14,7 @@ from db import get_db
 from models import Audit, AuditStatus, Job, JobStatus
 from audit.audit_engine import AuditEngine
 from audit.providers.performance.psi import PageSpeedInsightsProvider
+from audit_limits import check_audit_limits, DailyAuditUsageTracker
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -23,6 +24,7 @@ class AuditRequest(BaseModel):
     """Request model for creating a new audit."""
     
     url: HttpUrl
+    user_id: Optional[str] = None
     options: Optional[Dict[str, Any]] = None
     
     @validator("url")
@@ -97,9 +99,25 @@ async def create_audit(
         HTTPException: If audit creation fails
     """
     try:
+        # Check daily audit limits for logged-in users
+        if request.user_id:
+            limit_check = check_audit_limits(db, request.user_id)
+            if not limit_check["can_create"]:
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "message": limit_check["message"],
+                        "error": "AUDIT_LIMIT_EXCEEDED",
+                        "remaining_audits": limit_check["remaining"],
+                        "daily_limit": limit_check["daily_limit"],
+                        "used_today": limit_check["used_today"]
+                    }
+                )
+        
         # Create audit record
         audit = Audit(
             url=str(request.url),
+            user_id=request.user_id,
             status=AuditStatus.PENDING,
             options=request.options or {},
         )
@@ -646,6 +664,45 @@ async def get_pagespeed_insights(request: Dict[str, Any], http_request: Request 
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get PageSpeed Insights data: {str(e)}"
+        )
+
+
+@router.get("/usage")
+async def get_audit_usage(
+    user_id: str,
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Get audit usage statistics for a user.
+    
+    Args:
+        user_id: User ID to get usage for
+        db: Database session
+        
+    Returns:
+        Dict containing usage statistics
+    """
+    try:
+        tracker = DailyAuditUsageTracker(db)
+        usage_stats = tracker.can_create_audit(user_id)
+        
+        return {
+            "used_today": usage_stats["used_today"],
+            "remaining_today": usage_stats["remaining"],
+            "daily_limit": usage_stats["daily_limit"],
+            "can_create_audit": usage_stats["can_create"]
+        }
+        
+    except Exception as e:
+        logger.error(
+            "Failed to get audit usage",
+            user_id=user_id,
+            error=str(e),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get audit usage: {str(e)}"
         )
 
 

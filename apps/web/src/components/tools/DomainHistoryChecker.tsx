@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Globe, Loader2, CheckCircle, AlertCircle, Calendar, Shield, Server } from 'lucide-react'
+import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface DomainHistoryResponse {
   status: 'success' | 'error'
@@ -15,22 +17,29 @@ interface DomainHistoryResponse {
 }
 
 export default function DomainHistoryChecker() {
-  const [domain, setDomain] = useState('')
+  const { globalUrl, isValidUrl } = useGlobalSearch()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<DomainHistoryResponse | null>(null)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!domain.trim()) return
+  // Auto-run analysis when global URL is valid
+  useEffect(() => {
+    if (isValidUrl && globalUrl) {
+      handleAnalysis()
+    }
+  }, [globalUrl, isValidUrl])
+
+  const handleAnalysis = async () => {
+    if (!globalUrl || !isValidUrl) return
 
     setLoading(true)
     setError('')
     setResult(null)
 
     try {
-      // Clean domain input
-      let cleanDomain = domain.trim().toLowerCase()
+      // Extract domain from global URL
+      let cleanDomain = globalUrl.trim().toLowerCase()
       cleanDomain = cleanDomain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
 
       const response = await fetch('/api/domain-history', {
@@ -38,7 +47,7 @@ export default function DomainHistoryChecker() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ domain: cleanDomain }),
+        body: JSON.stringify({ domain: cleanDomain, userId: user?.id }),
       })
 
       const data = await response.json()
@@ -94,26 +103,29 @@ export default function DomainHistoryChecker() {
         </div>
       </div>
 
-      {/* Search Form */}
+      {/* Global URL Display */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div>
-            <label htmlFor="domain" className="block text-sm font-medium text-gray-700 mb-2">
-              Domain Name
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Analyzing Domain
             </label>
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                id="domain"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                placeholder="Enter domain name (e.g., example.com)"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                disabled={loading}
-              />
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span className="text-gray-900 font-mono">
+                    {globalUrl ? (() => {
+                      let domain = globalUrl.trim().toLowerCase()
+                      domain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
+                      return domain
+                    })() : 'No URL selected'}
+                  </span>
+                </div>
+              </div>
               <button
-                type="submit"
-                disabled={loading || !domain.trim()}
+                onClick={handleAnalysis}
+                disabled={loading || !isValidUrl}
                 className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >
                 {loading ? (
@@ -130,7 +142,13 @@ export default function DomainHistoryChecker() {
               </button>
             </div>
           </div>
-        </form>
+          {!globalUrl && (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Please enter a URL in the global search above to start analyzing.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Error Message */}

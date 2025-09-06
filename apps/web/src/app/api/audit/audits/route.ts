@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auditQueries } from '../../../../lib/database'
+import { checkDailyAuditLimit, recordAuditUsage } from '../../../../lib/auditLimits'
 
 // Try multiple backend URLs in order of preference
 const BACKEND_URLS = [
@@ -15,6 +16,23 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { url, userId, device = 'mobile' } = body
+    
+    // Check daily audit limit for logged-in users
+    if (userId) {
+      const limitCheck = checkDailyAuditLimit(userId)
+      if (!limitCheck.canCreateAudit) {
+        return NextResponse.json(
+          { 
+            detail: limitCheck.message || 'Daily audit limit exceeded',
+            error: 'AUDIT_LIMIT_EXCEEDED',
+            remainingAudits: limitCheck.remainingAudits,
+            dailyLimit: limitCheck.dailyLimit,
+            usedToday: limitCheck.usedToday
+          },
+          { status: 429 }
+        )
+      }
+    }
     
     console.log(`Attempting to connect to backend: ${BACKEND_URL}`)
     
@@ -72,6 +90,9 @@ export async function POST(request: NextRequest) {
     if (userId && url) {
       const auditId = data.id
       const createdAt = new Date().toISOString()
+      
+      // Record the audit usage
+      recordAuditUsage(userId)
       
       auditQueries.create.run(
         auditId,

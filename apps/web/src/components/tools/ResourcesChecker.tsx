@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
+import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Tool {
   id: string
@@ -21,14 +23,21 @@ interface ResourcesCheckerResponse {
 }
 
 export default function ResourcesChecker() {
-  const [url, setUrl] = useState('')
+  const { globalUrl, isValidUrl } = useGlobalSearch()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ResourcesCheckerResponse | null>(null)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!url.trim()) return
+  // Auto-run analysis when global URL is valid
+  useEffect(() => {
+    if (isValidUrl && globalUrl) {
+      handleAnalysis()
+    }
+  }, [globalUrl, isValidUrl])
+
+  const handleAnalysis = async () => {
+    if (!globalUrl || !isValidUrl) return
 
     setLoading(true)
     setError('')
@@ -36,7 +45,7 @@ export default function ResourcesChecker() {
 
     try {
       // Convert simple domain to full URL
-      let fullUrl = url.trim()
+      let fullUrl = globalUrl.trim()
       if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://')) {
         fullUrl = `https://${fullUrl}`
       }
@@ -46,7 +55,7 @@ export default function ResourcesChecker() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: fullUrl }),
+        body: JSON.stringify({ url: fullUrl, userId: user?.id }),
       })
 
       const data = await response.json()
@@ -97,26 +106,25 @@ export default function ResourcesChecker() {
         </div>
       </div>
 
-      {/* Search Form */}
+      {/* Global URL Display */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div>
-            <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-              Website URL
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Analyzing URL
             </label>
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                id="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter website URL (e.g., example.com or https://example.com)"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                disabled={loading}
-              />
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span className="text-gray-900 font-mono">
+                    {globalUrl ? (globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`) : 'No URL selected'}
+                  </span>
+                </div>
+              </div>
               <button
-                type="submit"
-                disabled={loading || !url.trim()}
+                onClick={handleAnalysis}
+                disabled={loading || !isValidUrl}
                 className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >
                 {loading ? (
@@ -133,7 +141,13 @@ export default function ResourcesChecker() {
               </button>
             </div>
           </div>
-        </form>
+          {!globalUrl && (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Please enter a URL in the global search above to start analyzing.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Error Message */}

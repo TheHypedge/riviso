@@ -30,6 +30,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { LoadingScreen } from '@/components/LoadingScreen'
 import { useAuth } from '@/contexts/AuthContext'
+import { AuditUsageDisplay } from '@/components/AuditUsageDisplay'
 import Link from 'next/link'
 import Image from 'next/image'
 import logoImage from '@/assets/riviso.png'
@@ -41,7 +42,7 @@ export default function HomePage() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const router = useRouter()
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, logout, auditUsage, refreshAuditUsage } = useAuth()
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Handle click outside to close dropdown
@@ -128,6 +129,13 @@ export default function HomePage() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        
+        // Handle audit limit exceeded error
+        if (errorData.error === 'AUDIT_LIMIT_EXCEEDED') {
+          setError(`Daily audit limit reached! You've used ${errorData.usedToday}/${errorData.dailyLimit} audits today. Try again tomorrow.`)
+          return
+        }
+        
         throw new Error(errorData.detail || 'Failed to start audit')
       }
 
@@ -140,6 +148,9 @@ export default function HomePage() {
         console.error('No audit ID in response:', audit)
         throw new Error('Invalid audit response: missing ID')
       }
+      
+      // Refresh audit usage after successful audit creation
+      await refreshAuditUsage()
       
       // Small delay before redirect
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -255,6 +266,13 @@ export default function HomePage() {
             {/* Minimal Search Form */}
             <div className="max-w-xl mx-auto mb-16 animate-fade-in-up animation-delay-600">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-6 border border-white/20">
+                {/* Audit Usage Display for logged-in users */}
+                {isAuthenticated && auditUsage && (
+                  <div className="mb-4">
+                    <AuditUsageDisplay variant="compact" />
+                  </div>
+                )}
+                
                 <div className="flex gap-3">
                   <div className="flex-1 relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -272,8 +290,8 @@ export default function HomePage() {
                   </div>
                   <button
                     onClick={handleSubmit}
-                    disabled={isLoading || !url}
-                    className="btn btn-primary btn-lg hover-glow"
+                    disabled={isLoading || !url || (auditUsage && !auditUsage.isUnlimited && auditUsage.remainingToday === 0)}
+                    className="btn btn-primary btn-lg hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <>
@@ -329,6 +347,13 @@ export default function HomePage() {
                 <div className="text-sm text-gray-600">Private & Safe</div>
               </div>
             </div>
+
+            {/* Audit Usage Display for logged-in users */}
+            {isAuthenticated && auditUsage && (
+              <div className="mt-8 max-w-2xl mx-auto animate-fade-in-up animation-delay-1000">
+                <AuditUsageDisplay variant="detailed" />
+              </div>
+            )}
 
             {/* Animated SEO Chart */}
             <div className="mt-16 animate-fade-in-up animation-delay-1000">

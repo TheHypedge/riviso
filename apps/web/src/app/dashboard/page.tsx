@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { GlobalSearchProvider } from '@/contexts/GlobalSearchContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DashboardLayout from '@/components/DashboardLayout'
 import { useState, useEffect } from 'react'
@@ -47,10 +48,12 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <DashboardLayout 
-        user={user}
-        logout={logout}
-      />
+      <GlobalSearchProvider>
+        <DashboardLayout 
+          user={user}
+          logout={logout}
+        />
+      </GlobalSearchProvider>
     </ProtectedRoute>
   )
 }

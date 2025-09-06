@@ -29,6 +29,7 @@ import ResourcesChecker from './tools/ResourcesChecker'
 import DomainHistoryChecker from './tools/DomainHistoryChecker'
 import OnPageSEO from './tools/OnPageSEO'
 import WebsiteAnalyzer from './tools/WebsiteAnalyzer'
+import GlobalSearchInput from './GlobalSearchInput'
 
 interface User {
   id: string
@@ -154,15 +155,20 @@ export default function DashboardLayout({ user, logout }: DashboardLayoutProps) 
       case 'overview':
       default:
         return (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="text-center py-12">
               <div className="w-24 h-24 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Home className="h-12 w-12 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to RIVISO Dashboard</h2>
               <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                Choose a tool from the sidebar to start analyzing websites and improving your SEO performance.
+                Enter a URL below and choose a tool from the sidebar to start analyzing websites and improving your SEO performance.
               </p>
+              
+              {/* Global Search Input */}
+              <div className="mb-12">
+                <GlobalSearchInput />
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
                 {tools.map((tool) => {
