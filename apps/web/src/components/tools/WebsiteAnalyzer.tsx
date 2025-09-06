@@ -24,6 +24,65 @@ import {
   RefreshCw
 } from 'lucide-react'
 
+// Circular Progress Component
+const CircularProgress = ({ score, size = 120, strokeWidth = 8, label }: { 
+  score: number, 
+  size?: number, 
+  strokeWidth?: number, 
+  label: string 
+}) => {
+  const radius = (size - strokeWidth) / 2
+  const circumference = radius * 2 * Math.PI
+  const strokeDasharray = circumference
+  const strokeDashoffset = circumference - (score / 100) * circumference
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return '#10B981' // green
+    if (score >= 50) return '#F59E0B' // yellow
+    return '#EF4444' // red
+  }
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg
+          width={size}
+          height={size}
+          className="transform -rotate-90"
+        >
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#E5E7EB"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+          {/* Progress circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={getScoreColor(score)}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-in-out"
+          />
+        </svg>
+        {/* Score text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-2xl font-bold text-gray-900">{score}</span>
+        </div>
+      </div>
+      <span className="text-sm font-medium text-gray-600 mt-2">{label}</span>
+    </div>
+  )
+}
+
 interface PageSpeedData {
   status: 'success' | 'error'
   url: string
@@ -342,104 +401,62 @@ export default function WebsiteAnalyzer() {
 
           {/* Overall Score */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Overall Website Score</h3>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-gray-600">Analysis Complete</span>
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center md:text-left">Overall Website Score</h3>
+                <div className="flex justify-center md:justify-start">
+                  <CircularProgress 
+                    score={result.website_info.score || 0} 
+                    size={140}
+                    strokeWidth={12}
+                    label="Overall Score"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <div className={`text-6xl font-bold ${getScoreColor(result.website_info.score).split(' ')[0]} mb-2`}>
-                {result.website_info.score}
-              </div>
-              <div className="text-lg text-gray-600 mb-4">out of 100</div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-500 ${
-                    result.website_info.score >= 90 ? 'bg-green-500' : 
-                    result.website_info.score >= 70 ? 'bg-yellow-500' : 
-                    result.website_info.score >= 50 ? 'bg-orange-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${result.website_info.score}%` }}
-                />
+              <div className="flex items-center text-green-600 mt-4 md:mt-0">
+                <CheckCircle className="h-6 w-6 mr-2" />
+                <span className="font-medium">Analysis Complete</span>
               </div>
             </div>
           </div>
 
           {/* Performance Comparison */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Comparison</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Mobile Performance */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2 text-primary-600" />
+              Performance Comparison
+            </h3>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+              {/* Mobile Performance */}
               {result.mobile_data && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Smartphone className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-gray-900">Mobile Performance</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.performance_score).split(' ')[0]}`}>
-                        {result.mobile_data.performance_score}
-                        </div>
-                        <div className="text-sm text-gray-600">Performance</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.accessibility_score).split(' ')[0]}`}>
-                        {result.mobile_data.accessibility_score}
-                        </div>
-                        <div className="text-sm text-gray-600">Accessibility</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.best_practices_score).split(' ')[0]}`}>
-                        {result.mobile_data.best_practices_score}
-                        </div>
-                        <div className="text-sm text-gray-600">Best Practices</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.mobile_data.seo_score).split(' ')[0]}`}>
-                        {result.mobile_data.seo_score}
-                        </div>
-                        <div className="text-sm text-gray-600">SEO</div>
-                      </div>
-                    </div>
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center mb-4">
+                    <Smartphone className="h-5 w-5 mr-2 text-blue-600" />
+                    <h4 className="text-md font-medium text-gray-900">Mobile Performance</h4>
                   </div>
-                )}
+                  <CircularProgress 
+                    score={result.mobile_data.performance_score || 0} 
+                    size={160}
+                    strokeWidth={12}
+                    label="Performance Score"
+                  />
+                </div>
+              )}
 
-                {/* Desktop Performance */}
+              {/* Desktop Performance */}
               {result.desktop_data && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Monitor className="h-5 w-5 text-green-600" />
-                      <h4 className="font-semibold text-gray-900">Desktop Performance</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.performance_score).split(' ')[0]}`}>
-                        {result.desktop_data.performance_score}
-                        </div>
-                        <div className="text-sm text-gray-600">Performance</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.accessibility_score).split(' ')[0]}`}>
-                        {result.desktop_data.accessibility_score}
-                        </div>
-                        <div className="text-sm text-gray-600">Accessibility</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.best_practices_score).split(' ')[0]}`}>
-                        {result.desktop_data.best_practices_score}
-                        </div>
-                        <div className="text-sm text-gray-600">Best Practices</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className={`text-2xl font-bold ${getScoreColor(result.desktop_data.seo_score).split(' ')[0]}`}>
-                        {result.desktop_data.seo_score}
-                      </div>
-                      <div className="text-sm text-gray-600">SEO</div>
-                    </div>
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center mb-4">
+                    <Monitor className="h-5 w-5 mr-2 text-green-600" />
+                    <h4 className="text-md font-medium text-gray-900">Desktop Performance</h4>
                   </div>
+                  <CircularProgress 
+                    score={result.desktop_data.performance_score || 0} 
+                    size={160}
+                    strokeWidth={12}
+                    label="Performance Score"
+                  />
                 </div>
               )}
             </div>
