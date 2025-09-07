@@ -26,7 +26,42 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
       }
       
       const urlObj = new URL(normalizedUrl)
-      return ['http:', 'https:'].includes(urlObj.protocol)
+      
+      // Check if protocol is valid
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        return false
+      }
+      
+      // Check if hostname has a valid domain with extension
+      const hostname = urlObj.hostname
+      
+      // Remove 'www.' prefix if present for validation
+      const domain = hostname.replace(/^www\./, '')
+      
+      // Check if domain has at least one dot and ends with a valid extension
+      const domainParts = domain.split('.')
+      if (domainParts.length < 2) {
+        return false
+      }
+      
+      // Check if the last part (extension) is at least 2 characters
+      const extension = domainParts[domainParts.length - 1]
+      if (extension.length < 2) {
+        return false
+      }
+      
+      // Check if extension contains only letters (no numbers or special chars)
+      if (!/^[a-zA-Z]+$/.test(extension)) {
+        return false
+      }
+      
+      // Check if domain name (before extension) is not empty
+      const domainName = domainParts.slice(0, -1).join('.')
+      if (!domainName || domainName.length === 0) {
+        return false
+      }
+      
+      return true
     } catch {
       return false
     }

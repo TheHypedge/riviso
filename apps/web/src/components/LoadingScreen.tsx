@@ -57,13 +57,45 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
   const [currentFactIndex, setCurrentFactIndex] = useState(0)
   const [dots, setDots] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
+  const [dynamicProgress, setDynamicProgress] = useState(0)
+  const [stepProgress, setStepProgress] = useState(0)
 
   const analysisSteps = [
-    { name: "Initializing Analysis", icon: Search, color: "text-blue-600" },
-    { name: "Fetching Page Data", icon: Globe, color: "text-green-600" },
-    { name: "Testing Performance", icon: Zap, color: "text-orange-600" },
-    { name: "Analyzing SEO", icon: BarChart3, color: "text-purple-600" },
-    { name: "Generating Report", icon: Target, color: "text-indigo-600" }
+    { 
+      name: "Initializing Analysis", 
+      icon: Search, 
+      color: "text-blue-600",
+      duration: 2000,
+      description: "Setting up analysis environment and validating URL"
+    },
+    { 
+      name: "Fetching Page Data", 
+      icon: Globe, 
+      color: "text-green-600",
+      duration: 3000,
+      description: "Downloading page content and analyzing structure"
+    },
+    { 
+      name: "Testing Performance", 
+      icon: Zap, 
+      color: "text-orange-600",
+      duration: 4000,
+      description: "Running Core Web Vitals and speed tests"
+    },
+    { 
+      name: "Analyzing SEO", 
+      icon: BarChart3, 
+      color: "text-purple-600",
+      duration: 3000,
+      description: "Checking technical SEO and content optimization"
+    },
+    { 
+      name: "Generating Report", 
+      icon: Target, 
+      color: "text-indigo-600",
+      duration: 2000,
+      description: "Compiling results and creating comprehensive report"
+    }
   ]
 
   useEffect(() => {
@@ -78,20 +110,36 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
       })
     }, 500)
 
-    // Update current step based on progress
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (progress >= 100) return analysisSteps.length - 1
-        return Math.min(Math.floor((progress / 100) * analysisSteps.length), analysisSteps.length - 1)
+    // Dynamic progress simulation
+    const progressInterval = setInterval(() => {
+      setDynamicProgress((prev) => {
+        if (prev >= 100) return 100
+        
+        // Calculate current step based on progress
+        const totalDuration = analysisSteps.reduce((sum, step) => sum + step.duration, 0)
+        const currentStepIndex = Math.min(Math.floor((prev / 100) * analysisSteps.length), analysisSteps.length - 1)
+        const currentStepData = analysisSteps[currentStepIndex]
+        
+        // Calculate progress within current step
+        const stepStartProgress = (currentStepIndex / analysisSteps.length) * 100
+        const stepEndProgress = ((currentStepIndex + 1) / analysisSteps.length) * 100
+        const stepProgress = ((prev - stepStartProgress) / (stepEndProgress - stepStartProgress)) * 100
+        
+        setStepProgress(stepProgress)
+        setCurrentStep(currentStepIndex)
+        
+        // Increment progress based on current step duration
+        const increment = (currentStepData.duration / totalDuration) * 2
+        return Math.min(prev + increment, 100)
       })
     }, 100)
 
     return () => {
       clearInterval(factInterval)
       clearInterval(dotsInterval)
-      clearInterval(stepInterval)
+      clearInterval(progressInterval)
     }
-  }, [progress])
+  }, [])
 
   const currentFact = seoFacts[currentFactIndex]
   const IconComponent = currentFact.icon
@@ -124,23 +172,44 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-gray-700">Analysis Progress</span>
-            <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+            <span className="text-sm text-gray-500">{Math.round(dynamicProgress)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
             <div 
-              className="bg-gradient-to-r from-primary-600 to-secondary-500 h-2 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            ></div>
+              className="bg-gradient-to-r from-primary-600 to-secondary-500 h-3 rounded-full transition-all duration-500 ease-out relative"
+              style={{ width: `${Math.min(dynamicProgress, 100)}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"></div>
+            </div>
+          </div>
+          
+          {/* Step Progress Indicator */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+              <span>Step {currentStep + 1} of {analysisSteps.length}</span>
+              <span>{Math.round(stepProgress)}% complete</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-1">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-green-500 h-1 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(stepProgress, 100)}%` }}
+              ></div>
+            </div>
           </div>
         </div>
 
         {/* Current Analysis Step */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center px-6 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
-            <StepIcon className={`h-5 w-5 mr-3 ${currentStepData.color} ${progress < 100 ? 'animate-pulse' : ''}`} />
-            <span className="text-lg font-medium text-gray-900">
-              {currentStepData.name}{dots}
-            </span>
+          <div className="inline-flex flex-col items-center px-6 py-4 bg-white rounded-xl shadow-sm border border-gray-200 max-w-md">
+            <div className="flex items-center mb-2">
+              <StepIcon className={`h-5 w-5 mr-3 ${currentStepData.color} ${dynamicProgress < 100 ? 'animate-pulse' : ''}`} />
+              <span className="text-lg font-medium text-gray-900">
+                {currentStepData.name}{dots}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 text-center">
+              {currentStepData.description}
+            </p>
           </div>
         </div>
 
@@ -191,11 +260,16 @@ export function LoadingScreen({ url, progress = 0 }: LoadingScreenProps) {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            {progress < 100 
-              ? "Analyzing your website with real-time data from multiple sources"
+            {dynamicProgress < 100 
+              ? `Analyzing your website with real-time data from multiple sources${dots}`
               : "Finalizing your comprehensive SEO report..."
             }
           </p>
+          {dynamicProgress < 100 && (
+            <p className="text-xs text-gray-400 mt-2">
+              Estimated time remaining: {Math.max(0, Math.round((100 - dynamicProgress) / 2))} seconds
+            </p>
+          )}
         </div>
       </div>
     </div>

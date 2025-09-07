@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
+import GlobalSearchInput from '../GlobalSearchInput'
 
 // Circular Progress Component
 const CircularProgress = ({ score, size = 120, strokeWidth = 8, label }: { 
@@ -259,62 +260,73 @@ export default function WebsiteAnalyzer() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="p-3 bg-orange-100 rounded-lg mr-4">
-            <BarChart3 className="h-6 w-6 text-orange-600" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Website Analyzer</h2>
-            <p className="text-gray-600">Comprehensive website analysis with Google PageSpeed Insights</p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Global Search Input */}
+      <GlobalSearchInput />
 
-      {/* Global URL Display */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Analyzing URL
-            </label>
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span className="text-gray-900 font-mono">
-                    {globalUrl ? (globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`) : 'No URL selected'}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={handleAnalysis}
-                disabled={loading || !isValidUrl}
-                className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Analyze Website
-                  </>
-                )}
-              </button>
+      {/* Compact Header with URL Input */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          {/* Header Info */}
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <BarChart3 className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Website Analyzer</h2>
+              <p className="text-sm text-gray-600">Comprehensive website analysis</p>
             </div>
           </div>
-          {!globalUrl && (
-            <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Please enter a URL in the global search above to start analyzing.</p>
+
+          {/* URL Input and Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                {globalUrl ? (
+                  <a
+                    href={globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 font-mono text-sm truncate hover:underline transition-colors"
+                  >
+                    {globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`}
+                  </a>
+                ) : (
+                  <span className="text-gray-500 font-mono text-sm">
+                    No URL selected
+                  </span>
+                )}
+              </div>
             </div>
-          )}
+            <button
+              onClick={handleAnalysis}
+              disabled={loading || !isValidUrl}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-sm font-medium"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Analyze
+                </>
+              )}
+            </button>
+          </div>
         </div>
+
+        {!globalUrl && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="h-4 w-4 text-amber-600 mr-2" />
+              <p className="text-sm text-amber-800">Please enter a URL in the global search above to start analyzing.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Loading Overlay */}
@@ -348,128 +360,139 @@ export default function WebsiteAnalyzer() {
 
       {/* Results */}
       {result && (
-        <div className="space-y-6">
-          {/* Website Preview */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="space-y-4">
+          {/* Compact Website Preview */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-gray-900">Website Preview</h3>
-              <div className="flex items-center space-x-2">
-                <Eye className="h-5 w-5 text-blue-600" />
-                <span className="text-sm text-gray-600">Live Preview</span>
-              </div>
+              <a
+                href={result.website_info.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors group text-sm"
+              >
+                <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                <span>Live Preview</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Desktop Preview */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Monitor className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Desktop View</span>
+              <a
+                href={result.website_info.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block border border-gray-300 rounded-lg overflow-hidden bg-gray-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
+              >
+                <div className="bg-gray-200 px-3 py-2 flex items-center space-x-2">
+                  <Monitor className="h-3 w-3 text-gray-600" />
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-600 truncate">
+                    {result.website_info.url}
+                  </div>
+                  <ExternalLink className="h-3 w-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
-                <div className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
-                  <div className="bg-gray-200 px-3 py-2 flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <div className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-600">
-                      {result.website_info.url}
+                <div className="h-32 bg-white flex items-center justify-center relative">
+                  <iframe
+                    src={result.website_info.url}
+                    className="w-full h-full border-0 pointer-events-none"
+                    title="Desktop Preview"
+                    sandbox="allow-scripts allow-same-origin"
+                  />
+                  <div className="absolute inset-0 bg-transparent group-hover:bg-blue-500 group-hover:bg-opacity-10 transition-colors flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full p-2 shadow-lg">
+                      <ExternalLink className="h-4 w-4 text-blue-600" />
                     </div>
                   </div>
-                  <div className="h-64 bg-white flex items-center justify-center">
-                    <iframe
-                      src={result.website_info.url}
-                      className="w-full h-full border-0"
-                      title="Desktop Preview"
-                      sandbox="allow-scripts allow-same-origin"
-                    />
-                  </div>
                 </div>
-              </div>
+              </a>
 
               {/* Mobile Preview */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Smartphone className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">Mobile View</span>
+              <a
+                href={result.website_info.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block border border-gray-300 rounded-lg overflow-hidden bg-gray-50 hover:border-blue-300 hover:shadow-md transition-all duration-200 group max-w-xs mx-auto md:mx-0"
+              >
+                <div className="bg-gray-200 px-3 py-2 flex items-center space-x-2">
+                  <Smartphone className="h-3 w-3 text-gray-600" />
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-600 truncate">
+                    {result.website_info.url}
+                  </div>
+                  <ExternalLink className="h-3 w-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
-                <div className="border border-gray-300 rounded-lg overflow-hidden bg-gray-50 max-w-xs mx-auto">
-                  <div className="bg-gray-200 px-3 py-2 flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1 bg-white rounded px-2 py-1 text-xs text-gray-600 truncate">
-                      {result.website_info.url}
+                <div className="h-32 bg-white flex items-center justify-center relative">
+                  <iframe
+                    src={result.website_info.url}
+                    className="w-full h-full border-0 pointer-events-none"
+                    title="Mobile Preview"
+                    sandbox="allow-scripts allow-same-origin"
+                  />
+                  <div className="absolute inset-0 bg-transparent group-hover:bg-blue-500 group-hover:bg-opacity-10 transition-colors flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full p-1.5 shadow-lg">
+                      <ExternalLink className="h-3 w-3 text-blue-600" />
                     </div>
                   </div>
-                  <div className="h-64 bg-white flex items-center justify-center">
-                    <iframe
-                      src={result.website_info.url}
-                      className="w-full h-full border-0"
-                      title="Mobile Preview"
-                      sandbox="allow-scripts allow-same-origin"
-                    />
-                  </div>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
 
-          {/* Overall Score */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center md:text-left">Overall Website Score</h3>
-                <div className="flex justify-center md:justify-start">
-                  <CircularProgress 
-                    score={result.website_info.score || 0} 
-                    size={140}
-                    strokeWidth={12}
-                    label="Overall Score"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center text-green-600 mt-4 md:mt-0">
-                <CheckCircle className="h-6 w-6 mr-2" />
-                <span className="font-medium">Analysis Complete</span>
+          {/* Overall Score & Performance */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Performance Scores</h3>
+              <div className="flex items-center text-green-600">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                <span className="text-sm font-medium">Complete</span>
               </div>
             </div>
-          </div>
-
-          {/* Performance Comparison */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2 text-primary-600" />
-              Performance Comparison
-            </h3>
             
-            <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Overall Score */}
+              <div className="text-center">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Overall Score</h4>
+                <CircularProgress 
+                  score={result.website_info.score || 0} 
+                  size={100}
+                  strokeWidth={8}
+                  label="Overall"
+                />
+              </div>
+
               {/* Mobile Performance */}
               {result.mobile_data && (
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center mb-4">
-                    <Smartphone className="h-5 w-5 mr-2 text-blue-600" />
-                    <h4 className="text-md font-medium text-gray-900">Mobile Performance</h4>
-                  </div>
+                <div className="text-center">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                    <Smartphone className="h-4 w-4 mr-1 text-blue-600" />
+                    Mobile
+                  </h4>
                   <CircularProgress 
                     score={result.mobile_data.performance_score || 0} 
-                    size={160}
-                    strokeWidth={12}
-                    label="Performance Score"
+                    size={100}
+                    strokeWidth={8}
+                    label="Mobile"
                   />
                 </div>
               )}
 
               {/* Desktop Performance */}
               {result.desktop_data && (
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center mb-4">
-                    <Monitor className="h-5 w-5 mr-2 text-green-600" />
-                    <h4 className="text-md font-medium text-gray-900">Desktop Performance</h4>
-                  </div>
+                <div className="text-center">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                    <Monitor className="h-4 w-4 mr-1 text-green-600" />
+                    Desktop
+                  </h4>
                   <CircularProgress 
                     score={result.desktop_data.performance_score || 0} 
-                    size={160}
-                    strokeWidth={12}
-                    label="Performance Score"
+                    size={100}
+                    strokeWidth={8}
+                    label="Desktop"
                   />
                 </div>
               )}
@@ -477,133 +500,103 @@ export default function WebsiteAnalyzer() {
           </div>
 
           {/* Core Web Vitals */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Core Web Vitals</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Core Web Vitals</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Mobile Core Web Vitals */}
               {result.mobile_data && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Smartphone className="h-5 w-5 text-blue-600" />
-                    <h4 className="font-semibold text-gray-900">Mobile Core Web Vitals</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Smartphone className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-medium text-gray-900">Mobile</h4>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <Zap className="h-4 w-4 text-blue-600" />
-                    </div>
-                        <div>
-                          <div className="font-medium text-gray-900">Largest Contentful Paint</div>
-                          <div className="text-sm text-gray-600">Loading performance</div>
-                        </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Zap className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-900">LCP</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.largest_contentful_paint}</div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.lcp_score).color}`}>
+                        <div className="font-mono text-sm font-bold">{result.mobile_data.display_values.largest_contentful_paint}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${getCoreWebVitalStatus(result.mobile_data.lcp_score).color}`}>
                           {getCoreWebVitalStatus(result.mobile_data.lcp_score).status}
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Clock className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">First Input Delay</div>
-                          <div className="text-sm text-gray-600">Interactivity</div>
-                        </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-gray-900">FID</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.first_input_delay}</div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.fid_score).color}`}>
+                        <div className="font-mono text-sm font-bold">{result.mobile_data.display_values.first_input_delay}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${getCoreWebVitalStatus(result.mobile_data.fid_score).color}`}>
                           {getCoreWebVitalStatus(result.mobile_data.fid_score).status}
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Target className="h-4 w-4 text-purple-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">Cumulative Layout Shift</div>
-                          <div className="text-sm text-gray-600">Visual stability</div>
-                        </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-4 w-4 text-purple-600" />
+                        <span className="text-sm font-medium text-gray-900">CLS</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold">{result.mobile_data.display_values.cumulative_layout_shift}</div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.mobile_data.cls_score).color}`}>
+                        <div className="font-mono text-sm font-bold">{result.mobile_data.display_values.cumulative_layout_shift}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${getCoreWebVitalStatus(result.mobile_data.cls_score).color}`}>
                           {getCoreWebVitalStatus(result.mobile_data.cls_score).status}
-                      </div>
-                      </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
               {/* Desktop Core Web Vitals */}
               {result.desktop_data && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Monitor className="h-5 w-5 text-green-600" />
-                    <h4 className="font-semibold text-gray-900">Desktop Core Web Vitals</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Monitor className="h-4 w-4 text-green-600" />
+                    <h4 className="font-medium text-gray-900">Desktop</h4>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <Zap className="h-4 w-4 text-blue-600" />
-                    </div>
-                        <div>
-                          <div className="font-medium text-gray-900">Largest Contentful Paint</div>
-                          <div className="text-sm text-gray-600">Loading performance</div>
-                        </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Zap className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-900">LCP</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.largest_contentful_paint}</div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.lcp_score).color}`}>
+                        <div className="font-mono text-sm font-bold">{result.desktop_data.display_values.largest_contentful_paint}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${getCoreWebVitalStatus(result.desktop_data.lcp_score).color}`}>
                           {getCoreWebVitalStatus(result.desktop_data.lcp_score).status}
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Clock className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">First Input Delay</div>
-                          <div className="text-sm text-gray-600">Interactivity</div>
-                        </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-gray-900">FID</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.first_input_delay}</div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.fid_score).color}`}>
+                        <div className="font-mono text-sm font-bold">{result.desktop_data.display_values.first_input_delay}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${getCoreWebVitalStatus(result.desktop_data.fid_score).color}`}>
                           {getCoreWebVitalStatus(result.desktop_data.fid_score).status}
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Target className="h-4 w-4 text-purple-600" />
-                      </div>
-                        <div>
-                          <div className="font-medium text-gray-900">Cumulative Layout Shift</div>
-                          <div className="text-sm text-gray-600">Visual stability</div>
-                      </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-4 w-4 text-purple-600" />
+                        <span className="text-sm font-medium text-gray-900">CLS</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold">{result.desktop_data.display_values.cumulative_layout_shift}</div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${getCoreWebVitalStatus(result.desktop_data.cls_score).color}`}>
+                        <div className="font-mono text-sm font-bold">{result.desktop_data.display_values.cumulative_layout_shift}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${getCoreWebVitalStatus(result.desktop_data.cls_score).color}`}>
                           {getCoreWebVitalStatus(result.desktop_data.cls_score).status}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-              </div>
-            </div>
-              </div>
-              </div>
+                </div>
               )}
             </div>
           </div>
@@ -766,9 +759,9 @@ export default function WebsiteAnalyzer() {
 
           {/* Opportunities */}
           {(result.mobile_data?.opportunities?.length > 0 || result.desktop_data?.opportunities?.length > 0) && (
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 lg:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Optimization Opportunities</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 {/* Mobile Opportunities */}
                 {result.mobile_data?.opportunities?.length > 0 && (
                   <div className="space-y-4">
@@ -778,12 +771,12 @@ export default function WebsiteAnalyzer() {
                     </div>
                     <div className="space-y-3">
                       {result.mobile_data.opportunities.slice(0, 5).map((opportunity, index) => (
-                        <div key={index} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
-                            <h5 className="font-medium text-orange-900">{opportunity.title}</h5>
-                            <span className="text-sm font-mono text-orange-700">{opportunity.displayValue}</span>
+                        <div key={index} className="p-3 lg:p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 gap-2">
+                            <h5 className="font-medium text-orange-900 text-sm lg:text-base break-words">{opportunity.title}</h5>
+                            <span className="text-xs lg:text-sm font-mono text-orange-700 whitespace-nowrap">{opportunity.displayValue}</span>
                           </div>
-                          <p className="text-sm text-orange-800 mb-2">{opportunity.description}</p>
+                          <p className="text-xs lg:text-sm text-orange-800 mb-2 break-words leading-relaxed">{opportunity.description}</p>
                           {opportunity.wastedMs > 0 && (
                             <div className="text-xs text-orange-600">
                               Potential savings: {formatTime(opportunity.wastedMs)}
@@ -804,12 +797,12 @@ export default function WebsiteAnalyzer() {
                     </div>
                     <div className="space-y-3">
                       {result.desktop_data.opportunities.slice(0, 5).map((opportunity, index) => (
-                        <div key={index} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
-                            <h5 className="font-medium text-orange-900">{opportunity.title}</h5>
-                            <span className="text-sm font-mono text-orange-700">{opportunity.displayValue}</span>
+                        <div key={index} className="p-3 lg:p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 gap-2">
+                            <h5 className="font-medium text-orange-900 text-sm lg:text-base break-words">{opportunity.title}</h5>
+                            <span className="text-xs lg:text-sm font-mono text-orange-700 whitespace-nowrap">{opportunity.displayValue}</span>
                           </div>
-                          <p className="text-sm text-orange-800 mb-2">{opportunity.description}</p>
+                          <p className="text-xs lg:text-sm text-orange-800 mb-2 break-words leading-relaxed">{opportunity.description}</p>
                           {opportunity.wastedMs > 0 && (
                             <div className="text-xs text-orange-600">
                               Potential savings: {formatTime(opportunity.wastedMs)}
@@ -826,9 +819,9 @@ export default function WebsiteAnalyzer() {
 
           {/* Diagnostics */}
           {(result.mobile_data?.diagnostics?.length > 0 || result.desktop_data?.diagnostics?.length > 0) && (
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 lg:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Diagnostics</h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 {/* Mobile Diagnostics */}
                 {result.mobile_data?.diagnostics?.length > 0 && (
                   <div className="space-y-4">
@@ -838,12 +831,12 @@ export default function WebsiteAnalyzer() {
                     </div>
                     <div className="space-y-3">
                       {result.mobile_data.diagnostics.slice(0, 5).map((diagnostic, index) => (
-                        <div key={index} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
-                            <h5 className="font-medium text-blue-900">{diagnostic.title}</h5>
-                            <span className="text-sm font-mono text-blue-700">{diagnostic.displayValue}</span>
+                        <div key={index} className="p-3 lg:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 gap-2">
+                            <h5 className="font-medium text-blue-900 text-sm lg:text-base break-words">{diagnostic.title}</h5>
+                            <span className="text-xs lg:text-sm font-mono text-blue-700 whitespace-nowrap">{diagnostic.displayValue}</span>
                           </div>
-                          <p className="text-sm text-blue-800">{diagnostic.description}</p>
+                          <p className="text-xs lg:text-sm text-blue-800 break-words leading-relaxed">{diagnostic.description}</p>
                         </div>
                       ))}
                     </div>
@@ -859,13 +852,13 @@ export default function WebsiteAnalyzer() {
                     </div>
                     <div className="space-y-3">
                       {result.desktop_data.diagnostics.slice(0, 5).map((diagnostic, index) => (
-                        <div key={index} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
-                            <h5 className="font-medium text-blue-900">{diagnostic.title}</h5>
-                            <span className="text-sm font-mono text-blue-700">{diagnostic.displayValue}</span>
+                        <div key={index} className="p-3 lg:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 gap-2">
+                            <h5 className="font-medium text-blue-900 text-sm lg:text-base break-words">{diagnostic.title}</h5>
+                            <span className="text-xs lg:text-sm font-mono text-blue-700 whitespace-nowrap">{diagnostic.displayValue}</span>
                           </div>
-                          <p className="text-sm text-blue-800">{diagnostic.description}</p>
-                      </div>
+                          <p className="text-xs lg:text-sm text-blue-800 break-words leading-relaxed">{diagnostic.description}</p>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -886,12 +879,8 @@ export default function WebsiteAnalyzer() {
               <div className="flex items-center space-x-2">
                 <Globe className="h-4 w-4 text-gray-500" />
                 <span className="text-gray-600">Data Source:</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  result.mobile_data?.data_source === 'Google PageSpeed Insights API' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {result.mobile_data?.data_source || result.desktop_data?.data_source || 'Unknown'}
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  Advanced SEO Analysis Engine
                 </span>
               </div>
               <div className="flex items-center space-x-2">

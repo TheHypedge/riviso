@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Search, User, LogOut, ChevronDown } from 'lucide-react'
@@ -11,6 +12,12 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const { user, logout } = useAuth()
+  const pathname = usePathname()
+  
+  // Hide header in dashboard routes
+  if (pathname?.startsWith('/dashboard')) {
+    return null
+  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)

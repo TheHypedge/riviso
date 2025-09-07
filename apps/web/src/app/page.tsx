@@ -99,13 +99,30 @@ export default function HomePage() {
     setIsLoading(true)
     setLoadingProgress(0)
     
-    // More realistic progress updates
+    // Dynamic progress simulation with realistic steps
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (prev >= 85) return prev
-        return prev + Math.random() * 12
+        if (prev >= 95) return prev
+        
+        // Simulate realistic progress with different speeds for different phases
+        let increment = 0
+        if (prev < 20) {
+          // Initial phase - faster
+          increment = 0.8 + Math.random() * 0.4
+        } else if (prev < 60) {
+          // Middle phase - moderate
+          increment = 0.4 + Math.random() * 0.3
+        } else if (prev < 85) {
+          // Final phase - slower
+          increment = 0.2 + Math.random() * 0.2
+        } else {
+          // Almost done - very slow
+          increment = 0.1 + Math.random() * 0.1
+        }
+        
+        return Math.min(prev + increment, 95)
       })
-    }, 300)
+    }, 200)
 
     try {
       // Simulate realistic loading time (2-3 seconds for demo)

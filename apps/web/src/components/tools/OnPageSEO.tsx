@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { FileText, Loader2, CheckCircle, AlertCircle, XCircle, Search, Image, Link as LinkIcon } from 'lucide-react'
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
+import GlobalSearchInput from '../GlobalSearchInput'
 
 interface OnPageResult {
   status: 'success' | 'error'
@@ -197,62 +198,62 @@ export default function OnPageSEO() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="p-3 bg-purple-100 rounded-lg mr-4">
-            <FileText className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">On-Page SEO Analysis</h2>
-            <p className="text-gray-600">Analyze on-page SEO elements and optimization</p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Global Search Input */}
+      <GlobalSearchInput />
 
-      {/* Global URL Display */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Analyzing URL
-            </label>
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span className="text-gray-900 font-mono">
-                    {globalUrl ? (globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`) : 'No URL selected'}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={handleAnalysis}
-                disabled={loading || !isValidUrl}
-                className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Analyze SEO
-                  </>
-                )}
-              </button>
+      {/* Compact Header with URL Input */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          {/* Header Info */}
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <FileText className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">On-Page SEO Analysis</h2>
+              <p className="text-sm text-gray-600">Analyze on-page SEO elements and optimization</p>
             </div>
           </div>
-          {!globalUrl && (
-            <div className="text-center py-8">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Please enter a URL in the global search above to start analyzing.</p>
+
+          {/* URL Input and Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                <span className="text-gray-900 font-mono text-sm truncate">
+                  {globalUrl ? (globalUrl.startsWith('http') ? globalUrl : `https://${globalUrl}`) : 'No URL selected'}
+                </span>
+              </div>
             </div>
-          )}
+            <button
+              onClick={handleAnalysis}
+              disabled={loading || !isValidUrl}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-sm font-medium"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Analyze SEO
+                </>
+              )}
+            </button>
+          </div>
         </div>
+
+        {!globalUrl && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="h-4 w-4 text-amber-600 mr-2" />
+              <p className="text-sm text-amber-800">Please enter a URL in the global search above to start analyzing.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Error Message */}
