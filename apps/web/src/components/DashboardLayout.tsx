@@ -194,7 +194,7 @@ export default function DashboardLayout({ user, logout, children }: DashboardLay
                   return (
                     <button
                       key={tool.id}
-                      onClick={() => setActiveTool(tool.id)}
+                      onClick={() => router.push(`/dashboard/${tool.id}` as any)}
                       className="group p-3 lg:p-6 bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                     >
                       <div className={`w-8 h-8 lg:w-12 lg:h-12 bg-gradient-to-br ${tool.gradient} rounded-lg flex items-center justify-center mb-2 lg:mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto lg:mx-0`}>
