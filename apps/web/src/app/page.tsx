@@ -290,7 +290,7 @@ export default function HomePage() {
                   </div>
                   <button
                     onClick={handleSubmit}
-                    disabled={isLoading || !url || (auditUsage && !auditUsage.isUnlimited && auditUsage.remainingToday === 0)}
+                    disabled={isLoading || !url || (auditUsage ? !auditUsage.isUnlimited && auditUsage.remainingToday === 0 : false)}
                     className="btn btn-primary btn-lg hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
