@@ -71,6 +71,42 @@ if (db) {
 // In-memory user store for production (when SQLite is not available)
 const inMemoryUsers = new Map<string, any>()
 
+// Persistent storage for production (using a simple file-based approach)
+const PRODUCTION_DB_FILE = process.env.PRODUCTION_DB_FILE || '/tmp/riviso_users.json'
+
+// Load users from persistent storage in production
+const loadUsersFromFile = () => {
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      const fs = require('fs')
+      if (fs.existsSync(PRODUCTION_DB_FILE)) {
+        const data = fs.readFileSync(PRODUCTION_DB_FILE, 'utf8')
+        const users = JSON.parse(data)
+        users.forEach((user: any) => {
+          inMemoryUsers.set(user.email, user)
+        })
+        console.log(`✅ Loaded ${users.length} users from persistent storage`)
+      }
+    } catch (error) {
+      console.log('Could not load users from file:', error)
+    }
+  }
+}
+
+// Save users to persistent storage in production
+const saveUsersToFile = () => {
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      const fs = require('fs')
+      const users = Array.from(inMemoryUsers.values())
+      fs.writeFileSync(PRODUCTION_DB_FILE, JSON.stringify(users, null, 2))
+      console.log(`✅ Saved ${users.length} users to persistent storage`)
+    } catch (error) {
+      console.log('Could not save users to file:', error)
+    }
+  }
+}
+
 // Initialize SUPER_ADMIN account in memory
 const initializeSuperAdmin = () => {
   const bcrypt = require('bcryptjs')
@@ -90,12 +126,32 @@ const initializeSuperAdmin = () => {
     lastLogin: null
   })
   
-  console.log('✅ SUPER_ADMIN account initialized in memory')
+  // Also initialize the test user that was created
+  const testUserPassword = bcrypt.hashSync('Admin@2025', 12)
+  inMemoryUsers.set('akhilesh@thehypedge.com', {
+    id: '1757088320106',
+    firstName: 'akhilesh',
+    lastName: 'soni',
+    email: 'akhilesh@thehypedge.com',
+    password: testUserPassword,
+    role: 'user',
+    plan: 'free',
+    auditsUsed: 0,
+    auditsLimit: 5,
+    createdAt: '2025-09-05T16:05:20.106Z',
+    lastLogin: null
+  })
+  
+  console.log('✅ SUPER_ADMIN and test user accounts initialized in memory')
 }
+
+// Load users from persistent storage first
+loadUsersFromFile()
 
 // Initialize SUPER_ADMIN if not already done
 if (!inMemoryUsers.has('iamakhileshsoni@gmail.com')) {
   initializeSuperAdmin()
+  saveUsersToFile()
 }
 
 // Prepared statements for better performance (with fallbacks)
@@ -132,6 +188,7 @@ export const userQueries = db ? {
       inMemoryUsers.set(email, {
         id, firstName, lastName, email, password, role, plan, auditsUsed, auditsLimit, createdAt, lastLogin: null
       })
+      saveUsersToFile()
     }
   },
   findByEmail: { 
@@ -151,6 +208,7 @@ export const userQueries = db ? {
         if (user.id === id) {
           user.lastLogin = lastLogin
           inMemoryUsers.set(email, user)
+          saveUsersToFile()
           break
         }
       }
@@ -165,6 +223,7 @@ export const userQueries = db ? {
         if (user.id === id) {
           user.auditsUsed = auditsUsed
           inMemoryUsers.set(email, user)
+          saveUsersToFile()
           break
         }
       }

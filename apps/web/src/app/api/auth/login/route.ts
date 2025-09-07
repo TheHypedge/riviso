@@ -22,7 +22,9 @@ export async function POST(request: NextRequest) {
     console.log('Database check:', { 
       userQueriesExists: !!userQueries, 
       findByEmailExists: !!userQueries.findByEmail,
-      findByEmailType: typeof userQueries.findByEmail
+      findByEmailType: typeof userQueries.findByEmail,
+      environment: process.env.NODE_ENV,
+      isProduction: process.env.NODE_ENV === 'production'
     })
     
     if (!userQueries.findByEmail) {
@@ -66,19 +68,25 @@ export async function POST(request: NextRequest) {
     userQueries.updateLastLogin.run(new Date().toISOString(), user.id)
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key'
     console.log('Generating JWT token...', { 
       userId: user.id, 
       email: user.email,
       jwtSecretExists: !!process.env.JWT_SECRET,
-      jwtSecretLength: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0
+      jwtSecretLength: jwtSecret.length,
+      usingDefaultSecret: !process.env.JWT_SECRET
     })
+    
+    if (!process.env.JWT_SECRET) {
+      console.warn('⚠️ JWT_SECRET not set in environment variables, using default secret')
+    }
     
     const token = jwt.sign(
       { 
         userId: user.id, 
         email: user.email 
       },
-      process.env.JWT_SECRET || 'your-secret-key',
+      jwtSecret,
       { expiresIn: '7d' }
     )
     console.log('JWT token generated successfully')

@@ -17,7 +17,7 @@ interface User {
 
 interface AuditUsageStats {
   usedToday: number
-  remainingToday: number
+  remainingToday: number | null
   dailyLimit: number
   isUnlimited: boolean
 }

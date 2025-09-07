@@ -84,12 +84,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key'
+    
+    if (!process.env.JWT_SECRET) {
+      console.warn('⚠️ JWT_SECRET not set in environment variables, using default secret')
+    }
+    
     const token = jwt.sign(
       { 
         userId: newUser.id, 
         email: newUser.email 
       },
-      process.env.JWT_SECRET || 'your-secret-key',
+      jwtSecret,
       { expiresIn: '7d' }
     )
 

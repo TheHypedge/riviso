@@ -50,7 +50,7 @@ export default function Header() {
               <Link href="/pricing" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
                 Pricing
               </Link>
-              <Link href="/resources-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
+              {/* <Link href="/resources-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
                 Resources Checker
               </Link>
               <Link href="/domain-history-checker" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
@@ -58,7 +58,7 @@ export default function Header() {
               </Link>
               <Link href="/onpage-optimization" className="text-gray-700 hover:text-primary-600 transition-colors font-medium hover-lift">
                 On-Page SEO
-              </Link>
+              </Link> */}
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
@@ -165,7 +165,7 @@ export default function Header() {
               >
                 Pricing
               </Link>
-              <Link
+              {/* <Link
                 href="/resources-checker"
                 className="block px-4 py-3 text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200"
                 onClick={closeMobileMenu}
@@ -186,7 +186,7 @@ export default function Header() {
               >
                 On-Page SEO
               </Link>
-              
+               */}
               {/* Mobile Auth Links */}
               <div className="border-t border-gray-200 pt-3 mt-3">
                 {user ? (

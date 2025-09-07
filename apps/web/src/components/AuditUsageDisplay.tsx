@@ -36,6 +36,7 @@ export function AuditUsageDisplay({
   }
 
   const getUsageColor = () => {
+    if (remainingToday === null) return 'text-gray-600'
     if (remainingToday === 0) return 'text-red-600'
     if (remainingToday === 1) return 'text-yellow-600'
     return 'text-green-600'
