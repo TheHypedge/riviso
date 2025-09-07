@@ -20,8 +20,8 @@ export default function OnPageSEOPage() {
 
   // Track page view
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'page_view', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'page_view', {
         page_title: 'On-Page SEO Analysis',
         page_location: window.location.href,
         custom_parameter_1: 'seo_tool'
