@@ -63,9 +63,7 @@ export default function Header() {
             <div className="flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <Link href="/dashboard" className="btn btn-secondary btn-sm hover-glow">
-                    Dashboard
-                  </Link>
+                 
                   <div className="relative">
                     <button
                       onClick={() => setShowUserDropdown(!showUserDropdown)}
