@@ -20,7 +20,9 @@ import {
   Home,
   Bell,
   HelpCircle,
-  ArrowLeft
+  ArrowLeft,
+  Database,
+  TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -51,7 +53,7 @@ interface DashboardLayoutProps {
   children?: React.ReactNode
 }
 
-type ToolType = 'overview' | 'resources-checker' | 'domain-history' | 'onpage-seo' | 'website-analyzer'
+type ToolType = 'overview' | 'resources-checker' | 'domain-history' | 'onpage-seo' | 'website-analyzer' | 'data-insights'
 
 const tools = [
   {
@@ -102,6 +104,7 @@ export default function DashboardLayout({ user, logout, children }: DashboardLay
     if (pathname === '/dashboard/domain-history') return 'domain-history'
     if (pathname === '/dashboard/onpage-seo') return 'onpage-seo'
     if (pathname === '/dashboard/website-analyzer') return 'website-analyzer'
+    if (pathname === '/data-insights') return 'data-insights'
     return 'overview'
   }
 
@@ -168,6 +171,17 @@ export default function DashboardLayout({ user, logout, children }: DashboardLay
         return <OnPageSEO />
       case 'website-analyzer':
         return <WebsiteAnalyzer />
+      case 'data-insights':
+        return (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Database className="h-8 w-8 text-purple-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Data Insights</h2>
+            <p className="text-gray-600 mb-6">Redirecting to Data Insights page...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+          </div>
+        )
       case 'overview':
       default:
         return (
@@ -369,6 +383,40 @@ export default function DashboardLayout({ user, logout, children }: DashboardLay
                 </button>
               )
             })}
+
+            {/* Data Insights Section - Only for Super Admin */}
+            {user.role === 'super_admin' && (
+              <>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2 mt-6">
+                  Admin Tools
+                </div>
+                
+                <button
+                  onClick={() => {
+                    router.push('/data-insights')
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className={`w-full flex items-center px-3 py-3 text-left rounded-xl transition-all duration-200 group ${
+                    activeTool === 'data-insights'
+                      ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg mr-3 transition-colors ${
+                    activeTool === 'data-insights' ? 'text-purple-600 bg-purple-100' : 'bg-gray-100 group-hover:bg-gray-200'
+                  }`}>
+                    <Database className="h-4 w-4 lg:h-5 lg:w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">Data Insights</p>
+                    <p className="text-xs text-gray-500 truncate">View all audit data and analytics</p>
+                  </div>
+                  <div className="flex items-center">
+                    <Crown className="h-3 w-3 text-purple-500" />
+                  </div>
+                </button>
+              </>
+            )}
           </nav>
 
           {/* Bottom Section */}
