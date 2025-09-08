@@ -1,16 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeOnPage } from '../../../lib/onpage';
+import { auditQueries } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get('url') || '';
+    const userId = searchParams.get('userId') || '1';
     
     if (!url) {
       return NextResponse.json(
         { error: 'Provide ?url=https://example.com' },
         { status: 400 }
       );
+    }
+
+    // Create audit record
+    const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const now = new Date().toISOString()
+    
+    try {
+      auditQueries.create.run(
+        auditId,
+        userId,
+        url,
+        'pending',
+        now,
+        null,
+        'mobile',
+        'onpage_seo'
+      )
+      console.log('✅ OnPage SEO audit record created:', auditId)
+    } catch (auditError) {
+      console.error('❌ Failed to create OnPage SEO audit record:', auditError)
     }
     
     if (!/^https?:\/\//i.test(url)) {
@@ -105,6 +127,15 @@ export async function GET(request: NextRequest) {
           }
         }
       };
+
+      // Update audit record with completion status
+      try {
+        const completedAt = new Date().toISOString()
+        auditQueries.updateStatus.run('completed', completedAt, auditId)
+        console.log('✅ OnPage SEO audit record completed:', auditId)
+      } catch (auditError) {
+        console.error('❌ Failed to update OnPage SEO audit record:', auditError)
+      }
       
       return NextResponse.json(transformedData, {
         headers: {

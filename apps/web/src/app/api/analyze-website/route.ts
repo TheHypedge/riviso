@@ -34,10 +34,11 @@ export async function POST(request: NextRequest) {
         auditId,
         userId || '1', // Default to user 1 if no userId provided
         url,
-        'website_analyzer', // tool_type
-        'pending',
-        now,
-        'mobile' // device
+        'pending', // status
+        now, // createdAt
+        null, // completedAt
+        'mobile', // device
+        'website_analyzer' // tool_type
       )
       console.log('✅ Audit record created:', auditId)
     } catch (auditError) {

@@ -281,8 +281,8 @@ export const userQueries = db ? {
 
 export const auditQueries = db ? {
   create: db.prepare(`
-    INSERT INTO audits (id, userId, url, tool_type, status, createdAt, device)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO audits (id, userId, url, status, createdAt, completedAt, device, tool_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `),
   
   createWithScores: db.prepare(`
