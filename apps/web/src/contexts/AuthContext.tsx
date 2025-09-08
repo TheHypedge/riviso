@@ -53,37 +53,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return
     
     try {
-      // Try backend API first
-      const backendUrls = [
-        process.env.NEXT_PUBLIC_BACKEND_URL,
-        process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL,
-        'https://riviso-api-production.up.railway.app',
-        'https://riviso.onrender.com',
-        'http://localhost:8000'
-      ].filter(Boolean)
-      
-      const backendUrl = backendUrls[0] || 'https://riviso-api-production.up.railway.app'
-      
-      const response = await fetch(`${backendUrl}/audits/usage?user_id=${user.id}`)
-      if (response.ok) {
-        const usageStats = await response.json()
-        setAuditUsage({
-          usedToday: usageStats.used_today,
-          remainingToday: usageStats.remaining_today,
-          dailyLimit: usageStats.daily_limit,
-          isUnlimited: false
-        })
-        return
-      }
-      
-      // Fallback to local API
+      // Use local API for audit usage (since Render backend doesn't have this endpoint)
       const localResponse = await fetch(`/api/audit/usage?userId=${user.id}`)
       if (localResponse.ok) {
         const usageStats = await localResponse.json()
         setAuditUsage(usageStats)
+      } else {
+        // Set default values if local API fails
+        setAuditUsage({
+          usedToday: 0,
+          remainingToday: 3,
+          dailyLimit: 3,
+          isUnlimited: false
+        })
       }
     } catch (error) {
       console.error('Error fetching audit usage:', error)
+      // Set default values on error
+      setAuditUsage({
+        usedToday: 0,
+        remainingToday: 3,
+        dailyLimit: 3,
+        isUnlimited: false
+      })
     }
   }
 
