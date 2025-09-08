@@ -40,12 +40,7 @@ export default function OnPageSEO() {
   const [result, setResult] = useState<OnPageResult | null>(null)
   const [error, setError] = useState('')
 
-  // Auto-run analysis when global URL is valid
-  useEffect(() => {
-    if (isValidUrl && globalUrl) {
-      handleAnalysis()
-    }
-  }, [globalUrl, isValidUrl])
+  // Remove auto-analysis - user must click analyze button
 
   const handleAnalysis = async () => {
     if (!globalUrl || !isValidUrl) return

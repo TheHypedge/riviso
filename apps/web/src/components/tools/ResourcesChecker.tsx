@@ -30,12 +30,7 @@ export default function ResourcesChecker() {
   const [result, setResult] = useState<ResourcesCheckerResponse | null>(null)
   const [error, setError] = useState('')
 
-  // Auto-run analysis when global URL is valid
-  useEffect(() => {
-    if (isValidUrl && globalUrl) {
-      handleAnalysis()
-    }
-  }, [globalUrl, isValidUrl])
+  // Remove auto-analysis - user must click analyze button
 
   const handleAnalysis = async () => {
     if (!globalUrl || !isValidUrl) return
