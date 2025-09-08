@@ -76,25 +76,37 @@ export default function DataInsights() {
         sort_order: sortOrder
       })
 
-      console.log('📡 API URL:', `/api/audit/data-insights?${params}`)
-      const response = await fetch(`/api/audit/data-insights?${params}`)
+      const apiUrl = `/api/audit/data-insights?${params}`
+      console.log('📡 API URL:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       
       console.log('📊 Response status:', response.status)
+      console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()))
       
       if (!response.ok) {
-        throw new Error('Failed to fetch audit data')
+        const errorText = await response.text()
+        console.error('❌ Response not OK:', response.status, errorText)
+        throw new Error(`Failed to fetch audit data: ${response.status} ${errorText}`)
       }
 
       const data: DataInsightsResponse = await response.json()
       console.log('📈 Audit data received:', data)
       console.log('📊 Audits array length:', data.audits?.length || 0)
       console.log('📊 Total count:', data.total_count)
+      console.log('📊 Audits array:', data.audits)
       
       setAudits(data.audits || [])
       setTotalPages(data.total_pages || 1)
       setTotalCount(data.total_count || 0)
       
       console.log('✅ State updated - audits:', data.audits?.length || 0)
+      console.log('✅ Current state after update:', { audits: data.audits?.length || 0, totalCount: data.total_count || 0 })
     } catch (err) {
       console.error('❌ Error fetching data:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
@@ -271,6 +283,33 @@ export default function DataInsights() {
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Direct API
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('🧪 Setting test data...')
+                    const testData = [
+                      {
+                        id: 'test-1',
+                        url: 'https://test.com',
+                        tool_type: 'website_analyzer',
+                        created_at: new Date().toISOString(),
+                        user_id: '1',
+                        status: 'success',
+                        performance_score: 85,
+                        seo_score: 90,
+                        accessibility_score: 80,
+                        best_practices_score: 75
+                      }
+                    ]
+                    setAudits(testData)
+                    setTotalCount(1)
+                    setTotalPages(1)
+                    console.log('✅ Test data set:', testData)
+                  }}
+                  className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Test Data
                 </button>
                 <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                   <Download className="h-4 w-4 mr-2" />
