@@ -1,4 +1,4 @@
-import { auditQueries } from './database'
+// Client-side audit tracking - calls API endpoints instead of direct database access
 
 export interface AuditData {
   id: string
@@ -13,23 +13,23 @@ export interface AuditData {
   device?: string
 }
 
-export class AuditTracker {
+export class AuditTrackerClient {
   static async createAudit(auditData: Omit<AuditData, 'id' | 'status'>): Promise<string> {
-    const id = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const now = new Date().toISOString()
-    
     try {
-      auditQueries.create.run(
-        id,
-        auditData.userId || null,
-        auditData.url,
-        auditData.toolType,
-        'pending',
-        now,
-        auditData.device || 'mobile'
-      )
-      
-      return id
+      const response = await fetch('/api/audit/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(auditData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create audit record')
+      }
+
+      const result = await response.json()
+      return result.auditId
     } catch (error) {
       console.error('Error creating audit record:', error)
       throw new Error('Failed to create audit record')
@@ -46,18 +46,22 @@ export class AuditTracker {
     },
     status: 'success' | 'error' = 'success'
   ): Promise<void> {
-    const now = new Date().toISOString()
-    
     try {
-      auditQueries.updateWithScores.run(
-        status,
-        now,
-        scores.performanceScore || null,
-        scores.seoScore || null,
-        scores.accessibilityScore || null,
-        scores.bestPracticesScore || null,
-        auditId
-      )
+      const response = await fetch('/api/audit/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auditId,
+          scores,
+          status
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update audit record')
+      }
     } catch (error) {
       console.error('Error updating audit with scores:', error)
       throw new Error('Failed to update audit record')
@@ -65,10 +69,21 @@ export class AuditTracker {
   }
 
   static async updateAuditStatus(auditId: string, status: 'success' | 'error'): Promise<void> {
-    const now = new Date().toISOString()
-    
     try {
-      auditQueries.updateStatus.run(status, now, null, auditId)
+      const response = await fetch('/api/audit/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auditId,
+          status
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update audit status')
+      }
     } catch (error) {
       console.error('Error updating audit status:', error)
       throw new Error('Failed to update audit status')

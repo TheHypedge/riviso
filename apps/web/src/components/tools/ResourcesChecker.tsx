@@ -5,7 +5,7 @@ import { Search, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
 import GlobalSearchInput from '../GlobalSearchInput'
-import { AuditTracker } from '@/lib/auditTracker'
+import { AuditTrackerClient } from '@/lib/auditTrackerClient'
 
 interface Tool {
   id: string
@@ -43,7 +43,7 @@ export default function ResourcesChecker() {
     // Track the audit
     let auditId: string | null = null
     try {
-      auditId = await AuditTracker.trackResourcesCheck(globalUrl, user?.id)
+      auditId = await AuditTrackerClient.trackResourcesCheck(globalUrl, user?.id)
     } catch (error) {
       console.error('Failed to track audit:', error)
     }
@@ -71,7 +71,7 @@ export default function ResourcesChecker() {
         // Update audit as successful
         if (auditId) {
           try {
-            await AuditTracker.updateAuditStatus(auditId, 'success')
+            await AuditTrackerClient.updateAuditStatus(auditId, 'success')
           } catch (error) {
             console.error('Failed to update audit status:', error)
           }
@@ -82,7 +82,7 @@ export default function ResourcesChecker() {
         // Update audit as failed
         if (auditId) {
           try {
-            await AuditTracker.updateAuditStatus(auditId, 'error')
+            await AuditTrackerClient.updateAuditStatus(auditId, 'error')
           } catch (error) {
             console.error('Failed to update audit status:', error)
           }
@@ -94,7 +94,7 @@ export default function ResourcesChecker() {
       // Update audit as failed
       if (auditId) {
         try {
-          await AuditTracker.updateAuditStatus(auditId, 'error')
+          await AuditTrackerClient.updateAuditStatus(auditId, 'error')
         } catch (error) {
           console.error('Failed to update audit status:', error)
         }

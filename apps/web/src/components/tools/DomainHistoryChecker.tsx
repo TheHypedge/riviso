@@ -5,7 +5,7 @@ import { Globe, Loader2, CheckCircle, AlertCircle, Calendar, Shield, Server } fr
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
 import GlobalSearchInput from '../GlobalSearchInput'
-import { AuditTracker } from '@/lib/auditTracker'
+import { AuditTrackerClient } from '@/lib/auditTrackerClient'
 
 interface DomainHistoryResponse {
   status: 'success' | 'error'
@@ -37,7 +37,7 @@ export default function DomainHistoryChecker() {
     // Track the audit
     let auditId: string | null = null
     try {
-      auditId = await AuditTracker.trackDomainHistory(globalUrl, user?.id)
+      auditId = await AuditTrackerClient.trackDomainHistory(globalUrl, user?.id)
     } catch (error) {
       console.error('Failed to track audit:', error)
     }
@@ -63,7 +63,7 @@ export default function DomainHistoryChecker() {
         // Update audit as successful
         if (auditId) {
           try {
-            await AuditTracker.updateAuditStatus(auditId, 'success')
+            await AuditTrackerClient.updateAuditStatus(auditId, 'success')
           } catch (error) {
             console.error('Failed to update audit status:', error)
           }
@@ -74,7 +74,7 @@ export default function DomainHistoryChecker() {
         // Update audit as failed
         if (auditId) {
           try {
-            await AuditTracker.updateAuditStatus(auditId, 'error')
+            await AuditTrackerClient.updateAuditStatus(auditId, 'error')
           } catch (error) {
             console.error('Failed to update audit status:', error)
           }
@@ -86,7 +86,7 @@ export default function DomainHistoryChecker() {
       // Update audit as failed
       if (auditId) {
         try {
-          await AuditTracker.updateAuditStatus(auditId, 'error')
+          await AuditTrackerClient.updateAuditStatus(auditId, 'error')
         } catch (error) {
           console.error('Failed to update audit status:', error)
         }

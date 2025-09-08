@@ -26,7 +26,7 @@ import {
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
 import GlobalSearchInput from '../GlobalSearchInput'
-import { AuditTracker } from '@/lib/auditTracker'
+import { AuditTrackerClient } from '@/lib/auditTrackerClient'
 
 // Circular Progress Component
 const CircularProgress = ({ score, size = 120, strokeWidth = 8, label }: { 
@@ -183,7 +183,7 @@ export default function WebsiteAnalyzer() {
     // Track the audit
     let auditId: string | null = null
     try {
-      auditId = await AuditTracker.trackWebsiteAnalysis(globalUrl, user?.id)
+      auditId = await AuditTrackerClient.trackWebsiteAnalysis(globalUrl, user?.id)
     } catch (error) {
       console.error('Failed to track audit:', error)
     }
@@ -254,7 +254,7 @@ export default function WebsiteAnalyzer() {
       // Update audit with scores if successful
       if (auditId && data.status === 'success') {
         try {
-          await AuditTracker.updateAuditWithScores(auditId, {
+          await AuditTrackerClient.updateAuditWithScores(auditId, {
             performanceScore: data.mobile_data?.performance_score || data.desktop_data?.performance_score,
             seoScore: data.mobile_data?.seo_score || data.desktop_data?.seo_score,
             accessibilityScore: data.mobile_data?.accessibility_score || data.desktop_data?.accessibility_score,
@@ -270,7 +270,7 @@ export default function WebsiteAnalyzer() {
       // Update audit as failed
       if (auditId) {
         try {
-          await AuditTracker.updateAuditStatus(auditId, 'error')
+          await AuditTrackerClient.updateAuditStatus(auditId, 'error')
         } catch (error) {
           console.error('Failed to update audit status:', error)
         }
