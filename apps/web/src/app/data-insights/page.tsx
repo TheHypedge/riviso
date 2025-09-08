@@ -66,6 +66,8 @@ export default function DataInsights() {
     setError('')
     
     try {
+      console.log('🔍 Fetching audit data...', { user, page, filterTool, sortBy, sortOrder })
+      
       const params = new URLSearchParams({
         page: page.toString(),
         per_page: '20',
@@ -74,13 +76,17 @@ export default function DataInsights() {
         sort_order: sortOrder
       })
 
+      console.log('📡 API URL:', `/api/audit/data-insights?${params}`)
       const response = await fetch(`/api/audit/data-insights?${params}`)
+      
+      console.log('📊 Response status:', response.status)
       
       if (!response.ok) {
         throw new Error('Failed to fetch audit data')
       }
 
       const data: DataInsightsResponse = await response.json()
+      console.log('📈 Audit data received:', data)
       setAudits(data.audits)
       setTotalPages(data.total_pages)
       setTotalCount(data.total_count)
@@ -92,8 +98,12 @@ export default function DataInsights() {
   }
 
   useEffect(() => {
+    console.log('🔄 useEffect triggered', { user, userRole: user?.role, isSuperAdmin: user?.role === 'super_admin' })
     if (user?.role === 'super_admin') {
+      console.log('✅ User is super admin, fetching audits...')
       fetchAudits()
+    } else {
+      console.log('❌ User is not super admin or not logged in')
     }
   }, [user, page, filterTool, sortBy, sortOrder])
 
@@ -168,6 +178,16 @@ export default function DataInsights() {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Data Insights</h1>
                 <p className="text-gray-600 mt-2">View all website analysis data and usage statistics</p>
+                {/* Debug info */}
+                <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Debug Info:</strong> User: {user ? `${user.firstName} ${user.lastName}` : 'Not logged in'} | 
+                    Role: {user?.role || 'Unknown'} | 
+                    Is Super Admin: {user?.role === 'super_admin' ? 'Yes' : 'No'} | 
+                    Loading: {loading ? 'Yes' : 'No'} | 
+                    Audits Count: {audits.length}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center space-x-4">
                 <button
