@@ -222,6 +222,33 @@ export default function DataInsights() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Test Fetch
                 </button>
+                <button
+                  onClick={async () => {
+                    console.log('🔐 Testing login...')
+                    try {
+                      const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'test@admin.com', password: 'admin123' })
+                      })
+                      const data = await response.json()
+                      if (response.ok) {
+                        console.log('✅ Login successful:', data.user)
+                        localStorage.setItem('token', data.token)
+                        localStorage.setItem('user', JSON.stringify(data.user))
+                        window.location.reload()
+                      } else {
+                        console.error('❌ Login failed:', data.message)
+                      }
+                    } catch (error) {
+                      console.error('❌ Login error:', error)
+                    }
+                  }}
+                  className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Login Test
+                </button>
                 <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                   <Download className="h-4 w-4 mr-2" />
                   Export
