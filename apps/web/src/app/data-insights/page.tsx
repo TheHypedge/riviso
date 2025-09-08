@@ -213,15 +213,24 @@ export default function DataInsights() {
                 <h1 className="text-3xl font-bold text-gray-900">Data Insights</h1>
                 <p className="text-gray-600 mt-2">View all website analysis data and usage statistics</p>
                 {/* Debug info */}
-                <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Debug Info:</strong> User: {user ? `${user.firstName} ${user.lastName}` : 'Not logged in'} | 
-                    Role: {user?.role || 'Unknown'} | 
-                    Is Super Admin: {user?.role === 'super_admin' ? 'Yes' : 'No'} | 
-                    Loading: {loading ? 'Yes' : 'No'} | 
-                    Audits Count: {audits.length}
-                  </p>
-                </div>
+        <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded-md">
+          <p className="text-sm text-yellow-800">
+            <strong>Debug Info:</strong> User: {user ? `${user.firstName} ${user.lastName}` : 'Not logged in'} | 
+            Role: {user?.role || 'Unknown'} | 
+            Is Super Admin: {user?.role === 'super_admin' ? 'Yes' : 'No'} | 
+            Loading: {loading ? 'Yes' : 'No'} | 
+            Audits Count: {audits.length}
+          </p>
+          <p className="text-sm text-yellow-800 mt-2">
+            <strong>User Object:</strong> {user ? JSON.stringify(user, null, 2) : 'null'}
+          </p>
+          <p className="text-sm text-yellow-800 mt-2">
+            <strong>LocalStorage Token:</strong> {typeof window !== 'undefined' ? (localStorage.getItem('token') ? 'Present' : 'Not found') : 'SSR'}
+          </p>
+          <p className="text-sm text-yellow-800 mt-2">
+            <strong>LocalStorage User:</strong> {typeof window !== 'undefined' ? (localStorage.getItem('user') ? 'Present' : 'Not found') : 'SSR'}
+          </p>
+        </div>
               </div>
               <div className="flex items-center space-x-4">
                 <button
@@ -334,6 +343,22 @@ export default function DataInsights() {
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Manual Fetch
+                </button>
+                <button
+                  onClick={async () => {
+                    console.log('🧪 Testing database...')
+                    try {
+                      const response = await fetch('/api/test-db')
+                      const data = await response.json()
+                      console.log('📊 Database test result:', data)
+                    } catch (error) {
+                      console.error('❌ Database test error:', error)
+                    }
+                  }}
+                  className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Test DB
                 </button>
                 <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                   <Download className="h-4 w-4 mr-2" />
