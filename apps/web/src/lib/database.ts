@@ -16,6 +16,18 @@ try {
   db = null
 }
 
+// For production environments, ensure database is created
+if (db) {
+  try {
+    // Test database connection
+    db.prepare('SELECT 1').get()
+    console.log('✅ Database connection verified')
+  } catch (error) {
+    console.error('❌ Database connection failed:', error)
+    db = null
+  }
+}
+
 // Initialize database only if available
 if (db) {
   // Enable foreign keys

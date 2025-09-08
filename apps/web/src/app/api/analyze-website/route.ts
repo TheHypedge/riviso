@@ -30,19 +30,24 @@ export async function POST(request: NextRequest) {
     
     try {
       console.log('💾 Attempting to create audit record...')
-      auditQueries.create.run(
-        auditId,
-        userId || '1', // Default to user 1 if no userId provided
-        url,
-        'pending', // status
-        now, // createdAt
-        null, // completedAt
-        'mobile', // device
-        'website_analyzer' // tool_type
-      )
-      console.log('✅ Audit record created:', auditId)
+      if (!auditQueries || !auditQueries.create) {
+        console.error('❌ Audit queries not available')
+      } else {
+        auditQueries.create.run(
+          auditId,
+          userId || '1', // Default to user 1 if no userId provided
+          url,
+          'pending', // status
+          now, // createdAt
+          null, // completedAt
+          'mobile', // device
+          'website_analyzer' // tool_type
+        )
+        console.log('✅ Audit record created:', auditId)
+      }
     } catch (auditError) {
       console.error('❌ Failed to create audit record:', auditError)
+      // Continue with analysis even if audit tracking fails
     }
 
     // Validate URL
