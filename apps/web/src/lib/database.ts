@@ -94,6 +94,13 @@ if (db) {
     // Column already exists, ignore error
   }
 
+  // Remove old score column if it exists (for migration from old schema)
+  try {
+    db.exec(`ALTER TABLE audits DROP COLUMN score`)
+  } catch (e) {
+    // Column doesn't exist, ignore error
+  }
+
   // Create daily_audit_usage table to track daily audit limits
   db.exec(`
     CREATE TABLE IF NOT EXISTS daily_audit_usage (
