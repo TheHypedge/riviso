@@ -88,13 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing authentication on mount
   useEffect(() => {
+    console.log('🔐 AuthContext: Checking for stored authentication...')
     const storedToken = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
 
+    console.log('🔐 AuthContext: Stored token:', storedToken ? 'Present' : 'Not found')
+    console.log('🔐 AuthContext: Stored user:', storedUser ? 'Present' : 'Not found')
+
     if (storedToken && storedUser) {
       try {
+        const parsedUser = JSON.parse(storedUser)
+        console.log('🔐 AuthContext: Parsed user:', parsedUser)
         setToken(storedToken)
-        setUser(JSON.parse(storedUser))
+        setUser(parsedUser)
       } catch (error) {
         console.error('Error parsing stored user data:', error)
         localStorage.removeItem('token')
@@ -126,10 +132,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       if (response.ok) {
+        console.log('🔐 AuthContext: Login successful, user data:', data.user)
         setUser(data.user)
         setToken(data.token)
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
+        console.log('🔐 AuthContext: User stored in localStorage')
         return true
       } else {
         throw new Error(data.message || 'Login failed')
