@@ -5,7 +5,7 @@ Audit endpoints for SEO Audit API.
 import uuid
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, HttpUrl, validator
 import structlog
@@ -18,6 +18,22 @@ from audit_limits import check_audit_limits, DailyAuditUsageTracker
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
+
+
+def add_cors_headers(response: Response) -> Response:
+    """Add CORS headers to response."""
+    response.headers["Access-Control-Allow-Origin"] = "https://www.riviso.com"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+
+@router.options("/usage")
+async def options_audit_usage(response: Response):
+    """Handle preflight OPTIONS request for audit usage."""
+    add_cors_headers(response)
+    return {"message": "OK"}
 
 
 class AuditRequest(BaseModel):
@@ -671,6 +687,7 @@ async def get_pagespeed_insights(request: Dict[str, Any], http_request: Request 
 async def get_audit_usage(
     user_id: str,
     db: Session = Depends(get_db),
+    response: Response = None,
 ) -> Dict[str, Any]:
     """
     Get audit usage statistics for a user.
@@ -683,6 +700,10 @@ async def get_audit_usage(
         Dict containing usage statistics
     """
     try:
+        # Add CORS headers
+        if response:
+            add_cors_headers(response)
+        
         tracker = DailyAuditUsageTracker(db)
         usage_stats = tracker.can_create_audit(user_id)
         

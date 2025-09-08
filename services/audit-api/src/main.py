@@ -147,9 +147,16 @@ else:
 if FULL_APP_AVAILABLE:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Allow all origins for now
-        allow_credentials=False,
-        allow_methods=["*"],
+        allow_origins=[
+            "https://www.riviso.com",
+            "https://riviso.com", 
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001"
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 
@@ -161,9 +168,16 @@ else:
     # Minimal CORS for limited mode
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
+        allow_origins=[
+            "https://www.riviso.com",
+            "https://riviso.com", 
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001"
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
 
@@ -187,6 +201,20 @@ async def add_request_id(request: Request, call_next):
     # Add to response headers
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
+    
+    return response
+
+
+@app.middleware("http")
+async def add_cors_headers_middleware(request: Request, call_next):
+    """Add CORS headers to all responses."""
+    response = await call_next(request)
+    
+    # Add CORS headers
+    response.headers["Access-Control-Allow-Origin"] = "https://www.riviso.com"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     
     return response
 
@@ -281,6 +309,16 @@ async def root():
             "status": "healthy",
             "mode": "limited"
         }
+
+
+@app.options("/{path:path}")
+async def options_handler(path: str, response: Response):
+    """Handle all OPTIONS requests for CORS preflight."""
+    response.headers["Access-Control-Allow-Origin"] = "https://www.riviso.com"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return {"message": "OK"}
 
 
 @app.get("/health")
