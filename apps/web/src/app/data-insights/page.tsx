@@ -123,15 +123,23 @@ export default function DataInsights() {
       page,
       filterTool,
       sortBy,
-      sortOrder
+      sortOrder,
+      loading
     })
+    
+    // Add a small delay to ensure user is fully loaded
+    if (loading) {
+      console.log('⏳ Still loading, waiting...')
+      return
+    }
+    
     if (user?.role === 'super_admin') {
       console.log('✅ User is super admin, fetching audits...')
       fetchAudits()
     } else {
-      console.log('❌ User is not super admin or not logged in')
+      console.log('❌ User is not super admin or not logged in', { user, role: user?.role })
     }
-  }, [user, page, filterTool, sortBy, sortOrder])
+  }, [user, page, filterTool, sortBy, sortOrder, loading])
 
   const toggleRowExpansion = (auditId: string) => {
     const newExpanded = new Set(expandedRows)
@@ -310,6 +318,22 @@ export default function DataInsights() {
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Test Data
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('🔄 Manual fetch triggered...')
+                    console.log('Current user:', user)
+                    console.log('Current loading:', loading)
+                    if (user?.role === 'super_admin') {
+                      fetchAudits()
+                    } else {
+                      console.log('❌ User is not super admin')
+                    }
+                  }}
+                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Manual Fetch
                 </button>
                 <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                   <Download className="h-4 w-4 mr-2" />
