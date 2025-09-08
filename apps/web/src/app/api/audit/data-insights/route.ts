@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match expected format
-    const transformedAudits = audits.map(audit => ({
+    const transformedAudits = audits.map((audit: any) => ({
       id: audit.id,
       url: audit.url,
       tool_type: audit.tool_type || 'website_analyzer',
