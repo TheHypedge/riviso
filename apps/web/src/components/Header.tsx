@@ -39,7 +39,7 @@ export default function Header() {
                 alt="RIVISO" 
                 width={32} 
                 height={32} 
-                className="mr-3 rounded-lg shadow-lg"
+                className="mr-3"
               />
               RIVISO
             </Link>
