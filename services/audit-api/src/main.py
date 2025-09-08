@@ -150,6 +150,7 @@ if FULL_APP_AVAILABLE:
         allow_origins=[
             "https://www.riviso.com",
             "https://riviso.com", 
+            "https://riviso-api-production.up.railway.app",
             "http://localhost:3000",
             "http://localhost:3001",
             "http://127.0.0.1:3000",
@@ -171,6 +172,7 @@ else:
         allow_origins=[
             "https://www.riviso.com",
             "https://riviso.com", 
+            "https://riviso-api-production.up.railway.app",
             "http://localhost:3000",
             "http://localhost:3001",
             "http://127.0.0.1:3000",

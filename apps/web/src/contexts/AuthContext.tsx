@@ -56,12 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Try backend API first
       const backendUrls = [
         process.env.NEXT_PUBLIC_BACKEND_URL,
-        process.env.NEXT_PUBLIC_RENDER_BACKEND_URL,
+        process.env.NEXT_PUBLIC_RAILWAY_BACKEND_URL,
+        'https://riviso-api-production.up.railway.app',
         'https://riviso.onrender.com',
         'http://localhost:8000'
       ].filter(Boolean)
       
-      const backendUrl = backendUrls[0] || 'https://riviso.onrender.com'
+      const backendUrl = backendUrls[0] || 'https://riviso-api-production.up.railway.app'
       
       const response = await fetch(`${backendUrl}/audits/usage?user_id=${user.id}`)
       if (response.ok) {
