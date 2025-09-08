@@ -249,6 +249,29 @@ export default function DataInsights() {
                   <User className="h-4 w-4 mr-2" />
                   Login Test
                 </button>
+                <button
+                  onClick={async () => {
+                    console.log('🧪 Direct API test...')
+                    try {
+                      const response = await fetch('/api/audit/data-insights')
+                      const data = await response.json()
+                      console.log('📊 Direct API response:', data)
+                      console.log('📊 Audits count:', data.audits?.length || 0)
+                      
+                      // Update state directly
+                      setAudits(data.audits || [])
+                      setTotalCount(data.total_count || 0)
+                      setTotalPages(data.total_pages || 1)
+                      console.log('✅ State updated directly')
+                    } catch (error) {
+                      console.error('❌ Direct API error:', error)
+                    }
+                  }}
+                  className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Direct API
+                </button>
                 <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                   <Download className="h-4 w-4 mr-2" />
                   Export
