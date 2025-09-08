@@ -127,19 +127,13 @@ export default function DataInsights() {
       loading
     })
     
-    // Add a small delay to ensure user is fully loaded
-    if (loading) {
-      console.log('⏳ Still loading, waiting...')
-      return
-    }
-    
     if (user?.role === 'super_admin') {
       console.log('✅ User is super admin, fetching audits...')
       fetchAudits()
     } else {
       console.log('❌ User is not super admin or not logged in', { user, role: user?.role })
     }
-  }, [user, page, filterTool, sortBy, sortOrder, loading])
+  }, [user, page, filterTool, sortBy, sortOrder])
 
   const toggleRowExpansion = (auditId: string) => {
     const newExpanded = new Set(expandedRows)
