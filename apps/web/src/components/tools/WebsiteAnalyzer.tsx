@@ -165,22 +165,44 @@ export default function WebsiteAnalyzer() {
   const { globalUrl, isValidUrl } = useGlobalSearch()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [result, setResult] = useState<WebsiteAnalysisResponse | null>(null)
   const [error, setError] = useState('')
 
-  // Auto-run analysis when global URL is valid
-  useEffect(() => {
-    if (isValidUrl && globalUrl) {
-      handleAnalysis()
-    }
-  }, [globalUrl, isValidUrl])
+  // Remove auto-analysis - user must click analyze button
 
   const handleAnalysis = async () => {
     if (!globalUrl || !isValidUrl) return
 
     setLoading(true)
+    setLoadingProgress(0)
     setError('')
     setResult(null)
+
+    // Dynamic progress simulation with realistic steps
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 95) return prev
+        
+        // Simulate realistic progress with different speeds for different phases
+        let increment = 0
+        if (prev < 20) {
+          // Initial phase - faster
+          increment = 0.8 + Math.random() * 0.4
+        } else if (prev < 60) {
+          // Middle phase - moderate
+          increment = 0.4 + Math.random() * 0.3
+        } else if (prev < 85) {
+          // Final phase - slower
+          increment = 0.2 + Math.random() * 0.2
+        } else {
+          // Almost done - very slow
+          increment = 0.1 + Math.random() * 0.1
+        }
+        
+        return Math.min(prev + increment, 95)
+      })
+    }, 200)
 
     try {
       // Convert simple domain to full URL
@@ -222,7 +244,12 @@ export default function WebsiteAnalyzer() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze website. Please check the URL and try again.')
     } finally {
-      setLoading(false)
+      clearInterval(progressInterval)
+      setLoadingProgress(100)
+      setTimeout(() => {
+        setLoading(false)
+        setLoadingProgress(0)
+      }, 500)
     }
   }
 
@@ -340,7 +367,13 @@ export default function WebsiteAnalyzer() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Analyzing Website</h3>
               <p className="text-gray-600 mb-4">Fetching real-time data from Google PageSpeed Insights...</p>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div className="bg-primary-600 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+                <div 
+                  className="bg-primary-600 h-2 rounded-full transition-all duration-300 ease-out" 
+                  style={{width: `${loadingProgress}%`}}
+                ></div>
+              </div>
+              <div className="text-sm text-gray-500 mb-2">
+                {Math.round(loadingProgress)}% Complete
               </div>
               <p className="text-sm text-gray-500">This may take 10-30 seconds for comprehensive analysis</p>
             </div>
