@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString()
     
-    auditQueries.updateStatus.run(status, now, null, auditId)
+    auditQueries.updateStatus.run(status, now, auditId)
     
     return NextResponse.json({ success: true })
   } catch (error) {

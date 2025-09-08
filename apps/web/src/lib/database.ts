@@ -292,7 +292,7 @@ export const auditQueries = db ? {
   `),
   
   updateStatus: db.prepare(`
-    UPDATE audits SET status = ?, completedAt = ?, score = ? WHERE id = ?
+    UPDATE audits SET status = ?, completedAt = ? WHERE id = ?
   `),
   
   updateWithScores: db.prepare(`

@@ -104,7 +104,6 @@ export async function PUT(request: NextRequest) {
     auditQueries.updateStatus.run(
       status,
       completedAt || new Date().toISOString(),
-      null, // score (can be updated later)
       auditId
     )
 
