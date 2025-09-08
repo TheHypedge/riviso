@@ -87,10 +87,16 @@ export default function DataInsights() {
 
       const data: DataInsightsResponse = await response.json()
       console.log('📈 Audit data received:', data)
-      setAudits(data.audits)
-      setTotalPages(data.total_pages)
-      setTotalCount(data.total_count)
+      console.log('📊 Audits array length:', data.audits?.length || 0)
+      console.log('📊 Total count:', data.total_count)
+      
+      setAudits(data.audits || [])
+      setTotalPages(data.total_pages || 1)
+      setTotalCount(data.total_count || 0)
+      
+      console.log('✅ State updated - audits:', data.audits?.length || 0)
     } catch (err) {
+      console.error('❌ Error fetching data:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
     } finally {
       setLoading(false)
@@ -98,7 +104,15 @@ export default function DataInsights() {
   }
 
   useEffect(() => {
-    console.log('🔄 useEffect triggered', { user, userRole: user?.role, isSuperAdmin: user?.role === 'super_admin' })
+    console.log('🔄 useEffect triggered', { 
+      user: user ? { id: user.id, email: user.email, role: user.role } : null, 
+      userRole: user?.role, 
+      isSuperAdmin: user?.role === 'super_admin',
+      page,
+      filterTool,
+      sortBy,
+      sortOrder
+    })
     if (user?.role === 'super_admin') {
       console.log('✅ User is super admin, fetching audits...')
       fetchAudits()
@@ -197,6 +211,16 @@ export default function DataInsights() {
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('🧪 Manual test button clicked')
+                    fetchAudits()
+                  }}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Test Fetch
                 </button>
                 <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                   <Download className="h-4 w-4 mr-2" />
