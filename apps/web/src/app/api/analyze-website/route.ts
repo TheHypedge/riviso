@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auditQueries } from '@/lib/database'
 
 export async function GET() {
   return NextResponse.json({ 
@@ -11,13 +12,36 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json()
+    console.log('🔍 API called - analyze-website')
+    const { url, userId } = await request.json()
+    console.log('📊 Request data:', { url, userId })
 
     if (!url) {
       return NextResponse.json(
         { error: 'URL is required' },
         { status: 400 }
       )
+    }
+
+    // Create audit record
+    const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const now = new Date().toISOString()
+    console.log('🆔 Generated audit ID:', auditId)
+    
+    try {
+      console.log('💾 Attempting to create audit record...')
+      auditQueries.create.run(
+        auditId,
+        userId || '1', // Default to user 1 if no userId provided
+        url,
+        'website_analyzer', // tool_type
+        'pending',
+        now,
+        'mobile' // device
+      )
+      console.log('✅ Audit record created:', auditId)
+    } catch (auditError) {
+      console.error('❌ Failed to create audit record:', auditError)
     }
 
     // Validate URL
@@ -40,6 +64,28 @@ export async function POST(request: NextRequest) {
     
     // If no API key, return mock data for testing
     if (!apiKey) {
+      // Update audit record with completion status and scores for mock data
+      try {
+        const completedAt = new Date().toISOString()
+        const avgPerformanceScore = Math.round((82 + 88) / 2) // mobile + desktop performance
+        const avgSeoScore = Math.round((88 + 90) / 2) // mobile + desktop seo
+        const avgAccessibilityScore = Math.round((95 + 98) / 2) // mobile + desktop accessibility
+        const avgBestPracticesScore = Math.round((90 + 92) / 2) // mobile + desktop best practices
+        
+        auditQueries.updateWithScores.run(
+          avgPerformanceScore, // performance_score
+          avgSeoScore, // seo_score
+          avgAccessibilityScore, // accessibility_score
+          avgBestPracticesScore, // best_practices_score
+          'completed',
+          completedAt,
+          auditId
+        )
+        console.log('✅ Mock audit record updated with scores:', auditId)
+      } catch (auditError) {
+        console.error('❌ Failed to update mock audit record:', auditError)
+      }
+
       return NextResponse.json({
         status: 'success',
         website_info: {
@@ -426,6 +472,28 @@ export async function POST(request: NextRequest) {
       },
       analysis_timestamp: new Date().toISOString()
     })
+
+    // Update audit record with completion status and scores
+    try {
+      const completedAt = new Date().toISOString()
+      const avgPerformanceScore = Math.round((mobileScore + desktopScore) / 2)
+      const avgSeoScore = Math.round((mobileSeoScore + desktopSeoScore) / 2)
+      const avgAccessibilityScore = Math.round((mobileAccessibilityScore + desktopAccessibilityScore) / 2)
+      const avgBestPracticesScore = Math.round((mobileBestPracticesScore + desktopBestPracticesScore) / 2)
+      
+      auditQueries.updateWithScores.run(
+        avgPerformanceScore, // performance_score
+        avgSeoScore, // seo_score
+        avgAccessibilityScore, // accessibility_score
+        avgBestPracticesScore, // best_practices_score
+        'completed',
+        completedAt,
+        auditId
+      )
+      console.log('✅ Audit record updated with scores:', auditId)
+    } catch (auditError) {
+      console.error('❌ Failed to update audit record:', auditError)
+    }
 
     // Add cache-busting headers
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
