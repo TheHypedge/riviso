@@ -5,6 +5,7 @@ import { FileText, Loader2, CheckCircle, AlertCircle, XCircle, Search, Image, Li
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
 import GlobalSearchInput from '../GlobalSearchInput'
+import { AuditTracker } from '@/lib/auditTracker'
 
 interface OnPageResult {
   status: 'success' | 'error'
@@ -49,6 +50,14 @@ export default function OnPageSEO() {
     setError('')
     setResult(null)
 
+    // Track the audit
+    let auditId: string | null = null
+    try {
+      auditId = await AuditTracker.trackOnPageSEO(globalUrl, user?.id)
+    } catch (error) {
+      console.error('Failed to track audit:', error)
+    }
+
     try {
       // Convert simple domain to full URL
       let fullUrl = globalUrl.trim()
@@ -61,11 +70,38 @@ export default function OnPageSEO() {
 
       if (response.ok) {
         setResult(data)
+        
+        // Update audit as successful
+        if (auditId) {
+          try {
+            await AuditTracker.updateAuditStatus(auditId, 'success')
+          } catch (error) {
+            console.error('Failed to update audit status:', error)
+          }
+        }
       } else {
         setError(data.message || 'An error occurred while analyzing the page')
+        
+        // Update audit as failed
+        if (auditId) {
+          try {
+            await AuditTracker.updateAuditStatus(auditId, 'error')
+          } catch (error) {
+            console.error('Failed to update audit status:', error)
+          }
+        }
       }
     } catch (err) {
       setError('Failed to connect to the server. Please try again.')
+      
+      // Update audit as failed
+      if (auditId) {
+        try {
+          await AuditTracker.updateAuditStatus(auditId, 'error')
+        } catch (error) {
+          console.error('Failed to update audit status:', error)
+        }
+      }
     } finally {
       setLoading(false)
     }

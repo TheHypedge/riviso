@@ -26,6 +26,7 @@ import {
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
 import GlobalSearchInput from '../GlobalSearchInput'
+import { AuditTracker } from '@/lib/auditTracker'
 
 // Circular Progress Component
 const CircularProgress = ({ score, size = 120, strokeWidth = 8, label }: { 
@@ -179,6 +180,14 @@ export default function WebsiteAnalyzer() {
     setError('')
     setResult(null)
 
+    // Track the audit
+    let auditId: string | null = null
+    try {
+      auditId = await AuditTracker.trackWebsiteAnalysis(globalUrl, user?.id)
+    } catch (error) {
+      console.error('Failed to track audit:', error)
+    }
+
     // Dynamic progress simulation with realistic steps
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
@@ -241,8 +250,31 @@ export default function WebsiteAnalyzer() {
 
       const data = await response.json()
       setResult(data)
+
+      // Update audit with scores if successful
+      if (auditId && data.status === 'success') {
+        try {
+          await AuditTracker.updateAuditWithScores(auditId, {
+            performanceScore: data.mobile_data?.performance_score || data.desktop_data?.performance_score,
+            seoScore: data.mobile_data?.seo_score || data.desktop_data?.seo_score,
+            accessibilityScore: data.mobile_data?.accessibility_score || data.desktop_data?.accessibility_score,
+            bestPracticesScore: data.mobile_data?.best_practices_score || data.desktop_data?.best_practices_score
+          }, 'success')
+        } catch (error) {
+          console.error('Failed to update audit scores:', error)
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze website. Please check the URL and try again.')
+      
+      // Update audit as failed
+      if (auditId) {
+        try {
+          await AuditTracker.updateAuditStatus(auditId, 'error')
+        } catch (error) {
+          console.error('Failed to update audit status:', error)
+        }
+      }
     } finally {
       clearInterval(progressInterval)
       setLoadingProgress(100)

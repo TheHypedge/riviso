@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { database } from '@/lib/database'
+import { auditQueries } from '@/lib/database'
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,59 +7,49 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const perPage = parseInt(searchParams.get('per_page') || '20')
     const toolType = searchParams.get('tool_type') || ''
-    const sortBy = searchParams.get('sort_by') || 'created_at'
+    const sortBy = searchParams.get('sort_by') || 'createdAt'
     const sortOrder = searchParams.get('sort_order') || 'desc'
 
     // Calculate offset
     const offset = (page - 1) * perPage
 
-    // Build query
-    let whereClause = ''
-    const params: any[] = []
-    let paramIndex = 1
-
+    // Get total count
+    let totalCount = 0
     if (toolType && toolType !== 'all') {
-      whereClause = 'WHERE tool_type = ?'
-      params.push(toolType)
+      const countResult = auditQueries.getCountWithFilters.get(toolType)
+      totalCount = countResult?.total || 0
+    } else {
+      const countResult = auditQueries.getCount.get()
+      totalCount = countResult?.total || 0
     }
 
-    // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM audits ${whereClause}`
-    const countResult = database.prepare(countQuery).get(...params)
-    const totalCount = countResult?.total || 0
-
-    // Build sort clause
-    const validSortColumns = ['created_at', 'url', 'tool_type', 'performance_score']
-    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'created_at'
-    const sortDirection = sortOrder === 'asc' ? 'ASC' : 'DESC'
-    const orderClause = `ORDER BY ${sortColumn} ${sortDirection}`
-
     // Get audits with pagination
-    const auditsQuery = `
-      SELECT 
-        id,
-        url,
-        tool_type,
-        created_at,
-        user_id,
-        status,
-        performance_score,
-        seo_score,
-        accessibility_score,
-        best_practices_score
-      FROM audits 
-      ${whereClause}
-      ${orderClause}
-      LIMIT ? OFFSET ?
-    `
-    
-    const audits = database.prepare(auditsQuery).all(...params, perPage, offset)
+    let audits = []
+    if (toolType && toolType !== 'all') {
+      audits = auditQueries.getAllWithFilters.all(toolType, perPage, offset)
+    } else {
+      audits = auditQueries.getAllWithPagination.all(perPage, offset)
+    }
+
+    // Transform data to match expected format
+    const transformedAudits = audits.map(audit => ({
+      id: audit.id,
+      url: audit.url,
+      tool_type: audit.tool_type || 'website_analyzer',
+      created_at: audit.createdAt,
+      user_id: audit.userId,
+      status: audit.status,
+      performance_score: audit.performance_score,
+      seo_score: audit.seo_score,
+      accessibility_score: audit.accessibility_score,
+      best_practices_score: audit.best_practices_score
+    }))
 
     // Calculate total pages
     const totalPages = Math.ceil(totalCount / perPage)
 
     return NextResponse.json({
-      audits,
+      audits: transformedAudits,
       total_count: totalCount,
       page,
       per_page: perPage,

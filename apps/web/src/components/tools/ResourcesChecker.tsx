@@ -5,6 +5,7 @@ import { Search, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-
 import { useGlobalSearch } from '@/contexts/GlobalSearchContext'
 import { useAuth } from '@/contexts/AuthContext'
 import GlobalSearchInput from '../GlobalSearchInput'
+import { AuditTracker } from '@/lib/auditTracker'
 
 interface Tool {
   id: string
@@ -39,6 +40,14 @@ export default function ResourcesChecker() {
     setError('')
     setResult(null)
 
+    // Track the audit
+    let auditId: string | null = null
+    try {
+      auditId = await AuditTracker.trackResourcesCheck(globalUrl, user?.id)
+    } catch (error) {
+      console.error('Failed to track audit:', error)
+    }
+
     try {
       // Convert simple domain to full URL
       let fullUrl = globalUrl.trim()
@@ -58,11 +67,38 @@ export default function ResourcesChecker() {
 
       if (response.ok) {
         setResult(data)
+        
+        // Update audit as successful
+        if (auditId) {
+          try {
+            await AuditTracker.updateAuditStatus(auditId, 'success')
+          } catch (error) {
+            console.error('Failed to update audit status:', error)
+          }
+        }
       } else {
         setError(data.message || 'An error occurred while analyzing the website')
+        
+        // Update audit as failed
+        if (auditId) {
+          try {
+            await AuditTracker.updateAuditStatus(auditId, 'error')
+          } catch (error) {
+            console.error('Failed to update audit status:', error)
+          }
+        }
       }
     } catch (err) {
       setError('Failed to connect to the server. Please try again.')
+      
+      // Update audit as failed
+      if (auditId) {
+        try {
+          await AuditTracker.updateAuditStatus(auditId, 'error')
+        } catch (error) {
+          console.error('Failed to update audit status:', error)
+        }
+      }
     } finally {
       setLoading(false)
     }

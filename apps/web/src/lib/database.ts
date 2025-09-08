@@ -42,16 +42,57 @@ if (db) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS audits (
       id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
+      userId TEXT,
       url TEXT NOT NULL,
+      tool_type TEXT NOT NULL DEFAULT 'website_analyzer',
       status TEXT NOT NULL DEFAULT 'pending',
       createdAt TEXT NOT NULL,
       completedAt TEXT,
-      score INTEGER,
+      performance_score INTEGER,
+      seo_score INTEGER,
+      accessibility_score INTEGER,
+      best_practices_score INTEGER,
       device TEXT NOT NULL DEFAULT 'mobile',
-      FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+      FOREIGN KEY (userId) REFERENCES users (id) ON DELETE SET NULL
     )
   `)
+
+  // Add missing columns if they don't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE audits ADD COLUMN tool_type TEXT DEFAULT 'website_analyzer'`)
+  } catch (e) {
+    // Column already exists, ignore error
+  }
+  
+  try {
+    db.exec(`ALTER TABLE audits ADD COLUMN performance_score INTEGER`)
+  } catch (e) {
+    // Column already exists, ignore error
+  }
+  
+  try {
+    db.exec(`ALTER TABLE audits ADD COLUMN seo_score INTEGER`)
+  } catch (e) {
+    // Column already exists, ignore error
+  }
+  
+  try {
+    db.exec(`ALTER TABLE audits ADD COLUMN accessibility_score INTEGER`)
+  } catch (e) {
+    // Column already exists, ignore error
+  }
+  
+  try {
+    db.exec(`ALTER TABLE audits ADD COLUMN best_practices_score INTEGER`)
+  } catch (e) {
+    // Column already exists, ignore error
+  }
+  
+  try {
+    db.exec(`ALTER TABLE audits ADD COLUMN user_id TEXT`)
+  } catch (e) {
+    // Column already exists, ignore error
+  }
 
   // Create daily_audit_usage table to track daily audit limits
   db.exec(`
@@ -233,8 +274,13 @@ export const userQueries = db ? {
 
 export const auditQueries = db ? {
   create: db.prepare(`
-    INSERT INTO audits (id, userId, url, status, createdAt, device)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO audits (id, userId, url, tool_type, status, createdAt, device)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `),
+  
+  createWithScores: db.prepare(`
+    INSERT INTO audits (id, userId, url, tool_type, status, createdAt, completedAt, performance_score, seo_score, accessibility_score, best_practices_score, device)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
   
   findByUserId: db.prepare(`
@@ -249,8 +295,57 @@ export const auditQueries = db ? {
     UPDATE audits SET status = ?, completedAt = ?, score = ? WHERE id = ?
   `),
   
+  updateWithScores: db.prepare(`
+    UPDATE audits SET status = ?, completedAt = ?, performance_score = ?, seo_score = ?, accessibility_score = ?, best_practices_score = ? WHERE id = ?
+  `),
+  
   getAll: db.prepare(`
     SELECT * FROM audits ORDER BY createdAt DESC
+  `),
+  
+  getAllWithPagination: db.prepare(`
+    SELECT 
+      id,
+      userId,
+      url,
+      tool_type,
+      status,
+      createdAt,
+      completedAt,
+      performance_score,
+      seo_score,
+      accessibility_score,
+      best_practices_score
+    FROM audits 
+    ORDER BY createdAt DESC 
+    LIMIT ? OFFSET ?
+  `),
+  
+  getAllWithFilters: db.prepare(`
+    SELECT 
+      id,
+      userId,
+      url,
+      tool_type,
+      status,
+      createdAt,
+      completedAt,
+      performance_score,
+      seo_score,
+      accessibility_score,
+      best_practices_score
+    FROM audits 
+    WHERE tool_type = ?
+    ORDER BY createdAt DESC 
+    LIMIT ? OFFSET ?
+  `),
+  
+  getCount: db.prepare(`
+    SELECT COUNT(*) as total FROM audits
+  `),
+  
+  getCountWithFilters: db.prepare(`
+    SELECT COUNT(*) as total FROM audits WHERE tool_type = ?
   `),
   
   delete: db.prepare(`
@@ -258,10 +353,16 @@ export const auditQueries = db ? {
   `)
 } : {
   create: { run: () => {} },
+  createWithScores: { run: () => {} },
   findByUserId: { all: () => [] },
   findById: { get: () => null },
   updateStatus: { run: () => {} },
+  updateWithScores: { run: () => {} },
   getAll: { all: () => [] },
+  getAllWithPagination: { all: () => [] },
+  getAllWithFilters: { all: () => [] },
+  getCount: { get: () => ({ total: 0 }) },
+  getCountWithFilters: { get: () => ({ total: 0 }) },
   delete: { run: () => {} }
 }
 
