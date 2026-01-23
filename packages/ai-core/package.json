@@ -1,0 +1,19 @@
+{
+  "name": "@riviso/ai-core",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@riviso/shared-types": "*",
+    "openai": "^4.24.1",
+    "@anthropic-ai/sdk": "^0.12.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.5"
+  }
+}
