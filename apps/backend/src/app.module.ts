@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ProjectModule } from './modules/project/project.module';
@@ -14,22 +13,22 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { HealthModule } from './modules/health/health.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
-import { OpenSearchModule } from './infrastructure/opensearch/opensearch.module';
 import { VectorDbModule } from './infrastructure/vector-db/vector-db.module';
+
+/** Use DB/Redis only when configured (skip for local dev without Docker). */
+const useDb = !!process.env.DATABASE_URL;
+const useRedis = !!process.env.REDIS_URL;
 
 @Module({
   imports: [
-    // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
 
-    // Infrastructure
-    DatabaseModule,
-    RedisModule,
-    // OpenSearchModule, // Optional - can enable later
-    VectorDbModule, // This one is just an interface, doesn't need actual connection
+    ...(useDb ? [DatabaseModule] : []),
+    ...(useRedis ? [RedisModule] : []),
+    VectorDbModule,
 
     // Core Feature Modules
     AuthModule,
