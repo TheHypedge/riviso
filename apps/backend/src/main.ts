@@ -85,7 +85,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.BACKEND_PORT || 4000;
+  // Railway and most PaaS use PORT; fallback to BACKEND_PORT for local dev
+  const port = process.env.PORT || process.env.BACKEND_PORT || 4000;
   await app.listen(port);
 
   logger.log(`🚀 Backend API running on: http://localhost:${port}/api`);
