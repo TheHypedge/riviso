@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useWebsite } from '@/contexts/WebsiteContext';
 import { api } from '@/lib/api';
+import type { TechnicalSeoReport, TechnicalSeoMetric } from '@riviso/shared-types';
+import { getMetricInfo, getMetricLabel, getMetricLabelClass } from '@/lib/technical-seo-metric-info';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -27,7 +29,8 @@ import {
   Maximize2,
   Minimize2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Info
 } from 'lucide-react';
 
 interface WebsiteMetrics {
@@ -174,6 +177,7 @@ interface WebsiteMetrics {
     estimatedImpact: string;
   }>;
   analyzedAt?: string;
+  technicalSeo?: TechnicalSeoReport;
 }
 
 type TabType = 'onpage' | 'offpage' | 'technical';
@@ -234,6 +238,26 @@ export default function WebsiteAnalyzer() {
       [section]: !prev[section],
     }));
   };
+
+  // Technical SEO categories expand/collapse (first 3 open by default)
+  const [technicalCategoryOpen, setTechnicalCategoryOpen] = useState<Record<string, boolean>>({
+    'crawlability-indexability': true,
+    'site-architecture-internal-linking': true,
+    'page-experience-core-web-vitals': true,
+  });
+  const toggleTechnicalCategory = (id: string) => {
+    setTechnicalCategoryOpen(prev => ({ ...prev, [id]: !(prev[id] ?? false) }));
+  };
+
+  // Technical SEO metric detail modal (clickable cards)
+  const [selectedTechnicalMetric, setSelectedTechnicalMetric] = useState<{
+    metric: TechnicalSeoMetric;
+    categoryTitle: string;
+  } | null>(null);
+  const openMetricDetail = (metric: TechnicalSeoMetric, categoryTitle: string) => {
+    setSelectedTechnicalMetric({ metric, categoryTitle });
+  };
+  const closeMetricDetail = () => setSelectedTechnicalMetric(null);
 
   const analyzeWebsiteUrl = async (urlToAnalyze: string) => {
     if (!urlToAnalyze) {
@@ -311,6 +335,15 @@ export default function WebsiteAnalyzer() {
       case 'high': return 'bg-red-100 text-red-700';
       case 'medium': return 'bg-yellow-100 text-yellow-700';
       default: return 'bg-blue-100 text-blue-700';
+    }
+  };
+
+  const getTechnicalStatusClass = (status?: string): string => {
+    switch (status) {
+      case 'pass': return 'bg-green-100 text-green-800 border-green-200';
+      case 'warn': return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'fail': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
@@ -1872,18 +1905,170 @@ export default function WebsiteAnalyzer() {
           {/* TECHNICAL SEO Section */}
           {activeTab === 'technical' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
-                <div className="max-w-md mx-auto">
-                  <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">TECHNICAL SEO</h3>
-                  <p className="text-gray-600">Technical SEO analysis coming soon...</p>
+              {!results.technicalSeo ? (
+                <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
+                  <div className="max-w-md mx-auto">
+                    <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">TECHNICAL SEO</h3>
+                    <p className="text-gray-600">Run a website analysis to view technical SEO metrics. Re-analyze if you&apos;ve already run one.</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {results.technicalSeo.summaryScores && results.technicalSeo.summaryScores.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {results.technicalSeo.summaryScores.map((s) => (
+                        <div key={s.name} className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                          <div className="text-sm font-medium text-gray-600 mb-1">{s.name}</div>
+                          <div className={`text-2xl font-bold ${getScoreColor(s.score)}`}>
+                            {s.score}<span className="text-sm font-normal text-gray-500">/{s.max}</span>
+                          </div>
+                          <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${s.score >= 70 ? 'bg-green-500' : s.score >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                              style={{ width: `${Math.min(100, (s.score / s.max) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {results.technicalSeo.categories.map((cat) => {
+                      const isOpen = technicalCategoryOpen[cat.id] ?? false;
+                      return (
+                        <div key={cat.id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => toggleTechnicalCategory(cat.id)}
+                            className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-purple-100">
+                                <Settings className="w-5 h-5 text-purple-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{cat.title}</h3>
+                                {cat.subtitle && <p className="text-sm text-gray-500 mt-0.5">{cat.subtitle}</p>}
+                              </div>
+                            </div>
+                            {isOpen ? <ChevronUp className="w-5 h-5 text-gray-400 shrink-0" /> : <ChevronDown className="w-5 h-5 text-gray-400 shrink-0" />}
+                          </button>
+                          {isOpen && (
+                            <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/50">
+                              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                {cat.metrics.map((metric, idx) => {
+                                  const label = getMetricLabel(metric.status, metric.value);
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => openMetricDetail(metric, cat.title)}
+                                      className="flex flex-col gap-1 rounded-lg bg-white p-3 border border-gray-100 text-left hover:border-purple-300 hover:shadow-md hover:ring-2 hover:ring-purple-100 transition-all cursor-pointer group"
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{metric.name}</span>
+                                        <div className="flex shrink-0 flex-wrap items-center gap-1 justify-end">
+                                          {metric.estimated && (
+                                            <span className="text-xs font-medium px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">Estimated</span>
+                                          )}
+                                          {metric.status && (
+                                            <span className={`text-xs font-medium px-2 py-0.5 rounded border ${getMetricLabelClass(label)}`}>
+                                              {label}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-wrap items-baseline gap-1">
+                                        <span className="text-lg font-semibold text-gray-900">
+                                          {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
+                                        </span>
+                                        {metric.unit && <span className="text-sm text-gray-500">{metric.unit}</span>}
+                                      </div>
+                                      {metric.description && <p className="text-xs text-gray-500 mt-1">{metric.description}</p>}
+                                      <p className="text-xs text-purple-600 mt-1 flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                                        <Info className="w-3.5 h-3.5 shrink-0" />
+                                        Click for meaning, measurement & how to improve
+                                      </p>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
       )}
       </div>
+
+      {/* Technical SEO Metric Detail Modal */}
+      {selectedTechnicalMetric && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={closeMetricDetail}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-purple-600 font-medium mb-0.5">{selectedTechnicalMetric.categoryTitle}</p>
+                <h2 className="text-xl font-bold text-gray-900">{selectedTechnicalMetric.metric.name}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeMetricDetail}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Meaning</h3>
+                <p className="text-sm text-gray-600">{getMetricInfo(selectedTechnicalMetric.metric.name).meaning}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">How it&apos;s measured</h3>
+                <p className="text-sm text-gray-600">{getMetricInfo(selectedTechnicalMetric.metric.name).howMeasured}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Your result</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-semibold text-gray-900">
+                    {typeof selectedTechnicalMetric.metric.value === 'number'
+                      ? selectedTechnicalMetric.metric.value.toLocaleString()
+                      : selectedTechnicalMetric.metric.value}
+                  </span>
+                  {selectedTechnicalMetric.metric.unit && (
+                    <span className="text-sm text-gray-500">{selectedTechnicalMetric.metric.unit}</span>
+                  )}
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getMetricLabelClass(getMetricLabel(selectedTechnicalMetric.metric.status, selectedTechnicalMetric.metric.value))}`}>
+                    {getMetricLabel(selectedTechnicalMetric.metric.status, selectedTechnicalMetric.metric.value)}
+                  </span>
+                  {selectedTechnicalMetric.metric.estimated && (
+                    <span className="text-xs font-medium px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">Estimated</span>
+                  )}
+                </div>
+                {selectedTechnicalMetric.metric.description && (
+                  <p className="text-xs text-gray-500 mt-2">{selectedTechnicalMetric.metric.description}</p>
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">How to make it better</h3>
+                <ul className="list-disc list-inside space-y-1.5 text-sm text-gray-600">
+                  {getMetricInfo(selectedTechnicalMetric.metric.name).improvementTips.map((tip, i) => (
+                    <li key={i}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Heading Tags Modal */}
       {isModalOpen && selectedHeadingType && (

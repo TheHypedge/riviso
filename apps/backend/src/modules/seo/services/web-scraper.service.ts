@@ -192,6 +192,10 @@ export interface ScrapedSEOData {
     stylesheetsCount: number;
     inlineStylesCount: number;
     inlineScriptsCount: number;
+    domNodeCount: number;
+    scriptSrcCount: number;
+    deferAsyncScriptCount: number;
+    resourceCount: number; // script[src] + link[rel=stylesheet] + img[src] + 1 (HTML)
   };
 }
 
@@ -811,12 +815,21 @@ export class WebScraperService {
   }
 
   private analyzeRawData($: any, html: string) {
+    const scriptSrcCount = $('script[src]').length;
+    const stylesheetsCount = $('link[rel="stylesheet"]').length;
+    const imgCount = $('img[src]').length;
+    const deferAsync = $('script[defer], script[async]').length;
+    const resourceCount = scriptSrcCount + stylesheetsCount + imgCount + 1; // +1 for HTML
     return {
       htmlLength: html.length,
       scriptsCount: $('script').length,
-      stylesheetsCount: $('link[rel="stylesheet"]').length,
+      stylesheetsCount,
       inlineStylesCount: $('style').length,
       inlineScriptsCount: $('script:not([src])').length,
+      domNodeCount: $('*').length,
+      scriptSrcCount,
+      deferAsyncScriptCount: deferAsync,
+      resourceCount,
     };
   }
 

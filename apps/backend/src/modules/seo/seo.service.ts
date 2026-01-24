@@ -7,8 +7,9 @@ import {
   SeoMetrics,
   SeoRecommendation,
 } from '@riviso/shared-types';
-import { AnalyzeUrlDto, UrlAnalysisResult } from './dto/analyze-url.dto';
+import { AnalyzeUrlDto } from './dto/analyze-url.dto';
 import { WebScraperService, ScrapedSEOData } from './services/web-scraper.service';
+import { buildTechnicalSeoReport } from './services/technical-seo-report.builder';
 
 @Injectable()
 export class SeoService {
@@ -144,6 +145,9 @@ export class SeoService {
           stylesheetsCount: scrapedData.rawData.stylesheetsCount,
           totalResources: scrapedData.rawData.scriptsCount + scrapedData.rawData.stylesheetsCount,
         },
+
+        // Technical SEO report (15 categories, tool-ready)
+        technicalSeo: buildTechnicalSeoReport(scrapedData, dto.url),
         
         analyzedAt: new Date().toISOString(),
       };
