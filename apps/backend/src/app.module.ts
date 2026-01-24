@@ -25,10 +25,10 @@ import { VectorDbModule } from './infrastructure/vector-db/vector-db.module';
       envFilePath: '.env',
     }),
 
-    // Infrastructure (commented out for demo without Docker)
-    // DatabaseModule,
-    // RedisModule,
-    // OpenSearchModule,
+    // Infrastructure
+    DatabaseModule,
+    RedisModule,
+    // OpenSearchModule, // Optional - can enable later
     VectorDbModule, // This one is just an interface, doesn't need actual connection
 
     // Core Feature Modules
