@@ -8,11 +8,6 @@
   "env": {
     "NODE_VERSION": "20.x"
   },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "@api_url"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
