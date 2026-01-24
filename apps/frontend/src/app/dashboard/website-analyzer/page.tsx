@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useWebsite } from '@/contexts/WebsiteContext';
+import { api } from '@/lib/api';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -245,29 +246,17 @@ export default function WebsiteAnalyzer() {
     setResults(null);
 
     try {
-      const response = await fetch('http://localhost:4000/api/v1/seo/analyze-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: urlToAnalyze,
-          includeKeywords: true,
-          includeCompetitors: true,
-          includeBacklinks: true,
-        }),
+      const { data } = await api.post('/v1/seo/analyze-url', {
+        url: urlToAnalyze,
+        includeKeywords: true,
+        includeCompetitors: true,
+        includeBacklinks: true,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
       setResults(data);
     } catch (err: any) {
       console.error('Analysis error:', err);
-      setError(err.message || 'Failed to analyze website');
+      const msg = err.response?.data?.message || err.message || 'Failed to analyze website';
+      setError(msg);
     } finally {
       setLoading(false);
     }

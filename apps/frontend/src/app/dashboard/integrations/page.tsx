@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { api } from '@/lib/api';
 import { 
   Search, 
   CheckCircle, 
@@ -50,22 +51,9 @@ export default function IntegrationsPage() {
 
   const checkGSCStatus = async () => {
     try {
-      const token = localStorage.getItem('accessToken'); // Fixed: use 'accessToken'
-      const response = await fetch('http://localhost:4000/api/v1/integrations/gsc/status', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setGscStatus(data);
-        
-        if (data.connected) {
-          // Fetch GSC data
-          await fetchGSCData();
-        }
-      }
+      const { data } = await api.get<GSCStatus>('/v1/integrations/gsc/status');
+      setGscStatus(data);
+      if (data.connected) await fetchGSCData(data);
     } catch (error) {
       console.error('Error checking GSC status:', error);
     } finally {
@@ -73,31 +61,19 @@ export default function IntegrationsPage() {
     }
   };
 
-  const fetchGSCData = async () => {
+  const fetchGSCData = async (status?: GSCStatus) => {
     try {
-      const token = localStorage.getItem('accessToken'); // Fixed: use 'accessToken'
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 28);
-
-      const response = await fetch('http://localhost:4000/api/v1/integrations/gsc/data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          siteUrl: gscStatus.integration?.siteUrl || 'https://example.com',
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-          dimensions: ['date'],
-        }),
+      const siteUrl = (status ?? gscStatus).integration?.siteUrl || 'https://example.com';
+      const { data } = await api.post<GSCData>('/v1/integrations/gsc/data', {
+        siteUrl,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        dimensions: ['date'],
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setGscData(data);
-      }
+      setGscData(data);
     } catch (error) {
       console.error('Error fetching GSC data:', error);
     }
@@ -106,31 +82,9 @@ export default function IntegrationsPage() {
   const connectGSC = async () => {
     setConnecting(true);
     try {
-      const token = localStorage.getItem('accessToken'); // Fixed: use 'accessToken' not 'token'
-      
-      if (!token) {
-        console.error('No authentication token found');
-        setConnecting(false);
-        return;
-      }
-      
-      // Get OAuth authorization URL
-      const response = await fetch('http://localhost:4000/api/v1/integrations/gsc/auth-url', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Auth URL received:', data.authUrl);
-        // Redirect to Google OAuth
-        window.location.href = data.authUrl;
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to get auth URL:', errorData);
-        setConnecting(false);
-      }
+      const { data } = await api.get<{ authUrl: string }>('/v1/integrations/gsc/auth-url');
+      if (data?.authUrl) window.location.href = data.authUrl;
+      else setConnecting(false);
     } catch (error) {
       console.error('Error connecting GSC:', error);
       setConnecting(false);

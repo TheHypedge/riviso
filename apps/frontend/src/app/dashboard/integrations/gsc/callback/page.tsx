@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
+import { api } from '@/lib/api';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 
 function GSCCallbackContent() {
@@ -30,39 +31,14 @@ function GSCCallbackContent() {
       }
 
       try {
-        const token = localStorage.getItem('token');
-        
-        // Exchange authorization code for tokens
-        const response = await fetch('http://localhost:4000/api/v1/integrations/gsc/callback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ 
-            code, 
-            state,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setStatus('success');
-          setMessage('Successfully connected to Google Search Console!');
-          
-          // Redirect back to integrations page after 2 seconds
-          setTimeout(() => {
-            router.push('/dashboard/integrations');
-          }, 2000);
-        } else {
-          const data = await response.json();
-          setStatus('error');
-          setMessage(data.message || 'Failed to connect to Google Search Console');
-        }
+        await api.post('/v1/integrations/gsc/callback', { code, state });
+        setStatus('success');
+        setMessage('Successfully connected to Google Search Console!');
+        setTimeout(() => router.push('/dashboard/integrations'), 2000);
       } catch (err: any) {
         console.error('Callback error:', err);
         setStatus('error');
-        setMessage('Connection failed. Please try again.');
+        setMessage(err.response?.data?.message || 'Connection failed. Please try again.');
       }
     };
 
