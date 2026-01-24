@@ -12,7 +12,7 @@
     "dev:backend": "cd apps/backend && npm run start:dev",
     "dev:frontend": "cd apps/frontend && npm run dev",
     "build": "npm run build:packages && npm run build:backend && npm run build:frontend",
-    "build:packages": "npm run build --workspace=packages/shared-types --workspace=packages/ai-core --workspace=packages/ui-components",
+    "build:packages": "cd packages/shared-types && npm run build && cd ../ai-core && npm run build && cd ../ui-components && npm run build",
     "build:backend": "cd apps/backend && npm run build",
     "build:frontend": "cd apps/frontend && npm run build",
     "lint": "npm run lint --workspaces --if-present",
