@@ -54,8 +54,7 @@ const nextConfig = {
     ]
   },
 
-  // Performance optimizations
-  swcMinify: true,
+  // Performance optimizations (swcMinify is now default in Next.js 15+)
   poweredByHeader: false,
   compress: true,
   
