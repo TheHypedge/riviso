@@ -20,7 +20,7 @@ export function getDatabaseConfig(configService: ConfigService): TypeOrmModuleOp
         password: url.password,
         database: url.pathname.slice(1), // Remove leading '/'
         autoLoadEntities: true,
-        synchronize: false, // Use migrations in production
+        synchronize: true, // Auto-create tables (change to false after first deploy + add migrations)
         logging: configService.get('NODE_ENV') === 'development',
         ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
       };
@@ -38,7 +38,7 @@ export function getDatabaseConfig(configService: ConfigService): TypeOrmModuleOp
     password: configService.get('DATABASE_PASSWORD') || 'postgres',
     database: configService.get('DATABASE_NAME') || 'riviso',
     autoLoadEntities: true,
-    synchronize: false,
+    synchronize: true, // Auto-create tables (change to false after first deploy + add migrations)
     logging: configService.get('NODE_ENV') === 'development',
     ssl: configService.get('DATABASE_SSL') === 'true' ? { rejectUnauthorized: false } : false,
   };
