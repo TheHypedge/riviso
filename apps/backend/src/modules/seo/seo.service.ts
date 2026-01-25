@@ -1,4 +1,7 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 import {
   SeoAudit,
   SeoIssue,
@@ -10,12 +13,18 @@ import {
 import { AnalyzeUrlDto } from './dto/analyze-url.dto';
 import { WebScraperService, ScrapedSEOData } from './services/web-scraper.service';
 import { buildTechnicalSeoReport } from './services/technical-seo-report.builder';
+import { mapEngineResponseToOffPageReport } from './services/off-page-engine-mapper';
+import type { EngineOffPageResponse } from './services/off-page-engine-mapper';
 
 @Injectable()
 export class SeoService {
   private readonly logger = new Logger(SeoService.name);
 
-  constructor(private readonly webScraperService: WebScraperService) {}
+  constructor(
+    private readonly webScraperService: WebScraperService,
+    private readonly httpService: HttpService,
+    private readonly config: ConfigService,
+  ) {}
 
   /**
    * Run a comprehensive SEO audit using REAL web scraping
@@ -148,12 +157,46 @@ export class SeoService {
 
         // Technical SEO report (15 categories, tool-ready)
         technicalSeo: buildTechnicalSeoReport(scrapedData, dto.url),
-        
+
+        // Off-Page SEO: not included here. Fetched only when user clicks Off Page tab (POST /seo/off-page-crawl).
+
         analyzedAt: new Date().toISOString(),
       };
     } catch (error) {
       this.logger.error(`Error analyzing ${dto.url}: ${error.message}`);
       throw new BadRequestException(`Failed to analyze website: ${error.message}`);
+    }
+  }
+
+  /**
+   * Trigger Off-Page analysis via scraper engine. Called only when user clicks Off Page tab.
+   * Returns live data (no sample). Requires SCRAPER_ENGINE_URL (default http://localhost:8000).
+   */
+  async offPageCrawl(url: string) {
+    let domain = '';
+    try {
+      const u = new URL(url);
+      domain = u.hostname.replace(/^www\./, '');
+    } catch {
+      throw new BadRequestException('Invalid URL');
+    }
+    const base = this.config.get<string>('SCRAPER_ENGINE_URL') || 'http://localhost:8000';
+    const endpoint = `${base.replace(/\/$/, '')}/off-page-analyze`;
+    this.logger.log(`Off-page crawl: ${url} via ${endpoint}`);
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post<EngineOffPageResponse>(endpoint, { url, domain }, {
+          timeout: 120_000,
+          validateStatus: (s) => s >= 200 && s < 300,
+        }),
+      );
+      const offPageSeo = mapEngineResponseToOffPageReport(data);
+      return { offPageSeo };
+    } catch (e: any) {
+      this.logger.warn(`Off-page engine unavailable: ${e?.message || e}`);
+      throw new ServiceUnavailableException(
+        'Off-page engine unavailable. Start the scraper engine (tools/scraper-engine) or set SCRAPER_ENGINE_URL.',
+      );
     }
   }
 

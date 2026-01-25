@@ -18,15 +18,16 @@ export default function AddWebsitePrompt() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url) return;
+    const raw = (url || '').trim();
+    if (!raw) return;
 
     try {
-      const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+      const fullUrl = raw.startsWith('http') ? raw : `https://${raw}`;
       new URL(fullUrl); // Validate
-      addWebsite(fullUrl, name);
+      addWebsite(fullUrl, (name || '').trim() || new URL(fullUrl).hostname);
       setShowModal(false);
-    } catch (error) {
-      alert('Please enter a valid URL');
+    } catch {
+      alert('Please enter a valid URL (e.g. https://example.com)');
     }
   };
 

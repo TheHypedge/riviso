@@ -1,43 +1,59 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-// Commented out for demo without database
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { Repository } from 'typeorm';
-// import { UserEntity } from './entities/user.entity';
-import { User, UserRole } from '@riviso/shared-types';
+import { AuthService } from '../auth/auth.service';
+import { UserIntegrationsStore } from './user-integrations.store';
+import type {
+  User,
+  UpdateProfileDto,
+  ChangePasswordDto,
+  UserIntegration,
+  IntegrationProvider,
+} from '@riviso/shared-types';
 
 @Injectable()
 export class UserService {
-  // In-memory mock users
-  private mockUsers: Map<string, User> = new Map();
-
   constructor(
-    // @InjectRepository(UserEntity)
-    // private userRepository: Repository<UserEntity>,
-  ) {
-    // Initialize with demo user
-    this.mockUsers.set('demo-user-123', {
-      id: 'demo-user-123',
-      email: 'demo@riviso.com',
-      name: 'Demo User',
-      role: UserRole.USER,
-      avatar: undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-  }
+    private readonly authService: AuthService,
+    private readonly integrationsStore: UserIntegrationsStore,
+  ) {}
 
   async findById(id: string): Promise<User> {
-    const user = this.mockUsers.get(id);
-    
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
+    const user = this.authService.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+    const updatedAt = (user.updatedAt as Date) ?? (user.createdAt as Date);
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+      phone: user.phone,
+      createdAt: (user.createdAt as Date).toISOString(),
+      updatedAt: (updatedAt instanceof Date ? updatedAt : new Date(updatedAt)).toISOString(),
+    };
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    const user = Array.from(this.mockUsers.values()).find(u => u.email === email);
-    return user || null;
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
+    const user = await this.authService.updateProfile(userId, dto);
+    return this.findById(user.id);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+    await this.authService.changePassword(userId, dto.currentPassword, dto.newPassword);
+  }
+
+  getIntegrations(userId: string): UserIntegration[] {
+    return this.integrationsStore.list(userId);
+  }
+
+  connectIntegration(userId: string, provider: IntegrationProvider, externalId?: string): void {
+    this.integrationsStore.connect(userId, provider, externalId);
+  }
+
+  disconnectIntegration(userId: string, provider: IntegrationProvider): void {
+    this.integrationsStore.disconnect(userId, provider);
+  }
+
+  isIntegrationConnected(userId: string, provider: IntegrationProvider): boolean {
+    return this.integrationsStore.isConnected(userId, provider);
   }
 }

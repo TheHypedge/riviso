@@ -10,8 +10,37 @@ export interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  phone?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Profile update (settings) */
+export interface UpdateProfileDto {
+  name?: string;
+  email?: string;
+  phone?: string;
+  avatar?: string;
+}
+
+/** Password change */
+export interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/** Integration provider */
+export type IntegrationProvider =
+  | 'google_search_console'
+  | 'google_ads'
+  | 'meta'
+  | 'google_analytics'
+  | 'google_tag_manager';
+
+export interface UserIntegration {
+  provider: IntegrationProvider;
+  connectedAt: string;
+  externalId?: string;
 }
 
 export interface Workspace {

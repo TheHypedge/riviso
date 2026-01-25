@@ -49,10 +49,12 @@
    - Click **+ CREATE CREDENTIALS** → **OAuth 2.0 Client ID**
    - Application type: **Web application**
    - Name: `Riviso GSC Integration`
-   - **Authorized redirect URIs**:
+   - **Authorized redirect URIs** (add both for flexibility):
      ```
+     http://localhost:4000/api/v1/integrations/gsc/oauth/callback
      http://localhost:3000/dashboard/integrations/gsc/callback
      ```
+     The **backend** callback (`/api/v1/.../gsc/oauth/callback`) is used by the new GSC module. The frontend callback is for legacy POST flow.
    - Click **Create**
    - Copy **Client ID** and **Client Secret**
 
@@ -64,7 +66,10 @@ Add to `/apps/backend/.env`:
 # Google OAuth2 Configuration
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/dashboard/integrations/gsc/callback
+GOOGLE_REDIRECT_URI=http://localhost:4000/api/v1/integrations/gsc/oauth/callback
+
+# Frontend URL (for post-OAuth redirect)
+FRONTEND_URL=http://localhost:3000
 
 # Token Encryption Key (generate with: openssl rand -base64 32)
 ENCRYPTION_KEY=generate-a-secure-32-character-key-here

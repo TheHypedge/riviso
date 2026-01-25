@@ -7,6 +7,7 @@ import {
   GscSite,
   GscDimension,
 } from '@riviso/shared-types';
+import { OAuthConfig } from '../../../common/config/oauth.config';
 
 export interface GSCConnection {
   userId: string;
@@ -30,62 +31,85 @@ export class GoogleSearchConsoleService {
   // In-memory storage (replace with database in production)
   private connections: Map<string, GSCConnection> = new Map();
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private oauthConfig: OAuthConfig,
+  ) {}
 
   /**
    * Generate OAuth2 authorization URL
+   * Uses centralized OAuth configuration - no hardcoded URLs
    */
   async getAuthUrl(userId: string): Promise<{ authUrl: string }> {
-    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    const redirectUri = this.configService.get<string>(
-      'GOOGLE_REDIRECT_URI',
-      'http://localhost:3000/dashboard/integrations/gsc/callback',
-    );
+    try {
+      // Validate OAuth configuration
+      if (!this.oauthConfig.validate()) {
+        throw new BadRequestException(
+          'Google OAuth not configured. Please set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and FRONTEND_URL in environment variables.',
+        );
+      }
 
-    if (!clientId) {
-      throw new BadRequestException(
-        'Google OAuth not configured. Please set GOOGLE_CLIENT_ID in environment variables.',
-      );
+      // Get scopes for Search Console (read-only)
+      const scopes = this.oauthConfig.getSearchConsoleScopes();
+
+      // Build authorization URL using centralized config
+      const authUrl = this.oauthConfig.buildAuthUrl({
+        scopes,
+        state: userId, // State contains userId for callback verification
+        accessType: 'offline', // Request refresh token
+        prompt: 'consent', // Force consent screen to get refresh token
+      });
+
+      const redirectUri = this.oauthConfig.getRedirectUri();
+      this.logger.log(`[OAuth] Generated GSC authorization URL for user: ${userId}`);
+      this.logger.log(`[OAuth] Redirect URI: ${redirectUri}`);
+      this.logger.log(`[OAuth] Scopes: ${scopes.join(', ')}`);
+      this.logger.warn(`[OAuth] IMPORTANT: Ensure this redirect URI is added in Google Cloud Console: ${redirectUri}`);
+
+      return { authUrl };
+    } catch (error) {
+      this.logger.error(`[OAuth] Failed to generate authorization URL: ${error.message}`, error.stack);
+      throw error instanceof BadRequestException 
+        ? error 
+        : new BadRequestException('Failed to generate OAuth authorization URL');
     }
-
-    const scopes = ['https://www.googleapis.com/auth/webmasters.readonly'].join(' ');
-
-    const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: scopes,
-      access_type: 'offline',
-      prompt: 'consent',
-      state: userId,
-      include_granted_scopes: 'true',
-    });
-
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-
-    this.logger.log(`Generated GSC auth URL for user: ${userId}`);
-    return { authUrl };
   }
 
   /**
    * Handle OAuth callback
+   * Validates state (userId) and exchanges code for tokens
    */
   async handleOAuthCallback(code: string, state: string, userId: string): Promise<GSCConnection> {
+    this.logger.log(`[OAuth] Handling callback for user: ${userId}`);
+    this.logger.debug(`[OAuth] State parameter: ${state.substring(0, 20)}...`);
+
+    // Validate state matches userId (basic security check)
+    if (state !== userId) {
+      this.logger.warn(`[OAuth] State mismatch - expected: ${userId}, received: ${state}`);
+      throw new BadRequestException('Invalid OAuth state parameter');
+    }
+
     try {
       // Exchange code for tokens
+      this.logger.log(`[OAuth] Exchanging authorization code for access token`);
       const tokens = await this.exchangeCodeForToken(code);
 
-      // Fetch user's GSC sites
+      // Fetch user's GSC sites to verify access
+      this.logger.log(`[OAuth] Fetching Google Search Console sites`);
       const sites = await this.fetchSitesFromGoogle(tokens.access_token);
 
       if (!sites || sites.length === 0) {
+        this.logger.warn(`[OAuth] No GSC properties found for authenticated account`);
         throw new BadRequestException(
-          'No Google Search Console properties found for this account.',
+          'No Google Search Console properties found for this account. Please verify your account has access to at least one property.',
         );
       }
 
-      // Use the first site
+      this.logger.log(`[OAuth] Found ${sites.length} GSC property/properties`);
+
+      // Use the first site (in production, you might want property selection)
       const primarySite = sites[0];
+      this.logger.log(`[OAuth] Using primary property: ${primarySite.siteUrl}`);
 
       // Store connection in memory
       const connection: GSCConnection = {
@@ -93,36 +117,39 @@ export class GoogleSearchConsoleService {
         siteUrl: primarySite.siteUrl,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || tokens.access_token,
-        expiresAt: Date.now() + tokens.expires_in * 1000,
+        expiresAt: Date.now() + (tokens.expires_in * 1000),
         connectedAt: new Date().toISOString(),
       };
 
       this.connections.set(userId, connection);
-      this.logger.log(`GSC connected for user ${userId}, site: ${primarySite.siteUrl}`);
+      this.logger.log(`[OAuth] GSC connection established for user ${userId}, property: ${primarySite.siteUrl}`);
 
       return connection;
-    } catch (error) {
-      this.logger.error(`OAuth callback error: ${error.message}`);
-      throw new UnauthorizedException('Failed to authenticate with Google Search Console');
+    } catch (error: any) {
+      this.logger.error(`[OAuth] Callback processing failed: ${error.message}`, error.stack);
+      
+      // Re-throw if already a proper exception
+      if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
+        throw error;
+      }
+      
+      throw new UnauthorizedException(`Failed to authenticate with Google Search Console: ${error.message}`);
     }
   }
 
   /**
    * Exchange authorization code for tokens
+   * Uses centralized OAuth configuration
    */
   private async exchangeCodeForToken(code: string): Promise<any> {
-    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
-    const redirectUri = this.configService.get<string>(
-      'GOOGLE_REDIRECT_URI',
-      'http://localhost:3000/dashboard/integrations/gsc/callback',
-    );
-
-    if (!clientId || !clientSecret) {
-      throw new BadRequestException('Google OAuth credentials not configured');
-    }
-
     try {
+      const clientId = this.oauthConfig.getClientId();
+      const clientSecret = this.oauthConfig.getClientSecret();
+      const redirectUri = this.oauthConfig.getRedirectUri();
+
+      this.logger.log(`[OAuth] Exchanging authorization code for tokens`);
+      this.logger.debug(`[OAuth] Using redirect URI: ${redirectUri}`);
+
       const response = await axios.post(
         `${this.OAUTH_BASE}/token`,
         {
@@ -139,10 +166,24 @@ export class GoogleSearchConsoleService {
         },
       );
 
+      this.logger.log(`[OAuth] Token exchange successful`);
+      this.logger.debug(`[OAuth] Token expires in: ${response.data.expires_in}s`);
+      this.logger.debug(`[OAuth] Refresh token present: ${!!response.data.refresh_token}`);
+
       return response.data;
-    } catch (error) {
-      this.logger.error(`Token exchange error: ${error.message}`);
-      throw error;
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.error_description 
+        || error?.response?.data?.error 
+        || error?.message 
+        || 'Unknown error';
+      
+      this.logger.error(`[OAuth] Token exchange failed: ${errorMessage}`);
+      this.logger.debug(`[OAuth] Error response: ${JSON.stringify(error?.response?.data)}`);
+      
+      if (error?.response?.status === 400) {
+        throw new BadRequestException(`Token exchange failed: ${errorMessage}. Verify redirect_uri matches exactly.`);
+      }
+      throw new UnauthorizedException(`Failed to exchange authorization code: ${errorMessage}`);
     }
   }
 
@@ -167,11 +208,18 @@ export class GoogleSearchConsoleService {
   /**
    * Get connection status
    */
-  async getConnectionStatus(userId: string): Promise<{ connected: boolean; siteUrl?: string }> {
+  async getConnectionStatus(userId: string): Promise<{
+    connected: boolean;
+    siteUrl?: string;
+    connectedAt?: string;
+    lastSyncAt?: string | null;
+  }> {
     const connection = this.connections.get(userId);
     return {
       connected: !!connection,
       siteUrl: connection?.siteUrl,
+      connectedAt: connection?.connectedAt,
+      lastSyncAt: null,
     };
   }
 

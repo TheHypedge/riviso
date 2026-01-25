@@ -3,6 +3,7 @@ export * from './user';
 export * from './project';
 export * from './seo';
 export * from './technical-seo';
+export * from './off-page-seo';
 export * from './serp';
 export * from './competitor';
 export * from './ai';

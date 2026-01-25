@@ -4,6 +4,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useWebsite } from '@/contexts/WebsiteContext';
 import { Globe, ChevronDown, Plus, Check, X, ExternalLink } from 'lucide-react';
 
+function safeHostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url || '—';
+  }
+}
+
 export default function WebsiteSelector() {
   const { selectedWebsite, websites, selectWebsite, addWebsite, removeWebsite } = useWebsite();
   const [isOpen, setIsOpen] = useState(false);
@@ -42,29 +50,29 @@ export default function WebsiteSelector() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:border-primary-500 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="flex items-center w-full space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-md hover:border-primary-500 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
       >
-        <Globe className="w-5 h-5 text-primary-600" />
-        <div className="flex flex-col items-start">
+        <Globe className="w-4 h-4 text-primary-600 flex-shrink-0" />
+        <div className="flex flex-col items-start flex-1 min-w-0">
           {selectedWebsite ? (
             <>
-              <span className="text-sm font-medium text-gray-900">{selectedWebsite.name}</span>
-              <span className="text-xs text-gray-500">{new URL(selectedWebsite.url).hostname}</span>
+              <span className="text-sm font-medium text-gray-900 truncate w-full">{selectedWebsite.name}</span>
+              <span className="text-xs text-gray-500 truncate w-full">{safeHostname(selectedWebsite.url)}</span>
             </>
           ) : (
             <span className="text-sm font-medium text-gray-500">No website selected</span>
           )}
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        <div className="absolute top-full mt-2 left-0 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200">
             <h3 className="text-sm font-semibold text-gray-900">Your Websites</h3>
@@ -104,7 +112,7 @@ export default function WebsiteSelector() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{website.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{new URL(website.url).hostname}</p>
+                        <p className="text-xs text-gray-500 truncate">{safeHostname(website.url)}</p>
                       </div>
                     </button>
                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ProjectModule } from './modules/project/project.module';
@@ -9,6 +10,7 @@ import { CompetitorModule } from './modules/competitor/competitor.module';
 import { AiModule } from './modules/ai/ai.module';
 import { CroModule } from './modules/cro/cro.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { GscModule } from './modules/integrations/gsc.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { HealthModule } from './modules/health/health.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
@@ -25,8 +27,9 @@ const useRedis = !!process.env.REDIS_URL;
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
 
-    ...(useDb ? [DatabaseModule] : []),
+    ...(useDb ? [DatabaseModule, GscModule] : []),
     ...(useRedis ? [RedisModule] : []),
     VectorDbModule,
 

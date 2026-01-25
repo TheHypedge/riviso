@@ -53,6 +53,16 @@ export const authService = {
     return null;
   },
 
+  /** Update stored user (name, email, phone, avatar) after profile save. Keeps initials/profile in sync. */
+  updateStoredUser(updates: { name?: string; email?: string; phone?: string; avatar?: string }) {
+    if (typeof window === 'undefined') return;
+    const current = this.getCurrentUser();
+    if (!current) return;
+    const next = { ...current, ...updates };
+    localStorage.setItem('user', JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('riviso-user-updated'));
+  },
+
   isAuthenticated(): boolean {
     if (typeof window !== 'undefined') {
       return !!localStorage.getItem('accessToken');

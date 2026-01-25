@@ -7,6 +7,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Request interceptor to add auth token
@@ -37,6 +38,8 @@ api.interceptors.response.use(
       console.error('API URL:', API_URL);
       if (error.code === 'ECONNREFUSED') {
         console.error('Backend server is not running or not accessible at', API_URL);
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        console.error('Request timeout - backend may be slow or unresponsive');
       }
     }
 

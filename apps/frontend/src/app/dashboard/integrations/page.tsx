@@ -82,7 +82,7 @@ export default function IntegrationsPage() {
   const connectGSC = async () => {
     setConnecting(true);
     try {
-      const { data } = await api.get<{ authUrl: string }>('/v1/integrations/gsc/auth-url');
+      const { data } = await api.get<{ authUrl: string }>('/v1/integrations/gsc/connect');
       if (data?.authUrl) window.location.href = data.authUrl;
       else setConnecting(false);
     } catch (error) {

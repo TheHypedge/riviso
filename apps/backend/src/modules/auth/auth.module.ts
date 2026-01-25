@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { DEFAULT_JWT_SECRET } from '../../common/constants/auth';
 // TypeORM commented out for demo without database
 // import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
@@ -15,7 +16,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET') || 'dev-secret-key',
+        secret: configService.get('JWT_SECRET') ?? DEFAULT_JWT_SECRET,
         signOptions: {
           expiresIn: configService.get('JWT_EXPIRATION', '7d'),
         },

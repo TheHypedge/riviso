@@ -1,0 +1,115 @@
+# Scraper Engine
+
+**Self-hosted Python scraping engine.** Crawl URLs, extract links and metadata, build a link graph, and compute metrics (referring domains, follow %, etc.) **without** Majestic, Ahrefs, Moz, or any other third-party backlink APIs.
+
+---
+
+## What It Does
+
+- **Crawls** seed URLs (your site + optional referrer URLs from GSC, logs, or manual list).
+- **Extracts** links, meta tags, headings, follow/nofollow, anchor text.
+- **Builds** a link graph over crawled pages only.
+- **Computes** referring domains, total backlinks (from external referrers), follow %, and an **estimated** DA-like score from your own formula.
+- **Stores** results in SQLite. Optional FastAPI app exposes `POST /crawl` and `GET /report/:domain`.
+
+---
+
+## Requirements
+
+- **Python 3.11+**
+- **Dependencies:** `httpx`, `beautifulsoup4`, `lxml`, `fastapi`, `uvicorn`, `pydantic`, `aiosqlite` (see `requirements.txt`).
+
+---
+
+## Setup
+
+```bash
+cd tools/scraper-engine
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+# Or: pip install -e ".[dev]"
+```
+
+---
+
+## Run the API
+
+**Option A – from repo root (recommended):**
+
+```bash
+npm run scraper:start
+```
+
+**Option B – from this directory:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt && pip install -e .
+python run.py
+# Or: uvicorn scraper_engine.api:app --reload --host 0.0.0.0 --port 8000
+```
+
+- **Health:** `GET http://localhost:8000/health`
+- **Off-Page analyze (Riviso Off Page tab):** `POST http://localhost:8000/off-page-analyze`  
+  Body: `{ "url": "https://example.com/", "domain": "example.com" }`  
+  Sync crawl + link graph; returns referring domains, follow %, estimated DA, etc. Used when user clicks **Off Page** in Website Analyzer.
+- **Crawl:** `POST http://localhost:8000/crawl`  
+  Body: `{ "seed_urls": ["https://example.com/"], "target_domain": "example.com", "max_pages": 500 }`  
+  Returns `{ "job_id", "status": "queued", "target_domain" }`. Crawl runs in background.
+- **Report:** `GET http://localhost:8000/report/example.com`  
+  Returns latest metrics for `example.com` (referring domains, follow %, etc.) from your crawls.
+- **Ingest referrers:** `POST http://localhost:8000/ingest-referrers`  
+  Body: `{ "domain": "example.com", "urls": ["https://referrer.com/page"] }`  
+  Registers referrer URLs for future crawls (minimal impl).
+
+---
+
+## Use as a Library
+
+```python
+import asyncio
+from scraper_engine.crawler import crawl
+from scraper_engine.graph import build_graph_and_metrics
+from scraper_engine.config import CrawlConfig
+
+async def main():
+    pages = await crawl(
+        seed_urls=["https://example.com/"],
+        target_domain="example.com",
+        config=CrawlConfig(max_pages_per_domain=100),
+    )
+    metrics = build_graph_and_metrics(pages, "example.com")
+    print(metrics)  # referring_domains, total_backlinks, follow_pct, estimated_da, ...
+
+asyncio.run(main())
+```
+
+---
+
+## Referrer Discovery (No Third-Party APIs)
+
+To get **backlinks** and **referring domains**, you must provide **referrer URLs** as seeds (pages that link to you). Options:
+
+1. **GSC export:** Use the "Links" report → "External links" / "Top linking sites" → export URLs, then pass them as `seed_urls` along with your homepage.
+2. **Access logs:** Parse `Referer` header from your server logs; add those URLs to `seed_urls`.
+3. **Manual list:** Curate known referrer URLs from outreach or research.
+
+Then `POST /crawl` with `seed_urls = [your homepage] + [referrer URLs]` and `target_domain = "yourdomain.com"`. The engine will crawl those pages and count links *to* your domain as backlinks; referring domains = distinct source domains.
+
+---
+
+## Environment
+
+| Variable | Description |
+|----------|-------------|
+| `SCRAPER_ENGINE_DB` | SQLite DB path (default: `scraper_engine.db` in cwd). |
+
+**Backend (NestJS):** Set `SCRAPER_ENGINE_URL=http://localhost:8000` in `apps/backend/.env` (or your env) so the Off-Page tab can call the engine. Default is `http://localhost:8000` if unset.
+
+---
+
+## Design Doc
+
+See [docs/scraping-engine-design.md](../../docs/scraping-engine-design.md) for architecture, data flow, and what you can / cannot do without external APIs.

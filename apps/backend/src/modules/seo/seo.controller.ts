@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SeoService } from './seo.service';
 import { AnalyzeUrlDto } from './dto/analyze-url.dto';
+import { OffPageCrawlDto } from './dto/off-page-crawl.dto';
 
 @ApiTags('SEO')
 @Controller('seo')
@@ -47,5 +48,12 @@ export class SeoController {
       this.logger.error(`Error analyzing ${dto.url}: ${error.message}`, error.stack);
       throw error;
     }
+  }
+
+  @Post('off-page-crawl')
+  @ApiOperation({ summary: 'Run Off-Page analysis via scraper engine. Triggered only when user clicks Off Page tab.' })
+  async offPageCrawl(@Body() dto: OffPageCrawlDto) {
+    this.logger.log(`Off-page crawl requested: ${dto.url}`);
+    return this.seoService.offPageCrawl(dto.url);
   }
 }

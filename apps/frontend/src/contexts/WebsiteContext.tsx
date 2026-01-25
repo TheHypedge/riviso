@@ -25,25 +25,29 @@ export function WebsiteProvider({ children }: { children: ReactNode }) {
   const [websites, setWebsites] = useState<Website[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount. Guard against invalid/corrupt data.
   useEffect(() => {
-    const stored = localStorage.getItem('riviso_websites');
-    const selectedId = localStorage.getItem('riviso_selected_website');
-    
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setWebsites(parsed);
-      
-      if (selectedId) {
-        const selected = parsed.find((w: Website) => w.id === selectedId);
-        if (selected) {
-          setSelectedWebsite(selected);
-        } else if (parsed.length > 0) {
-          setSelectedWebsite(parsed[0]);
-        }
-      } else if (parsed.length > 0) {
-        setSelectedWebsite(parsed[0]);
+    let parsed: Website[] = [];
+    try {
+      const stored = localStorage.getItem('riviso_websites');
+      if (stored) {
+        const raw = JSON.parse(stored);
+        const arr = Array.isArray(raw) ? raw : [];
+        parsed = arr.filter((w: unknown) => w && typeof w === 'object' && 'id' in w && 'url' in w && typeof (w as Website).url === 'string');
       }
+    } catch {
+      parsed = [];
+    }
+    setWebsites(parsed);
+    if (parsed.length > 0) {
+      let selectedId: string | null = null;
+      try {
+        selectedId = localStorage.getItem('riviso_selected_website');
+      } catch {
+        /* ignore */
+      }
+      const selected = selectedId ? parsed.find((w) => w.id === selectedId) : null;
+      setSelectedWebsite(selected ?? parsed[0]);
     }
     setIsLoading(false);
   }, []);

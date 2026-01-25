@@ -11,6 +11,7 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd apps/backend && npm run start:dev",
     "dev:frontend": "cd apps/frontend && npm run dev",
+    "scraper:start": "cd tools/scraper-engine && (test -d .venv || python3 -m venv .venv) && .venv/bin/pip install -r requirements.txt -q && .venv/bin/pip install -e . -q && .venv/bin/python run.py",
     "build": "npm run build:packages && npm run build:backend && npm run build:frontend",
     "build:packages": "cd packages/shared-types && npm run build && cd ../../packages/ai-core && npm run build && cd ../../packages/ui-components && npm run build",
     "build:backend": "cd apps/backend && npm run build",

@@ -126,9 +126,24 @@
 
 ---
 
+## 🔗 SEO Audits (Website Analyzer)
+
+### 9. [docs/off-page-seo-audit-framework.md](docs/off-page-seo-audit-framework.md)
+**Audience:** SEO engineers, product, data engineers
+
+**Contents:**
+- Enterprise Off-Page SEO parameter framework (10 categories)
+- Per-parameter: business objective, technical definition, data sources, extraction method, scoring (0–100), risk thresholds (Green/Yellow/Red), update frequency, dependencies
+- Authority & trust, backlink quality & risk, anchor health, link growth & velocity, brand & entity, content-driven authority, competitive benchmarking, technical integrity, local signals (conditional), composite scores
+- Deterministic formulas, alternative data sources, fallback logic, API/automation notes
+
+**When to read:** When designing or implementing the Off-Page SEO audit engine
+
+---
+
 ## 🎨 Frontend Documentation
 
-### 9. [apps/frontend/FRONTEND_ARCHITECTURE.md](apps/frontend/FRONTEND_ARCHITECTURE.md)
+### 10. [apps/frontend/FRONTEND_ARCHITECTURE.md](apps/frontend/FRONTEND_ARCHITECTURE.md)
 **Audience:** Frontend developers
 
 **Contents:**
@@ -139,7 +154,7 @@
 
 ---
 
-### 10. [apps/frontend/IMPLEMENTATION_GUIDE.md](apps/frontend/IMPLEMENTATION_GUIDE.md)
+### 11. [apps/frontend/IMPLEMENTATION_GUIDE.md](apps/frontend/IMPLEMENTATION_GUIDE.md)
 **Audience:** Frontend developers building UI
 
 **Contents:**
@@ -149,7 +164,7 @@
 
 ---
 
-### 11. [apps/frontend/DESIGN_SYSTEM.md](apps/frontend/DESIGN_SYSTEM.md)
+### 12. [apps/frontend/DESIGN_SYSTEM.md](apps/frontend/DESIGN_SYSTEM.md)
 **Audience:** Frontend developers, designers
 
 **Contents:**
@@ -160,7 +175,7 @@
 
 ---
 
-### 12. [apps/frontend/FRONTEND_STATUS.md](apps/frontend/FRONTEND_STATUS.md)
+### 13. [apps/frontend/FRONTEND_STATUS.md](apps/frontend/FRONTEND_STATUS.md)
 **Audience:** Project managers, developers
 
 **Contents:**
@@ -172,7 +187,7 @@
 
 ## 🔧 Backend Documentation
 
-### 13. [apps/backend/ARCHITECTURE.md](apps/backend/ARCHITECTURE.md)
+### 14. [apps/backend/ARCHITECTURE.md](apps/backend/ARCHITECTURE.md)
 **Audience:** Backend developers
 
 **Contents:**
@@ -183,7 +198,7 @@
 
 ---
 
-### 14. [apps/backend/src/infrastructure/DATA_LAYER.md](apps/backend/src/infrastructure/DATA_LAYER.md)
+### 15. [apps/backend/src/infrastructure/DATA_LAYER.md](apps/backend/src/infrastructure/DATA_LAYER.md)
 **Audience:** Backend developers, database admins
 
 **Contents:**

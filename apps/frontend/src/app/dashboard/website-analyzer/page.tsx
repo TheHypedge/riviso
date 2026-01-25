@@ -1,11 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useWebsite } from '@/contexts/WebsiteContext';
 import { api } from '@/lib/api';
-import type { TechnicalSeoReport, TechnicalSeoMetric } from '@riviso/shared-types';
+import type { TechnicalSeoReport, TechnicalSeoMetric, OffPageSeoReport, OffPageSeoMetric, OffPageSeoCategory } from '@riviso/shared-types';
 import { getMetricInfo, getMetricLabel, getMetricLabelClass } from '@/lib/technical-seo-metric-info';
+import { getOffPageMetricInfo, getOffPageMetricLabel, getOffPageMetricLabelClass } from '@/lib/off-page-seo-metric-info';
+import { CircularProgress } from '@/components/CircularProgress';
+import {
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+} from 'recharts';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -178,17 +194,39 @@ interface WebsiteMetrics {
   }>;
   analyzedAt?: string;
   technicalSeo?: TechnicalSeoReport;
+  offPageSeo?: OffPageSeoReport;
 }
 
 type TabType = 'onpage' | 'offpage' | 'technical';
 
+function getOrigin(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
+}
+
+function getPathname(url: string): string {
+  try {
+    const p = new URL(url).pathname;
+    return p || '/';
+  } catch {
+    return '/';
+  }
+}
+
 export default function WebsiteAnalyzer() {
   const { selectedWebsite } = useWebsite();
   const [url, setUrl] = useState('');
+  const [path, setPath] = useState('/');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<WebsiteMetrics | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('onpage');
+  const [offPageLoading, setOffPageLoading] = useState(false);
+  const [offPageError, setOffPageError] = useState<string | null>(null);
+  const [offPageRetryKey, setOffPageRetryKey] = useState(0);
   
   // Modal state for heading tags
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -214,6 +252,36 @@ export default function WebsiteAnalyzer() {
   useEffect(() => {
     setFaviconError(false);
   }, [results]);
+
+  const offPageAttemptedForRef = useRef<string | null>(null);
+
+  // Trigger Off-Page API only when user clicks Off Page tab. Fetch live data from scraper engine.
+  useEffect(() => {
+    if (activeTab !== 'offpage' || !results?.url || !results?.domain) return;
+    if (results.offPageSeo && !results.offPageSeo.demoData) return;
+    if (offPageAttemptedForRef.current === results.domain && !results.offPageSeo && !offPageRetryKey) return;
+    offPageAttemptedForRef.current = results.domain;
+    let cancelled = false;
+    setOffPageError(null);
+    setOffPageLoading(true);
+    api
+      .post<{ offPageSeo: WebsiteMetrics['offPageSeo'] }>('/v1/seo/off-page-crawl', { url: results.url })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setResults((prev) => (prev ? { ...prev, offPageSeo: data.offPageSeo } : null));
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        const msg = err?.response?.data?.message || err?.message || 'Off-page engine unavailable';
+        setOffPageError(msg);
+      })
+      .finally(() => {
+        if (!cancelled) setOffPageLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, results?.url, results?.domain, results?.offPageSeo, offPageRetryKey]);
   
   // Expandable sections state for heading tags
   const [expandedSections, setExpandedSections] = useState<{
@@ -249,6 +317,25 @@ export default function WebsiteAnalyzer() {
     setTechnicalCategoryOpen(prev => ({ ...prev, [id]: !(prev[id] ?? false) }));
   };
 
+  // Off-Page SEO categories expand/collapse (first 2 open by default)
+  const [offPageCategoryOpen, setOffPageCategoryOpen] = useState<Record<string, boolean>>({
+    'authority-trust': true,
+    'backlink-quality-risk': true,
+  });
+  const toggleOffPageCategory = (id: string) => {
+    setOffPageCategoryOpen(prev => ({ ...prev, [id]: !(prev[id] ?? false) }));
+  };
+
+  // Off-Page SEO metric detail modal (clickable cards)
+  const [selectedOffPageMetric, setSelectedOffPageMetric] = useState<{
+    metric: OffPageSeoMetric;
+    categoryTitle: string;
+  } | null>(null);
+  const openOffPageMetricDetail = (metric: OffPageSeoMetric, categoryTitle: string) => {
+    setSelectedOffPageMetric({ metric, categoryTitle });
+  };
+  const closeOffPageMetricDetail = () => setSelectedOffPageMetric(null);
+
   // Technical SEO metric detail modal (clickable cards)
   const [selectedTechnicalMetric, setSelectedTechnicalMetric] = useState<{
     metric: TechnicalSeoMetric;
@@ -268,6 +355,8 @@ export default function WebsiteAnalyzer() {
     setLoading(true);
     setError('');
     setResults(null);
+    offPageAttemptedForRef.current = null;
+    setOffPageError(null);
 
     try {
       const { data } = await api.post('/v1/seo/analyze-url', {
@@ -286,23 +375,25 @@ export default function WebsiteAnalyzer() {
     }
   };
 
-  // Auto-populate URL from selected website and analyze
+  // When selected website changes: set path from its URL, analyze base + path. Root domain = selector only.
   useEffect(() => {
     if (selectedWebsite) {
-      setUrl(selectedWebsite.url);
-      // Auto-analyze the selected website
-      analyzeWebsiteUrl(selectedWebsite.url);
+      const p = getPathname(selectedWebsite.url);
+      setPath(p);
+      const base = getOrigin(selectedWebsite.url);
+      const full = base + (p.startsWith('/') ? p : `/${p}`);
+      analyzeWebsiteUrl(full);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWebsite]);
 
   const analyzeWebsite = () => {
-    analyzeWebsiteUrl(url);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      analyzeWebsite();
+    if (selectedWebsite) {
+      const base = getOrigin(selectedWebsite.url);
+      const normalized = path.trim() ? (path.startsWith('/') ? path : `/${path}`) : '/';
+      analyzeWebsiteUrl(base + normalized);
+    } else {
+      analyzeWebsiteUrl(url);
     }
   };
 
@@ -439,44 +530,51 @@ export default function WebsiteAnalyzer() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Website Analyzer</h1>
-          <p className="text-gray-600 mt-1">
-            {selectedWebsite 
-              ? `Analyzing: ${selectedWebsite.name || selectedWebsite.url}`
-              : 'Add a website to get comprehensive SEO, performance, and ranking metrics'}
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Website Analyzer</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
+            {selectedWebsite
+              ? `Analyzing: ${selectedWebsite.name || selectedWebsite.url}. Change path below; switch root site via the selector above.`
+              : 'Enter any URL to analyze — or select a website above to inspect URLs within that domain (GSC-style)'}
           </p>
         </div>
 
-      {/* Search Bar */}
+      {/* Search Bar — GSC-style: base from selector (read-only), path editable. No selector = full URL. */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        {!selectedWebsite && (
-          <div className="text-center py-8">
-            <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Website Selected</h3>
-            <p className="text-gray-600 mb-4">
-              Please add a website using the selector in the top-right corner to start analyzing.
-            </p>
-          </div>
-        )}
-        {selectedWebsite && (
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 flex flex-wrap items-stretch gap-0 overflow-hidden rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+            {selectedWebsite ? (
+              <>
+                <div className="flex items-center px-4 py-3 bg-gray-100 text-gray-700 font-mono text-sm border-r border-gray-300 truncate min-w-0">
+                  {getOrigin(selectedWebsite.url)}
+                </div>
+                <input
+                  type="text"
+                  value={path}
+                  onChange={(e) => setPath(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); analyzeWebsite(); } }}
+                  placeholder="/ or e.g. /blog"
+                  className="flex-1 min-w-[120px] px-4 py-3 outline-none"
+                  disabled={loading}
+                  aria-label="Path (editable)"
+                />
+              </>
+            ) : (
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); analyzeWebsite(); } }}
                 placeholder="Enter website URL (e.g., https://example.com)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              disabled={loading}
-            />
-            {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+                className="w-full px-4 py-3 outline-none border-0 rounded-lg focus:ring-0"
+                disabled={loading}
+              />
+            )}
           </div>
           <button
             onClick={analyzeWebsite}
-            disabled={loading || !url}
+            disabled={loading || (selectedWebsite ? false : !url)}
             className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
           >
             {loading ? (
@@ -487,10 +585,15 @@ export default function WebsiteAnalyzer() {
                 </svg>
                 Analyzing...
               </span>
-            ) : 'Re-analyze'}
+            ) : results ? 'Re-analyze' : 'Analyze'}
           </button>
         </div>
+        {selectedWebsite && (
+          <p className="text-xs text-gray-500 mt-2">
+            Inspect any URL in &apos;{selectedWebsite.name || getOrigin(selectedWebsite.url).replace(/^https?:\/\//, '')}&apos;. Root domain is fixed; change it via the website selector above.
+          </p>
         )}
+        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
       </div>
 
       {/* Loading State */}
@@ -503,121 +606,124 @@ export default function WebsiteAnalyzer() {
 
       {/* Results */}
       {results && !loading && (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Hero Overview Card */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <Globe className="w-8 h-8" />
-                  <h2 className="text-3xl font-bold">{results.domain}</h2>
+          <div className="bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl shadow-xl overflow-hidden">
+            <div className="relative p-6 sm:p-8 lg:p-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                      <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white truncate">{results.domain}</h2>
+                  </div>
+                  <p className="text-indigo-200/90 text-sm sm:text-base">Complete SEO & Performance Analysis</p>
                 </div>
-                <p className="text-blue-100">Complete SEO & Performance Analysis</p>
+                {results.score !== undefined && (
+                  <div className="flex-shrink-0 flex justify-center lg:justify-end">
+                    <CircularProgress
+                      value={results.score}
+                      max={100}
+                      size="xl"
+                      label="SEO Score"
+                      sublabel="/ 100"
+                      variant="light"
+                    />
+                  </div>
+                )}
+                {results.metrics?.domainAuthority != null && results.score === undefined && (
+                  <div className="flex-shrink-0 flex justify-center lg:justify-end">
+                    <CircularProgress
+                      value={results.metrics.domainAuthority}
+                      max={100}
+                      size="xl"
+                      label="Domain Authority"
+                      sublabel="/ 100"
+                      variant="light"
+                    />
+                  </div>
+                )}
               </div>
-              {results.score !== undefined && (
-              <div className="text-right">
-                <div className="text-5xl font-bold">{results.score}</div>
-                <div className="text-sm text-blue-100 mt-1">SEO Score</div>
-              </div>
+
+              {results.onPageSEO && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
+                  {[
+                    { icon: FileText, value: results.onPageSEO.headings?.h1?.length ?? 0, label: 'H1 Tags', accent: 'border-l-emerald-400 bg-emerald-500/10' },
+                    { icon: FileText, value: (results.onPageSEO.headings?.h2?.length ?? 0) + (results.onPageSEO.headings?.h3?.length ?? 0), label: 'H2 + H3 Tags', accent: 'border-l-amber-400 bg-amber-500/10' },
+                    { icon: LinkIcon, value: results.onPageSEO.internalLinks?.count ?? 0, label: 'Internal Links', accent: 'border-l-blue-400 bg-blue-500/10' },
+                    { icon: ExternalLink, value: results.onPageSEO.externalLinks?.count ?? 0, label: 'External Links', accent: 'border-l-violet-400 bg-violet-500/10' },
+                  ].map((m, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-xl border-l-4 p-4 sm:p-5 backdrop-blur-sm ${m.accent} border border-white/10 transition-all hover:scale-[1.02] hover:shadow-lg`}
+                    >
+                      <m.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white/80 mb-2" />
+                      <div className="text-xl sm:text-2xl font-bold text-white tabular-nums">{m.value}</div>
+                      <div className="text-xs sm:text-sm text-indigo-200/90">{m.label}</div>
+                    </div>
+                  ))}
+                </div>
               )}
-              {results.metrics && (
-              <div className="text-right">
-                <div className="text-5xl font-bold">{results.metrics?.domainAuthority}</div>
-                <div className="text-sm text-blue-100 mt-1">Domain Authority</div>
-              </div>
+              {results.metrics && !results.onPageSEO && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
+                  {[
+                    { icon: Users, value: formatNumber(results.metrics?.monthlyVisits), label: 'Monthly Visits' },
+                    { icon: Search, value: formatNumber(results.metrics?.totalKeywords), label: 'Keywords' },
+                    { icon: LinkIcon, value: formatNumber(results.metrics?.totalBacklinks), label: 'Backlinks' },
+                    { icon: Award, value: results.metrics?.top3Rankings, label: 'Top 3 Rankings' },
+                  ].map((m, i) => (
+                    <div key={i} className="rounded-xl border-l-4 border-l-white/30 bg-white/5 backdrop-blur-sm p-4 sm:p-5 border border-white/10">
+                      <m.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white/80 mb-2" />
+                      <div className="text-xl sm:text-2xl font-bold text-white tabular-nums">{m.value}</div>
+                      <div className="text-xs sm:text-sm text-indigo-200/90">{m.label}</div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            
-            {results.onPageSEO && (
-            <div className="grid grid-cols-4 gap-6 mt-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <FileText className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{results.onPageSEO.headings?.h1?.length || 0}</div>
-                <div className="text-sm text-blue-100">H1 Tags</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <FileText className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{(results.onPageSEO.headings?.h2?.length || 0) + (results.onPageSEO.headings?.h3?.length || 0)}</div>
-                <div className="text-sm text-blue-100">H2 + H3 Tags</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <LinkIcon className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{results.onPageSEO.internalLinks?.count || 0}</div>
-                <div className="text-sm text-blue-100">Internal Links</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <ExternalLink className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{results.onPageSEO.externalLinks?.count || 0}</div>
-                <div className="text-sm text-blue-100">External Links</div>
-              </div>
-            </div>
-            )}
-            {results.metrics && (
-            <div className="grid grid-cols-4 gap-6 mt-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Users className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{formatNumber(results.metrics?.monthlyVisits)}</div>
-                <div className="text-sm text-blue-100">Monthly Visits</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Search className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{formatNumber(results.metrics?.totalKeywords)}</div>
-                <div className="text-sm text-blue-100">Keywords</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <LinkIcon className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{formatNumber(results.metrics?.totalBacklinks)}</div>
-                <div className="text-sm text-blue-100">Backlinks</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <Award className="w-6 h-6 mb-2" />
-                <div className="text-2xl font-bold">{results.metrics?.top3Rankings}</div>
-                <div className="text-sm text-blue-100">Top 3 Rankings</div>
-              </div>
-            </div>
-            )}
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-            <div className="flex border-b border-gray-200">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+            <div className="flex overflow-x-auto border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <button
                 onClick={() => setActiveTab('onpage')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 min-w-[120px] sm:min-w-0 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all ${
                   activeTab === 'onpage'
                     ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  <span>ON PAGE SEO</span>
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span>ON PAGE</span>
                 </div>
               </button>
               <button
                 onClick={() => setActiveTab('offpage')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 min-w-[120px] sm:min-w-0 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all ${
                   activeTab === 'offpage'
-                    ? 'bg-green-50 text-green-600 border-b-2 border-green-600'
+                    ? 'bg-emerald-50 text-emerald-600 border-b-2 border-emerald-600'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <ExternalLink className="w-5 h-5" />
-                  <span>OFF PAGE SEO</span>
+                  <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span>OFF PAGE</span>
                 </div>
               </button>
               <button
                 onClick={() => setActiveTab('technical')}
-                className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 min-w-[120px] sm:min-w-0 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all ${
                   activeTab === 'technical'
-                    ? 'bg-purple-50 text-purple-600 border-b-2 border-purple-600'
+                    ? 'bg-violet-50 text-violet-600 border-b-2 border-violet-600'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  <span>TECHNICAL SEO</span>
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span>TECHNICAL</span>
                 </div>
               </button>
             </div>
@@ -1889,16 +1995,283 @@ export default function WebsiteAnalyzer() {
           </div>
           )}
 
-          {/* OFF PAGE SEO Section */}
+          {/* OFF PAGE SEO Section — triggered only when user clicks Off Page tab */}
           {activeTab === 'offpage' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
-                <div className="max-w-md mx-auto">
-                  <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">OFF PAGE SEO</h3>
-                  <p className="text-gray-600">Off-page SEO analysis coming soon...</p>
+              {!results ? (
+                <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
+                  <div className="max-w-md mx-auto">
+                    <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">OFF PAGE SEO</h3>
+                    <p className="text-gray-600">Run a website analysis first, then open this tab to trigger the Off-Page engine and view live data.</p>
+                  </div>
                 </div>
-              </div>
+              ) : offPageLoading ? (
+                <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
+                  <div className="max-w-md mx-auto">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-indigo-500 border-t-transparent mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Running Off-Page analysis</h3>
+                    <p className="text-gray-600">Scraping your site and building the link graph. This may take a minute.</p>
+                  </div>
+                </div>
+              ) : offPageError ? (
+                <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
+                  <div className="max-w-lg mx-auto space-y-4">
+                    <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto" />
+                    <h3 className="text-xl font-semibold text-gray-900">Off-Page engine unavailable</h3>
+                    <p className="text-gray-600">{offPageError}</p>
+                    <div className="text-left bg-gray-50 rounded-lg p-4 space-y-2 text-sm text-gray-700">
+                      <p className="font-medium">Fix it:</p>
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>From the repo root, run <code className="bg-gray-200 px-1.5 py-0.5 rounded font-mono text-xs">npm run scraper:start</code> (creates venv, installs deps, starts the engine on port 8000).</li>
+                        <li>Optional: add <code className="bg-gray-200 px-1.5 py-0.5 rounded font-mono text-xs">SCRAPER_ENGINE_URL=http://localhost:8000</code> to <code className="bg-gray-200 px-1.5 py-0.5 rounded font-mono text-xs">apps/backend/.env</code> (backend defaults to this if unset).</li>
+                        <li>Click <strong>Retry Off-Page analysis</strong> below.</li>
+                      </ol>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { offPageAttemptedForRef.current = null; setOffPageError(null); setOffPageRetryKey((k) => k + 1); }}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                    >
+                      Retry Off-Page analysis
+                    </button>
+                  </div>
+                </div>
+              ) : !results.offPageSeo ? (
+                <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100 text-center py-12">
+                  <div className="max-w-md mx-auto">
+                    <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">OFF PAGE SEO</h3>
+                    <p className="text-gray-600">Run a website analysis first, then open this tab to trigger the Off-Page engine.</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {results.offPageSeo.summaryScores && results.offPageSeo.summaryScores.length > 0 && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 overflow-hidden">
+                          <h3 className="text-sm font-semibold text-gray-700 mb-4">Off-Page profile</h3>
+                          <div className="h-64 sm:h-72 min-w-[240px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RadarChart
+                                data={results.offPageSeo.summaryScores.map((s: { name: string; score: number; max: number }) => ({
+                                  subject: s.name.replace(/ Score| Index/g, '').slice(0, 12),
+                                  score: s.score,
+                                  fullMark: s.max,
+                                }))}
+                              >
+                                <PolarGrid stroke="#e5e7eb" />
+                                <PolarAngleAxis
+                                  dataKey="subject"
+                                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                                />
+                                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                                <Radar
+                                  name="Score"
+                                  dataKey="score"
+                                  stroke="#6366f1"
+                                  fill="#6366f1"
+                                  fillOpacity={0.4}
+                                  strokeWidth={2}
+                                />
+                                <Tooltip
+                                  contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+                                  formatter={(val: number) => [val, 'Score']}
+                                />
+                              </RadarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                          {results.offPageSeo.summaryScores.map((s: { name: string; score: number; max: number }) => (
+                            <div
+                              key={s.name}
+                              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 flex flex-col items-center justify-center hover:shadow-xl hover:border-indigo-100 transition-all"
+                            >
+                              <CircularProgress
+                                value={s.score}
+                                max={s.max}
+                                size="md"
+                                label={s.name}
+                                sublabel={`/ ${s.max}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {results.offPageSeo?.demoData ? (
+                    <p className="text-sm text-gray-500">
+                      Showing sample data for illustration. Connect Majestic, Ahrefs, or Moz for live backlink metrics. Click any metric for definitions and improvement tips.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {results.offPageSeo?.engineMeta && (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                          <span className="font-medium text-emerald-800">Engine connected</span>
+                          <span className="text-emerald-700">
+                            {results.offPageSeo.engineMeta.pagesCrawled} pages crawled
+                          </span>
+                          <span className="text-emerald-700">
+                            {results.offPageSeo.engineMeta.referringDomains} referring domains
+                          </span>
+                          <span className="text-emerald-700">
+                            {results.offPageSeo.engineMeta.totalBacklinks} backlinks
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            Use this to check the engine ran. N/A = metric not computed by crawler.
+                          </span>
+                        </div>
+                      )}
+                      <details className="group rounded-xl border border-gray-200 bg-gray-50/80">
+                        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100/80 list-none [&::-webkit-details-marker]:hidden flex items-center gap-2">
+                          How to check if values are accurate or the engine isn&apos;t working
+                        </summary>
+                        <div className="px-4 pb-3 pt-0 text-sm text-gray-600 space-y-2 border-t border-gray-200 mt-0">
+                          <p><strong>Engine working:</strong> If you see &quot;Engine connected&quot; above with pages crawled &gt; 0, the scraper ran. Referring domains and backlinks come only from <em>other</em> sites linking to you. A single-domain crawl (just your URL) usually gives 0 backlinks.</p>
+                          <p><strong>N/A values:</strong> The engine only computes referring domains, backlinks, follow %, and estimated DA. Trust Score, Spam Score, Anchor Text, etc. need extra data (e.g. GSC referrer URLs via <code className="bg-gray-200 px-1 rounded text-xs">/ingest-referrers</code>, or external APIs).</p>
+                          <p><strong>No backlinks in crawl:</strong> Add referrer URLs (GSC export, server logs) and re-crawl to see backlink metrics.</p>
+                          <p>Click any metric for definitions and improvement tips.</p>
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {results.offPageSeo.categories.map((cat: OffPageSeoCategory) => {
+                      const isOpen = offPageCategoryOpen[cat.id] ?? false;
+                      return (
+                        <div key={cat.id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => toggleOffPageCategory(cat.id)}
+                            className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-indigo-100">
+                                <BarChart3 className="w-5 h-5 text-indigo-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{cat.title}</h3>
+                                {cat.subtitle && <p className="text-sm text-gray-500 mt-0.5">{cat.subtitle}</p>}
+                              </div>
+                            </div>
+                            {isOpen ? <ChevronUp className="w-5 h-5 text-gray-400 shrink-0" /> : <ChevronDown className="w-5 h-5 text-gray-400 shrink-0" />}
+                          </button>
+                          {isOpen && (
+                            <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/50">
+                              {(() => {
+                                const numericData = cat.metrics
+                                  .map((m: OffPageSeoMetric) => {
+                                    const v = m.value;
+                                    let n = 0;
+                                    if (typeof v === 'number') n = v;
+                                    else if (typeof v === 'string') {
+                                      const match = v.match(/(\d+)/);
+                                      n = match ? Math.min(100, parseInt(match[1], 10)) : 0;
+                                    }
+                                    return { name: m.name.length > 18 ? m.name.slice(0, 16) + '…' : m.name, value: n, full: m };
+                                  })
+                                  .filter((d: { value: number }) => d.value > 0);
+                                return (
+                                  <div className="space-y-4">
+                                    {numericData.length >= 3 && (
+                                      <div className="h-48 sm:h-56 rounded-xl bg-white border border-gray-100 p-3 overflow-hidden">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                          <BarChart data={numericData} layout="vertical" margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                                            <XAxis type="number" domain={[0, 100]} hide />
+                                            <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
+                                            <Tooltip
+                                              contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+                                              formatter={(val: number, _: unknown, props: unknown) => {
+                                                const p = (props as { payload?: { full: OffPageSeoMetric } })?.payload;
+                                                if (!p?.full) return [val, 'Score'];
+                                                const v = p.full.value;
+                                                return [
+                                                  typeof v === 'number' ? v.toLocaleString() : String(v),
+                                                  p.full.name,
+                                                ];
+                                              }}
+                                            />
+                                            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16}>
+                                              {numericData.map((_: unknown, i: number) => (
+                                                <Cell
+                                                  key={i}
+                                                  fill={
+                                                    (numericData[i] as { value: number }).value >= 70
+                                                      ? '#10b981'
+                                                      : (numericData[i] as { value: number }).value >= 40
+                                                        ? '#f59e0b'
+                                                        : '#ef4444'
+                                                  }
+                                                />
+                                              ))}
+                                            </Bar>
+                                          </BarChart>
+                                        </ResponsiveContainer>
+                                      </div>
+                                    )}
+                                    <div className="space-y-1">
+                                      {cat.metrics.map((metric: OffPageSeoMetric, idx: number) => {
+                                        const label = getOffPageMetricLabel(metric.status, metric.value);
+                                        let barPct = 0;
+                                        const v = metric.value;
+                                        if (typeof v === 'number') barPct = Math.min(100, v);
+                                        else if (typeof v === 'string') {
+                                          const m = v.match(/(\d+)/);
+                                          if (m) barPct = Math.min(100, parseInt(m[1], 10));
+                                        }
+                                        return (
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => openOffPageMetricDetail(metric, cat.title)}
+                                            className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-white px-4 py-3 border border-gray-100 text-left hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer group"
+                                          >
+                                            <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+                                              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{metric.name}</span>
+                                              <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                                                {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
+                                                {metric.unit && <span className="text-gray-500 font-normal ml-0.5">{metric.unit}</span>}
+                                              </span>
+                                            </div>
+                                            <div className="flex shrink-0 items-center gap-2">
+                                              {results.offPageSeo?.demoData && (
+                                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Sample</span>
+                                              )}
+                                              {metric.status && (
+                                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getOffPageMetricLabelClass(label)}`}>
+                                                  {label}
+                                                </span>
+                                              )}
+                                              <Info className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 shrink-0" />
+                                            </div>
+                                            {barPct > 0 && (
+                                              <div className="w-full mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                  className={`h-full rounded-full transition-all duration-500 ${
+                                                    barPct >= 70 ? 'bg-emerald-500' : barPct >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                                                  }`}
+                                                  style={{ width: `${barPct}%` }}
+                                                />
+                                              </div>
+                                            )}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -1916,19 +2289,19 @@ export default function WebsiteAnalyzer() {
               ) : (
                 <>
                   {results.technicalSeo.summaryScores && results.technicalSeo.summaryScores.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                       {results.technicalSeo.summaryScores.map((s) => (
-                        <div key={s.name} className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-                          <div className="text-sm font-medium text-gray-600 mb-1">{s.name}</div>
-                          <div className={`text-2xl font-bold ${getScoreColor(s.score)}`}>
-                            {s.score}<span className="text-sm font-normal text-gray-500">/{s.max}</span>
-                          </div>
-                          <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full ${s.score >= 70 ? 'bg-green-500' : s.score >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
-                              style={{ width: `${Math.min(100, (s.score / s.max) * 100)}%` }}
-                            />
-                          </div>
+                        <div
+                          key={s.name}
+                          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-5 flex flex-col items-center justify-center hover:shadow-xl hover:border-violet-100 transition-all"
+                        >
+                          <CircularProgress
+                            value={s.score}
+                            max={s.max}
+                            size="md"
+                            label={s.name}
+                            sublabel={`/ ${s.max}`}
+                          />
                         </div>
                       ))}
                     </div>
@@ -1956,44 +2329,109 @@ export default function WebsiteAnalyzer() {
                           </button>
                           {isOpen && (
                             <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/50">
-                              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                {cat.metrics.map((metric, idx) => {
-                                  const label = getMetricLabel(metric.status, metric.value);
-                                  return (
-                                    <button
-                                      key={idx}
-                                      type="button"
-                                      onClick={() => openMetricDetail(metric, cat.title)}
-                                      className="flex flex-col gap-1 rounded-lg bg-white p-3 border border-gray-100 text-left hover:border-purple-300 hover:shadow-md hover:ring-2 hover:ring-purple-100 transition-all cursor-pointer group"
-                                    >
-                                      <div className="flex items-start justify-between gap-2">
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{metric.name}</span>
-                                        <div className="flex shrink-0 flex-wrap items-center gap-1 justify-end">
-                                          {metric.estimated && (
-                                            <span className="text-xs font-medium px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">Estimated</span>
-                                          )}
-                                          {metric.status && (
-                                            <span className={`text-xs font-medium px-2 py-0.5 rounded border ${getMetricLabelClass(label)}`}>
-                                              {label}
-                                            </span>
-                                          )}
-                                        </div>
+                              {(() => {
+                                const numericData = cat.metrics
+                                  .map((m: TechnicalSeoMetric) => {
+                                    const v = m.value;
+                                    let n = 0;
+                                    if (typeof v === 'number') n = m.unit === 'levels' ? Math.min(100, v * 20) : Math.min(100, v);
+                                    else if (typeof v === 'string') {
+                                      const match = v.match(/(\d+)/);
+                                      n = match ? Math.min(100, parseInt(match[1], 10)) : 0;
+                                    }
+                                    return { name: m.name.length > 18 ? m.name.slice(0, 16) + '…' : m.name, value: n, full: m };
+                                  })
+                                  .filter((d: { value: number }) => d.value > 0);
+                                return (
+                                  <div className="space-y-4">
+                                    {numericData.length >= 3 && (
+                                      <div className="h-48 sm:h-56 rounded-xl bg-white border border-gray-100 p-3 overflow-hidden">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                          <BarChart data={numericData} layout="vertical" margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                                            <XAxis type="number" domain={[0, 100]} hide />
+                                            <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
+                                            <Tooltip
+                                              contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+                                              formatter={(val: number, _: unknown, props: unknown) => {
+                                                const p = (props as { payload?: { full: TechnicalSeoMetric } })?.payload;
+                                                if (!p?.full) return [val, 'Value'];
+                                                const v = p.full.value;
+                                                return [
+                                                  typeof v === 'number' ? v.toLocaleString() : String(v),
+                                                  p.full.name,
+                                                ];
+                                              }}
+                                            />
+                                            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16} fill="#8b5cf6">
+                                              {numericData.map((_: unknown, i: number) => (
+                                                <Cell
+                                                  key={i}
+                                                  fill={
+                                                    (numericData[i] as { value: number }).value >= 70
+                                                      ? '#10b981'
+                                                      : (numericData[i] as { value: number }).value >= 40
+                                                        ? '#f59e0b'
+                                                        : '#ef4444'
+                                                  }
+                                                />
+                                              ))}
+                                            </Bar>
+                                          </BarChart>
+                                        </ResponsiveContainer>
                                       </div>
-                                      <div className="flex flex-wrap items-baseline gap-1">
-                                        <span className="text-lg font-semibold text-gray-900">
-                                          {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
-                                        </span>
-                                        {metric.unit && <span className="text-sm text-gray-500">{metric.unit}</span>}
-                                      </div>
-                                      {metric.description && <p className="text-xs text-gray-500 mt-1">{metric.description}</p>}
-                                      <p className="text-xs text-purple-600 mt-1 flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                                        <Info className="w-3.5 h-3.5 shrink-0" />
-                                        Click for meaning, measurement & how to improve
-                                      </p>
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                                    )}
+                                    <div className="space-y-1">
+                                      {cat.metrics.map((metric, idx) => {
+                                        const label = getMetricLabel(metric.status, metric.value);
+                                        let barPct = 0;
+                                        const v = metric.value;
+                                        if (typeof v === 'number') barPct = metric.unit === 'levels' ? Math.min(100, v * 20) : Math.min(100, v);
+                                        else if (typeof v === 'string') {
+                                          const m = v.match(/(\d+)/);
+                                          if (m) barPct = Math.min(100, parseInt(m[1], 10));
+                                        }
+                                        return (
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => openMetricDetail(metric, cat.title)}
+                                            className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-white px-4 py-3 border border-gray-100 text-left hover:border-violet-200 hover:shadow-md transition-all cursor-pointer group"
+                                          >
+                                            <div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+                                              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{metric.name}</span>
+                                              <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                                                {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
+                                                {metric.unit && <span className="text-gray-500 font-normal ml-0.5">{metric.unit}</span>}
+                                              </span>
+                                            </div>
+                                            <div className="flex shrink-0 items-center gap-2">
+                                              {metric.estimated && (
+                                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Estimated</span>
+                                              )}
+                                              {metric.status && (
+                                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getMetricLabelClass(label)}`}>
+                                                  {label}
+                                                </span>
+                                              )}
+                                              <Info className="w-4 h-4 text-gray-400 group-hover:text-violet-500 shrink-0" />
+                                            </div>
+                                            {barPct > 0 && (
+                                              <div className="w-full mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                  className={`h-full rounded-full transition-all duration-500 ${
+                                                    barPct >= 70 ? 'bg-emerald-500' : barPct >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                                                  }`}
+                                                  style={{ width: `${barPct}%` }}
+                                                />
+                                              </div>
+                                            )}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           )}
                         </div>
@@ -2065,6 +2503,116 @@ export default function WebsiteAnalyzer() {
                   ))}
                 </ul>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Off-Page SEO Metric Detail Modal */}
+      {selectedOffPageMetric && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={closeOffPageMetricDetail}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-indigo-600 font-medium mb-0.5">{selectedOffPageMetric.categoryTitle}</p>
+                <h2 className="text-xl font-bold text-gray-900">{selectedOffPageMetric.metric.name}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeOffPageMetricDetail}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Meaning</h3>
+                <p className="text-sm text-gray-600">{getOffPageMetricInfo(selectedOffPageMetric.metric.name).meaning}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">How it&apos;s measured</h3>
+                <p className="text-sm text-gray-600">{getOffPageMetricInfo(selectedOffPageMetric.metric.name).howMeasured}</p>
+              </div>
+              {getOffPageMetricInfo(selectedOffPageMetric.metric.name).dataSources && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Data sources</h3>
+                  <p className="text-sm text-gray-600">{getOffPageMetricInfo(selectedOffPageMetric.metric.name).dataSources}</p>
+                </div>
+              )}
+              {getOffPageMetricInfo(selectedOffPageMetric.metric.name).riskThresholds && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Risk thresholds</h3>
+                  <p className="text-sm text-gray-600 font-mono bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
+                    {getOffPageMetricInfo(selectedOffPageMetric.metric.name).riskThresholds}
+                  </p>
+                </div>
+              )}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Your result</h3>
+                {results?.offPageSeo?.demoData && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                    This value is sample data. Connect Majestic, Ahrefs, or Moz for live, verifiable metrics and to cross-check with their tools.
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-semibold text-gray-900">
+                    {typeof selectedOffPageMetric.metric.value === 'number'
+                      ? selectedOffPageMetric.metric.value.toLocaleString()
+                      : selectedOffPageMetric.metric.value}
+                  </span>
+                  {selectedOffPageMetric.metric.unit && (
+                    <span className="text-sm text-gray-500">{selectedOffPageMetric.metric.unit}</span>
+                  )}
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getOffPageMetricLabelClass(getOffPageMetricLabel(selectedOffPageMetric.metric.status, selectedOffPageMetric.metric.value))}`}>
+                    {getOffPageMetricLabel(selectedOffPageMetric.metric.status, selectedOffPageMetric.metric.value)}
+                  </span>
+                  {results?.offPageSeo?.demoData && (
+                    <span className="text-xs font-medium px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">Sample</span>
+                  )}
+                  {!results?.offPageSeo?.demoData && selectedOffPageMetric.metric.requiresBacklinkData && (
+                    <span className="text-xs font-medium px-2 py-0.5 rounded border bg-amber-50 text-amber-700 border-amber-200">Requires API</span>
+                  )}
+                </div>
+                {selectedOffPageMetric.metric.description && (
+                  <p className="text-xs text-gray-500 mt-2">{selectedOffPageMetric.metric.description}</p>
+                )}
+              </div>
+              {getOffPageMetricInfo(selectedOffPageMetric.metric.name).howToVerify && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">How to verify</h3>
+                  <p className="text-sm text-gray-600">{getOffPageMetricInfo(selectedOffPageMetric.metric.name).howToVerify}</p>
+                </div>
+              )}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">How to make it better</h3>
+                <ul className="list-disc list-inside space-y-1.5 text-sm text-gray-600">
+                  {getOffPageMetricInfo(selectedOffPageMetric.metric.name).improvementTips.map((tip, i) => (
+                    <li key={i}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+              {getOffPageMetricInfo(selectedOffPageMetric.metric.name).resources && getOffPageMetricInfo(selectedOffPageMetric.metric.name).resources!.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Resources</h3>
+                  <ul className="space-y-2">
+                    {getOffPageMetricInfo(selectedOffPageMetric.metric.name).resources!.map((r, i) => (
+                      <li key={i}>
+                        <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-1.5"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                          {r.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

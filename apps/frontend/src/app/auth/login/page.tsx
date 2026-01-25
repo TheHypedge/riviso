@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/lib/auth';
+import { api } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +12,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+
+  // Check backend health on mount
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        await api.get('/v1/health/live', { timeout: 3000 });
+        setBackendStatus('online');
+      } catch (err: any) {
+        setBackendStatus('offline');
+        // Don't set error here, just show warning
+      }
+    };
+    checkBackend();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,12 +39,19 @@ export default function LoginPage() {
     } catch (err: any) {
       let errorMessage = 'Invalid credentials. Please check your email and password.';
       
-      if (err.message) {
-        errorMessage = err.message;
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
+      // Handle timeout errors
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. The backend server may be slow or unresponsive. Please check if the backend is running on port 4000.';
       } else if (err.code === 'ECONNREFUSED' || !err.response) {
         errorMessage = 'Cannot connect to server. Please make sure the backend is running on port 4000.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.data?.error?.message) {
+        errorMessage = Array.isArray(err.response.data.error.message) 
+          ? err.response.data.error.message.join('. ')
+          : err.response.data.error.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
       } else if (err.response?.status === 401) {
         errorMessage = 'Invalid email or password. Please try again.';
       } else if (err.response?.status >= 500) {
@@ -56,6 +79,14 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+
+        {backendStatus === 'offline' && (
+          <div className="rounded-md bg-yellow-50 border border-yellow-200 p-4">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Backend server appears to be offline. Please ensure the backend is running on port 4000.
+            </p>
+          </div>
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (

@@ -9,6 +9,7 @@ import * as path from 'path';
 // import { UserEntity } from '../user/entities/user.entity';
 import { LoginDto, RegisterDto } from './dto';
 import { AuthResponse, UserRole } from '@riviso/shared-types';
+import type { UpdateProfileDto } from '@riviso/shared-types';
 
 // Mock user interface for in-memory storage (exported for use in JWT strategy)
 export interface MockUser {
@@ -17,7 +18,10 @@ export interface MockUser {
   name: string;
   password: string;
   role: UserRole;
+  phone?: string;
+  avatar?: string;
   createdAt: Date | string;
+  updatedAt?: Date | string;
 }
 
 @Injectable()
@@ -60,7 +64,8 @@ export class AuthService {
         // Convert date strings back to Date objects
         usersArray.forEach(user => {
           user.createdAt = new Date(user.createdAt);
-          this.users.set(user.email, user);
+          if (user.updatedAt) user.updatedAt = new Date(user.updatedAt as string);
+          this.users.set(user.email.toLowerCase(), user);
         });
         
         this.logger.log(`Loaded ${usersArray.length} users from file`);
@@ -75,6 +80,7 @@ export class AuthService {
       const usersArray = Array.from(this.users.values()).map(user => ({
         ...user,
         createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
+        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : (user.updatedAt ?? user.createdAt),
       }));
       
       fs.writeFileSync(this.usersFilePath, JSON.stringify(usersArray, null, 2), 'utf-8');
@@ -94,9 +100,10 @@ export class AuthService {
       password: '$2b$10$tlj2WaPl8ziTe9Ettv7GBOl1f049I/S1ifFy17q.6TqNRj6buWWYu', // demo123
       role: UserRole.USER,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    this.users.set(demoUser.email, demoUser);
-    
+    this.users.set(demoUser.email.toLowerCase(), demoUser);
+
     // Also create a test user
     // Email: iamakhilesh@gmail.com, Password: Test123!
     const testUser: MockUser = {
@@ -106,8 +113,9 @@ export class AuthService {
       password: '$2b$10$5OK1sE58kBI51vtvkW9OpuZHvdbdxs1rfC4OKNaiu5aGCH3WSqvmy', // Test123!
       role: UserRole.USER,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    this.users.set(testUser.email, testUser);
+    this.users.set(testUser.email.toLowerCase(), testUser);
   }
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
@@ -132,9 +140,10 @@ export class AuthService {
       password: hashedPassword,
       role: UserRole.USER,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    this.users.set(user.email, user);
+    this.users.set(user.email.toLowerCase(), user);
     this.saveUsers(); // Persist to file
     
     this.logger.log(`User registered successfully: ${user.email} (ID: ${user.id})`);
@@ -209,13 +218,49 @@ export class AuthService {
   }
 
   async validateUser(userId: string): Promise<MockUser> {
-    // Find user by ID in memory
     const user = Array.from(this.users.values()).find(u => u.id === userId);
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
+    if (!user) throw new UnauthorizedException('User not found');
     return user;
+  }
+
+  /** Find user by id (internal). */
+  findById(userId: string): MockUser | null {
+    return Array.from(this.users.values()).find(u => u.id === userId) ?? null;
+  }
+
+  /** Update profile; persist to file. */
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<MockUser> {
+    const user = this.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const oldEmail = user.email.toLowerCase();
+    if (dto.name != null) user.name = dto.name.trim();
+    if (dto.phone != null) user.phone = dto.phone.trim() || undefined;
+    if (dto.avatar != null) user.avatar = dto.avatar.trim() || undefined;
+    if (dto.email != null) {
+      const newEmail = dto.email.toLowerCase().trim();
+      if (newEmail !== oldEmail) {
+        if (this.users.has(newEmail)) throw new ConflictException('Email already in use');
+        this.users.delete(oldEmail);
+        user.email = newEmail;
+        this.users.set(newEmail, user);
+      }
+    }
+    user.updatedAt = new Date();
+    this.saveUsers();
+    this.logger.log(`Profile updated for user ${userId}`);
+    return user;
+  }
+
+  /** Change password; persist to file. */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = this.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) throw new UnauthorizedException('Current password is incorrect');
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.updatedAt = new Date();
+    this.saveUsers();
+    this.logger.log(`Password changed for user ${userId}`);
   }
 }
