@@ -1,387 +1,323 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
+import { GscDateRangeSelector } from '@/components/search-console/GscDateRangeSelector';
 import { api } from '@/lib/api';
-import {
-  BarChart3,
-  CheckCircle,
-  XCircle,
-  ExternalLink,
-  Loader,
-  Unplug,
-  AlertCircle,
-  TrendingUp,
-  MousePointer,
-} from 'lucide-react';
 import { useWebsite } from '@/contexts/WebsiteContext';
+import {
+  Loader,
+  AlertCircle,
+  Lightbulb,
+  TrendingUp,
+  TrendingDown,
+  MousePointer,
+  Eye,
+  BarChart3,
+  Globe,
+  FileText,
+  Search,
+  Image as ImageIcon,
+} from 'lucide-react';
 
-interface GscStatus {
-  connected: boolean;
-  properties: Array<{
-    id: string;
-    gscPropertyUrl: string;
-    permissionLevel: string;
-    lastSyncedAt: string | null;
-  }>;
+type Tab = 'top' | 'trendingUp' | 'trendingDown';
+
+interface InsightRow {
+  key: string;
+  clicks: number;
+  impressions: number;
+  change?: string;
 }
 
-function GscPageContent() {
-  const { selectedWebsite } = useWebsite();
-  const searchParams = useSearchParams();
-  const [status, setStatus] = useState<GscStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
-  const [disconnecting, setDisconnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [callbackMessage, setCallbackMessage] = useState<string | null>(null);
-  const [propertyModal, setPropertyModal] = useState<{ sites: string[]; googleAccountId: string } | null>(null);
-  const [selectedProperty, setSelectedProperty] = useState('');
-  const [gscData, setGscData] = useState<{
-    totalClicks: number;
-    totalImpressions: number;
-    averageCtr: number;
-    averagePosition: number;
-  } | null>(null);
-  const [dataLoading, setDataLoading] = useState(false);
+interface InsightsPayload {
+  startDate: string;
+  endDate: string;
+  totalClicks: number;
+  totalImpressions: number;
+  averageCtr: number;
+  averagePosition: number;
+  yourContent: { top: InsightRow[]; trendingUp: (InsightRow & { change: string })[]; trendingDown: (InsightRow & { change: string })[] };
+  queries: { top: InsightRow[]; trendingUp: (InsightRow & { change: string })[]; trendingDown: (InsightRow & { change: string })[] };
+  topCountries: Array<{ country: string; countryName: string; clicks: number; impressions: number }>;
+  additionalTrafficSources: Array<{ source: string; clicks: number; impressions: number }>;
+}
 
-  const checkStatus = useCallback(async () => {
+export default function InsightsPage() {
+  const { selectedWebsite } = useWebsite();
+  const [data, setData] = useState<InsightsPayload | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [contentTab, setContentTab] = useState<Tab>('top');
+  const [queriesTab, setQueriesTab] = useState<Tab>('top');
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 27);
+    start.setHours(0, 0, 0, 0);
+    return { start, end };
+  });
+  const [requestedRange, setRequestedRange] = useState<{ start: Date; end: Date } | null>(null);
+
+  const fetchData = useCallback(async () => {
+    if (!selectedWebsite?.url) {
+      setError('Please select a website');
+      return;
+    }
+    setLoading(true);
+    setError(null);
     try {
-      setError(null);
-      const { data } = await api.get<GscStatus>('/v1/integrations/gsc/status');
-      setStatus(data);
+      const startDate = dateRange.start.toISOString().split('T')[0];
+      const endDate = dateRange.end.toISOString().split('T')[0];
+      const { data: res } = await api.get<InsightsPayload>('/v1/search-console/insights', {
+        params: { websiteId: selectedWebsite.url, startDate, endDate },
+      });
+      setData(res);
+      setRequestedRange({ start: new Date(res.startDate), end: new Date(res.endDate) });
     } catch (e: any) {
-      setStatus({ connected: false, properties: [] });
-      setError(e?.response?.data?.message || 'Could not load GSC status');
+      setError(e?.response?.data?.message || 'Failed to load insights');
+      setData(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedWebsite?.url, dateRange]);
 
   useEffect(() => {
-    checkStatus();
-  }, [checkStatus]);
+    if (selectedWebsite?.url) fetchData();
+  }, [selectedWebsite?.url, dateRange, fetchData]);
 
-  useEffect(() => {
-    if (!status?.connected || !status.properties?.length) {
-      setGscData(null);
-      return;
-    }
-    const site = status.properties[0].gscPropertyUrl;
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - 28);
-    setDataLoading(true);
-    api
-      .post<{ totalClicks: number; totalImpressions: number; averageCtr: number; averagePosition: number }>(
-        '/v1/integrations/gsc/data',
-        {
-          siteUrl: site,
-          startDate: start.toISOString().split('T')[0],
-          endDate: end.toISOString().split('T')[0],
-          dimensions: ['date'],
-        },
-      )
-      .then(({ data }) => setGscData(data))
-      .catch(() => setGscData(null))
-      .finally(() => setDataLoading(false));
-  }, [status?.connected, status?.properties?.[0]?.gscPropertyUrl]);
-
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const err = searchParams.get('error');
-    const multiple = searchParams.get('multiple');
-    const sitesB64 = searchParams.get('sites');
-    const googleAccountId = searchParams.get('googleAccountId');
-    const property = searchParams.get('property');
-
-    if (err) {
-      setCallbackMessage(err === 'access_denied' ? 'Access denied' : decodeURIComponent(err));
-      return;
-    }
-    if (success === '1') {
-      if (multiple === '1' && sitesB64 && googleAccountId) {
-        try {
-          const sites = JSON.parse(atob(sitesB64)) as string[];
-          setPropertyModal({ sites, googleAccountId });
-          setCallbackMessage(null);
-        } catch {
-          setCallbackMessage('Connected. Select a property below.');
-        }
-      } else if (property) {
-        setCallbackMessage(`Connected to ${property}`);
-        checkStatus();
-      } else {
-        setCallbackMessage('Connected');
-        checkStatus();
-      }
-    }
-  }, [searchParams, checkStatus]);
-
-  const connectGsc = async () => {
-    setConnecting(true);
-    setError(null);
-    try {
-      const websiteUrl = selectedWebsite?.url ?? '';
-      const { data } = await api.get<{ authUrl: string }>(
-        `/v1/integrations/gsc/connect${websiteUrl ? `?websiteUrl=${encodeURIComponent(websiteUrl)}` : ''}`,
-      );
-      if (data?.authUrl) window.location.href = data.authUrl;
-      else setError('No auth URL returned');
-    } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to start connection');
-    } finally {
-      setConnecting(false);
-    }
+  const handleDateChange = (start: Date, end: Date) => {
+    setDateRange({ start, end });
+    setRequestedRange(null);
+    setData(null);
   };
 
-  const saveProperty = async () => {
-    if (!propertyModal || !selectedProperty) return;
-    setError(null);
-    try {
-      await api.post('/v1/integrations/gsc/property', {
-        googleAccountId: propertyModal.googleAccountId,
-        propertyUrl: selectedProperty,
-        websiteId: selectedWebsite?.id ?? undefined,
-      });
-      setPropertyModal(null);
-      setSelectedProperty('');
-      setCallbackMessage('Property saved');
-      checkStatus();
-    } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to save property');
-    }
-  };
+  const tabList: { id: Tab; label: string }[] = [
+    { id: 'top', label: 'Top' },
+    { id: 'trendingUp', label: 'Trending up' },
+    { id: 'trendingDown', label: 'Trending down' },
+  ];
 
-  const disconnectGsc = async () => {
-    setDisconnecting(true);
-    setError(null);
-    try {
-      await api.post('/v1/integrations/gsc/disconnect');
-      setStatus({ connected: false, properties: [] });
-      setCallbackMessage(null);
-    } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to disconnect');
-    } finally {
-      setDisconnecting(false);
-    }
-  };
-
-  if (loading) {
+  const renderTabbedSection = (
+    title: string,
+    icon: React.ReactNode,
+    activeTab: Tab,
+    onTab: (t: Tab) => void,
+    top: InsightRow[],
+    trendingUp: (InsightRow & { change: string })[],
+    trendingDown: (InsightRow & { change: string })[],
+    keyLabel: string,
+    viewMoreHref?: string,
+  ) => {
+    const list = activeTab === 'top' ? top : activeTab === 'trendingUp' ? trendingUp : trendingDown;
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader className="w-12 h-12 text-primary-600 animate-spin" />
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5">
+        <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          {icon}
+          {title}
+        </h3>
+        <p className="text-xs text-gray-500 mb-3">Data from Google Search Console</p>
+        <div className="flex gap-2 mb-4">
+          {tabList.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => onTab(t.id)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === t.id ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-      </DashboardLayout>
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {list.length === 0 ? (
+            <p className="text-sm text-gray-500">No data for this tab.</p>
+          ) : (
+            list.map((item, i) => (
+              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 gap-2">
+                <span className="text-sm font-medium text-gray-900 truncate flex-1" title={item.key}>
+                  {keyLabel === 'page' ? (item.key.replace(/^https?:\/\//, '').replace(/\/$/, '') || item.key) : item.key}
+                </span>
+                <span className="text-sm text-gray-500 tabular-nums shrink-0">
+                  {'change' in item && item.change ? `${item.change} ${item.clicks}` : `${item.clicks} clicks`}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+        {viewMoreHref && (
+          <Link href={viewMoreHref} className="inline-block mt-3 text-sm font-medium text-primary-600 hover:text-primary-700">
+            View more →
+          </Link>
+        )}
+      </div>
     );
-  }
+  };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Search Console</h1>
-          <p className="text-gray-600 mt-1">
-            Connect Google Search Console to unlock keyword, performance, and indexing insights.
-          </p>
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Lightbulb className="w-6 h-6 text-amber-500" />
+              Insights
+            </h1>
+            <p className="text-sm text-gray-600 mt-0.5">
+              Your content, queries, top countries, and additional traffic sources. Data from Google Search Console.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/gsc/performance"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Search Results
+          </Link>
         </div>
 
-        {callbackMessage && (
-          <div
-            className={`rounded-xl border p-4 flex items-center gap-3 ${
-              callbackMessage.includes('denied') || callbackMessage.includes('error')
-                ? 'bg-red-50 border-red-200 text-red-800'
-                : 'bg-green-50 border-green-200 text-green-800'
-            }`}
-          >
-            {callbackMessage.includes('denied') || callbackMessage.includes('error') ? (
-              <XCircle className="w-6 h-6 shrink-0" />
-            ) : (
-              <CheckCircle className="w-6 h-6 shrink-0" />
-            )}
-            <p className="font-medium">{callbackMessage}</p>
-          </div>
-        )}
-
         {error && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center gap-3 text-amber-800">
-            <AlertCircle className="w-6 h-6 shrink-0" />
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 flex items-center gap-3 text-red-800">
+            <AlertCircle className="w-5 h-5 shrink-0" />
             <p className="font-medium">{error}</p>
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-blue-100 rounded-xl">
-                <BarChart3 className="w-8 h-8 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Google Search Console</h2>
-                <p className="text-gray-600 mt-1">
-                  Get real data: clicks, impressions, queries, pages. Read-only access.
-                </p>
-                {status?.connected && status.properties.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-                    <span className="text-sm font-medium text-green-700">
-                      Connected to {status.properties[0].gscPropertyUrl}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
+        <GscDateRangeSelector
+          startDate={dateRange.start}
+          endDate={dateRange.end}
+          onDateChange={handleDateChange}
+          onRefresh={fetchData}
+          loading={loading}
+          requestedRange={requestedRange}
+        />
 
-            {!status?.connected || status.properties.length === 0 ? (
-              <button
-                onClick={connectGsc}
-                disabled={connecting}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed font-medium shrink-0"
-              >
-                {connecting ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Connecting…
-                  </>
-                ) : (
-                  <>
-                    <ExternalLink className="w-5 h-5" />
-                    Connect Google Search Console
-                  </>
-                )}
-              </button>
-            ) : (
-              <button
-                onClick={disconnectGsc}
-                disabled={disconnecting}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-60 font-medium shrink-0"
-              >
-                {disconnecting ? (
-                  <Loader className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Unplug className="w-5 h-5" />
-                )}
-                Disconnect
-              </button>
-            )}
-          </div>
-
-          {selectedWebsite && !status?.connected && (
-            <p className="text-sm text-gray-500 mt-4">
-              Using <strong>{selectedWebsite.name || selectedWebsite.url}</strong> for property matching. Change site via the selector above.
-            </p>
-          )}
-        </div>
-
-        {status?.connected && status.properties.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {dataLoading ? (
-              <div className="col-span-full flex justify-center py-8">
-                <Loader className="w-8 h-8 text-blue-600 animate-spin" />
-              </div>
-            ) : gscData ? (
-              <>
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-gray-500 mb-1">
-                    <MousePointer className="w-4 h-4" />
-                    <span className="text-xs font-medium">Clicks</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{gscData.totalClicks.toLocaleString()}</div>
-                  <div className="text-xs text-gray-500 mt-1">Last 28 days</div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-gray-500 mb-1">
-                    <BarChart3 className="w-4 h-4" />
-                    <span className="text-xs font-medium">Impressions</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{gscData.totalImpressions.toLocaleString()}</div>
-                  <div className="text-xs text-gray-500 mt-1">Last 28 days</div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-gray-500 mb-1">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-xs font-medium">CTR</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{(gscData.averageCtr * 100).toFixed(2)}%</div>
-                  <div className="text-xs text-gray-500 mt-1">Average</div>
-                </div>
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                  <div className="text-xs font-medium text-gray-500 mb-1">Avg. position</div>
-                  <div className="text-2xl font-bold text-gray-900">{gscData.averagePosition.toFixed(1)}</div>
-                  <div className="text-xs text-gray-500 mt-1">Last 28 days</div>
-                </div>
-              </>
-            ) : null}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader className="w-8 h-8 text-primary-600 animate-spin" />
           </div>
         )}
 
-        {propertyModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Select a property</h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Multiple GSC properties matched. Choose one to link.
-              </p>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {propertyModal.sites.map((url) => (
-                  <label
-                    key={url}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedProperty === url ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="property"
-                      value={url}
-                      checked={selectedProperty === url}
-                      onChange={() => setSelectedProperty(url)}
-                      className="text-blue-600"
-                    />
-                    <span className="text-sm font-medium text-gray-900 truncate">{url}</span>
-                  </label>
-                ))}
+        {data && !loading && (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-gray-500 mb-1">
+                  <MousePointer className="w-4 h-4" />
+                  <span className="text-xs font-medium">Total clicks</span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{data.totalClicks.toLocaleString()}</div>
+                {requestedRange && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {requestedRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {requestedRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                )}
               </div>
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={saveProperty}
-                  disabled={!selectedProperty}
-                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    setPropertyModal(null);
-                    setSelectedProperty('');
-                  }}
-                  className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
-                >
-                  Cancel
-                </button>
+              <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-gray-500 mb-1">
+                  <Eye className="w-4 h-4" />
+                  <span className="text-xs font-medium">Total impressions</span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{data.totalImpressions.toLocaleString()}</div>
+                {requestedRange && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {requestedRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {requestedRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                )}
+              </div>
+              <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-gray-500 mb-1">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="text-xs font-medium">Average CTR</span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{data.averageCtr.toFixed(2)}%</div>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 mb-1">Average position</div>
+                <div className="text-2xl font-bold text-gray-900">{data.averagePosition.toFixed(1)}</div>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {renderTabbedSection(
+                'Your content',
+                <FileText className="w-4 h-4 text-blue-600" />,
+                contentTab,
+                setContentTab,
+                data.yourContent.top,
+                data.yourContent.trendingUp,
+                data.yourContent.trendingDown,
+                'page',
+                '/dashboard/gsc/performance',
+              )}
+              {renderTabbedSection(
+                'Queries leading to your site',
+                <Search className="w-4 h-4 text-emerald-600" />,
+                queriesTab,
+                setQueriesTab,
+                data.queries.top,
+                data.queries.trendingUp,
+                data.queries.trendingDown,
+                'query',
+                '/dashboard/gsc/performance',
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5">
+                <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-violet-600" />
+                  Top countries
+                </h3>
+                <p className="text-xs text-gray-500 mb-3">Data from Google Search Console</p>
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {data.topCountries.length === 0 ? (
+                    <p className="text-sm text-gray-500">No country data for this range.</p>
+                  ) : (
+                    data.topCountries.slice(0, 15).map((c, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                        <span className="text-sm font-medium text-gray-900">{c.countryName || c.country}</span>
+                        <span className="text-sm text-gray-500 tabular-nums">{c.clicks} clicks</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5">
+                <h3 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-amber-600" />
+                  Additional traffic sources
+                </h3>
+                <p className="text-xs text-gray-500 mb-3">Data from Google Search Console</p>
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {data.additionalTrafficSources.length === 0 ? (
+                    <p className="text-sm text-gray-500">No traffic source data for this range.</p>
+                  ) : (
+                    data.additionalTrafficSources.map((s, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                        <span className="text-sm font-medium text-gray-900">{s.source}</span>
+                        <span className="text-sm text-gray-500 tabular-nums">{s.clicks} clicks</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {!data && !loading && !error && selectedWebsite?.url && (
+          <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200 text-center">
+            <Lightbulb className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">No insights yet</p>
+            <p className="text-sm text-gray-500 mt-2">Click &quot;Refresh Data&quot; to load Google Search Console insights.</p>
           </div>
         )}
       </div>
     </DashboardLayout>
-  );
-}
-
-export default function GscPage() {
-  return (
-    <Suspense
-      fallback={
-        <DashboardLayout>
-          <div className="flex items-center justify-center h-64">
-            <Loader className="w-12 h-12 text-primary-600 animate-spin" />
-          </div>
-        </DashboardLayout>
-      }
-    >
-      <GscPageContent />
-    </Suspense>
   );
 }

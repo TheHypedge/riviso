@@ -10,3 +10,4 @@ export * from './google-account.repository';
 export * from './google-token.repository';
 export * from './gsc-property.repository';
 export * from './gsc-sync-log.repository';
+export * from './guest-audit.repository';

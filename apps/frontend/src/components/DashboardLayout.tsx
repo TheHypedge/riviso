@@ -5,19 +5,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
-  Search, 
-  TrendingUp, 
-  Users, 
   MessageSquare, 
-  Target,
   Settings,
   LogOut,
   Menu,
   X,
   Globe,
-  Link as LinkIcon,
-  BarChart3,
+  Lightbulb,
   ChevronDown,
+  ChevronRight,
   User
 } from 'lucide-react';
 import { authService } from '@/lib/auth';
@@ -42,14 +38,17 @@ function userInitials(user: { name?: string; email?: string } | null): string {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Website Analyzer', href: '/dashboard/website-analyzer', icon: Globe },
-  { name: 'Search Console', href: '/dashboard/gsc', icon: BarChart3 },
-  { name: 'Integrations', href: '/dashboard/integrations', icon: LinkIcon },
-  { name: 'SEO Analysis', href: '/dashboard/seo', icon: Search },
-  { name: 'Keywords & SERP', href: '/dashboard/keywords', icon: TrendingUp },
-  { name: 'Competitors', href: '/dashboard/competitors', icon: Users },
-  { name: 'CRO Insights', href: '/dashboard/cro', icon: Target },
+  {
+    name: 'Insights',
+    href: '/dashboard/gsc',
+    icon: Lightbulb,
+    children: [
+      { name: 'Search Results', href: '/dashboard/gsc/performance' },
+      { name: 'Links', href: '/dashboard/gsc/links' },
+    ],
+  },
   { name: 'AI Assistant', href: '/dashboard/ai', icon: MessageSquare },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -61,6 +60,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  const [insightsExpanded, setInsightsExpanded] = useState(() => pathname.startsWith('/dashboard/gsc'));
 
   // Only access localStorage after component mounts (client-side only)
   useEffect(() => {
@@ -84,6 +84,88 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [userDropdownOpen]);
 
+  // Keep Insights expanded when navigating to any /dashboard/gsc route
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/gsc')) setInsightsExpanded(true);
+  }, [pathname]);
+
+  const renderNavItem = (item: (typeof navigation)[0], onLinkClick?: () => void) => {
+    if ('children' in item && item.children) {
+      const Icon = item.icon;
+      const isParentActive = pathname === item.href || pathname.startsWith(item.href + '/');
+      return (
+        <div key={item.name} className="space-y-0.5">
+          <div className="flex items-center rounded-md overflow-hidden">
+            <Link
+              href={item.href}
+              onClick={onLinkClick}
+              className={`flex-1 flex items-center px-3 py-2 text-sm font-medium min-w-0 ${
+                isParentActive && pathname === item.href
+                  ? 'bg-primary-100 text-primary-600'
+                  : isParentActive
+                  ? 'text-primary-600'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Icon className="w-5 h-5 mr-3 shrink-0" />
+              <span className="truncate">{item.name}</span>
+            </Link>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                setInsightsExpanded((v) => !v);
+              }}
+              className={`p-2 text-gray-500 hover:bg-gray-100 rounded-md shrink-0 ${
+                isParentActive ? 'hover:bg-primary-50' : ''
+              }`}
+              aria-expanded={insightsExpanded}
+              aria-label={insightsExpanded ? 'Collapse Insights' : 'Expand Insights'}
+            >
+              <ChevronRight
+                className={`w-4 h-4 transition-transform ${insightsExpanded ? 'rotate-90' : ''}`}
+              />
+            </button>
+          </div>
+          {insightsExpanded && (
+            <div className="ml-5 pl-2 border-l-2 border-gray-200 space-y-0.5">
+              {item.children.map((child) => {
+                const isChildActive = pathname === child.href;
+                return (
+                  <Link
+                    key={child.name}
+                    href={child.href}
+                    onClick={onLinkClick}
+                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      isChildActive ? 'bg-primary-100 text-primary-600' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {child.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+    const Icon = item.icon;
+    const isActive = pathname === item.href;
+    return (
+      <Link
+        key={item.name}
+        href={item.href}
+        onClick={onLinkClick}
+        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+          isActive ? 'bg-primary-100 text-primary-600' : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <Icon className="w-5 h-5 mr-3" />
+        {item.name}
+      </Link>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
@@ -102,25 +184,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <WebsiteSelector />
             </div>
             <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      isActive
-                        ? 'bg-primary-100 text-primary-600'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Icon className="w-5 h-5 mr-3" />
-                    {item.name}
-                  </Link>
-                );
-              })}
+              {navigation.map((item) => renderNavItem(item, () => setSidebarOpen(false)))}
             </nav>
           </div>
         </div>
@@ -137,24 +201,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <WebsiteSelector />
           </div>
           <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
-              );
-            })}
+            {navigation.map((item) => renderNavItem(item))}
           </nav>
         </div>
       </div>
@@ -218,14 +265,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="sticky top-0 z-10 hidden lg:flex items-center justify-between h-16 px-6 bg-white border-b border-gray-200">
           <div className="flex items-center space-x-4">
             <span className="text-lg font-semibold text-gray-900">
-              {pathname === '/dashboard' && 'Dashboard'}
+              {pathname === '/dashboard' && 'Overview'}
               {pathname === '/dashboard/website-analyzer' && 'Website Analyzer'}
-              {pathname === '/dashboard/gsc' && 'Search Console'}
-              {pathname === '/dashboard/integrations' && 'Integrations'}
-              {pathname === '/dashboard/seo' && 'SEO Analysis'}
-              {pathname === '/dashboard/keywords' && 'Keywords & SERP'}
-              {pathname === '/dashboard/competitors' && 'Competitors'}
-              {pathname === '/dashboard/cro' && 'CRO Insights'}
+              {pathname === '/dashboard/gsc' && 'Insights'}
+              {pathname.startsWith('/dashboard/gsc/performance') && 'Search Results'}
+              {pathname.startsWith('/dashboard/gsc/links') && 'Links'}
+              {pathname.startsWith('/dashboard/gsc/') && !pathname.startsWith('/dashboard/gsc/performance') && !pathname.startsWith('/dashboard/gsc/links') && 'Insights'}
               {pathname === '/dashboard/ai' && 'AI Assistant'}
               {pathname === '/dashboard/settings' && 'Settings'}
             </span>
@@ -277,7 +322,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="py-6">
+        <main className="py-4">
           <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <AddWebsitePrompt />
             {children}

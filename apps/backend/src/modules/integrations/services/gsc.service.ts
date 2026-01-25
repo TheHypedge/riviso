@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import {
@@ -8,6 +8,7 @@ import {
   GscDimension,
 } from '@riviso/shared-types';
 import { OAuthConfig } from '../../../common/config/oauth.config';
+import { GscConnectionStore } from './gsc-connection.store';
 
 export interface GSCConnection {
   userId: string;
@@ -19,22 +20,39 @@ export interface GSCConnection {
 }
 
 /**
- * Simplified GSC Service - Works without database (in-memory storage)
- * For production with database, use gsc.service.ts (production version)
+ * GSC Service with persistent file-based storage
+ * Connections persist across server restarts
  */
 @Injectable()
-export class GoogleSearchConsoleService {
+export class GoogleSearchConsoleService implements OnModuleInit {
   private readonly logger = new Logger(GoogleSearchConsoleService.name);
   private readonly GSC_API_BASE = 'https://www.googleapis.com/webmasters/v3';
   private readonly OAUTH_BASE = 'https://oauth2.googleapis.com';
   
-  // In-memory storage (replace with database in production)
+  // Persistent storage - loaded from file on startup
   private connections: Map<string, GSCConnection> = new Map();
 
   constructor(
     private configService: ConfigService,
     private oauthConfig: OAuthConfig,
+    private connectionStore: GscConnectionStore,
   ) {}
+
+  /**
+   * Load connections from file on module initialization
+   */
+  onModuleInit() {
+    this.logger.log('Loading GSC connections from persistent storage...');
+    this.connections = this.connectionStore.loadConnections();
+    this.logger.log(`Loaded ${this.connections.size} GSC connection(s) on startup`);
+  }
+
+  /**
+   * Save connections to file
+   */
+  private saveConnections(): void {
+    this.connectionStore.saveConnections(this.connections);
+  }
 
   /**
    * Generate OAuth2 authorization URL
@@ -122,6 +140,7 @@ export class GoogleSearchConsoleService {
       };
 
       this.connections.set(userId, connection);
+      this.saveConnections(); // Persist to file
       this.logger.log(`[OAuth] GSC connection established for user ${userId}, property: ${primarySite.siteUrl}`);
 
       return connection;
@@ -253,15 +272,36 @@ export class GoogleSearchConsoleService {
       throw new UnauthorizedException('Google Search Console not connected');
     }
 
+    // Refresh token if needed
+    await this.refreshTokenIfNeeded(userId);
+
     try {
-      const response = await axios.post(
-        `${this.GSC_API_BASE}/sites/${encodeURIComponent(dto.siteUrl)}/searchAnalytics/query`,
-        {
-          startDate: dto.startDate,
-          endDate: dto.endDate,
-          dimensions: dto.dimensions || [GscDimension.DATE, GscDimension.QUERY],
-          rowLimit: 25000,
-        },
+      // Properly encode the site URL for the API endpoint
+      const encodedSiteUrl = encodeURIComponent(dto.siteUrl);
+      
+      this.logger.log(`[GSC] Fetching data for property: ${dto.siteUrl}`);
+      this.logger.log(`[GSC] Date range: ${dto.startDate} to ${dto.endDate}`);
+      
+      const apiUrl = `${this.GSC_API_BASE}/sites/${encodedSiteUrl}/searchAnalytics/query`;
+      
+      // For accurate totals matching Google Search Console UI, we need to:
+      // 1. Get daily totals (DATE dimension only) - this gives us accurate daily aggregation
+      // 2. Get query breakdown (DATE + QUERY) - for top queries
+      // 3. Get page breakdown (DATE + PAGE) - for top pages
+      
+      // First, get daily totals (most accurate for overall metrics)
+      const dailyRequest = {
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        dimensions: [GscDimension.DATE],
+        rowLimit: 1000,
+      };
+      
+      this.logger.log(`[GSC] Requesting daily totals with dimensions: DATE only`);
+      
+      const dailyResponse = await axios.post(
+        apiUrl,
+        dailyRequest,
         {
           headers: {
             Authorization: `Bearer ${connection.accessToken}`,
@@ -269,41 +309,406 @@ export class GoogleSearchConsoleService {
           },
         },
       );
-
-      // Process and return data
-      return this.processGscData(dto, response.data.rows || []);
-    } catch (error) {
-      this.logger.error(`Error fetching GSC data: ${error.message}`);
-      throw new BadRequestException('Failed to fetch Google Search Console data');
+      
+      const dailyRows = dailyResponse.data?.rows || [];
+      this.logger.log(`[GSC] Daily totals: ${dailyRows.length} rows`);
+      
+      // Get query breakdown if requested
+      let queryRows: any[] = [];
+      if (dto.dimensions?.includes(GscDimension.QUERY) || !dto.dimensions) {
+        const queryRequest = {
+          startDate: dto.startDate,
+          endDate: dto.endDate,
+          dimensions: [GscDimension.DATE, GscDimension.QUERY],
+          rowLimit: 10000,
+        };
+        
+        this.logger.log(`[GSC] Requesting query breakdown`);
+        const queryResponse = await axios.post(apiUrl, queryRequest, {
+          headers: {
+            Authorization: `Bearer ${connection.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        queryRows = queryResponse.data?.rows || [];
+        this.logger.log(`[GSC] Query breakdown: ${queryRows.length} rows`);
+      }
+      
+      // Get page breakdown if requested
+      let pageRows: any[] = [];
+      if (dto.dimensions?.includes(GscDimension.PAGE)) {
+        const pageRequest = {
+          startDate: dto.startDate,
+          endDate: dto.endDate,
+          dimensions: [GscDimension.DATE, GscDimension.PAGE],
+          rowLimit: 10000,
+        };
+        
+        this.logger.log(`[GSC] Requesting page breakdown`);
+        const pageResponse = await axios.post(apiUrl, pageRequest, {
+          headers: {
+            Authorization: `Bearer ${connection.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        pageRows = pageResponse.data?.rows || [];
+        this.logger.log(`[GSC] Page breakdown: ${pageRows.length} rows`);
+      }
+      
+      // Process data using daily rows for accurate totals, and query/page rows for breakdowns
+      const processedData = this.processGscDataMulti(dto, dailyRows, queryRows, pageRows);
+      this.logger.log(`[GSC] Processed data: ${processedData.totalClicks} clicks, ${processedData.totalImpressions} impressions`);
+      return processedData;
+    } catch (error: any) {
+      this.logger.error(`[GSC] Error fetching data: ${error.message}`);
+      this.logger.error(`[GSC] Error response:`, error.response?.data);
+      this.logger.error(`[GSC] Error status:`, error.response?.status);
+      this.logger.error(`[GSC] Error stack:`, error.stack);
+      
+      // Provide more specific error messages
+      if (error.response?.status === 403) {
+        throw new BadRequestException('Access denied. Please check your Google Search Console permissions.');
+      } else if (error.response?.status === 400) {
+        const errorMsg = error.response?.data?.error?.message || error.message;
+        throw new BadRequestException(`Invalid request: ${errorMsg}`);
+      } else if (error.response?.status === 401) {
+        throw new UnauthorizedException('Authentication failed. Please reconnect Google Search Console.');
+      }
+      
+      throw new BadRequestException(`Failed to fetch Google Search Console data: ${error.response?.data?.error?.message || error.message}`);
     }
   }
 
   /**
-   * Process GSC API data
+   * Refresh access token if expired
    */
-  private processGscData(dto: GscDataQueryDto, rows: any[]): GscPerformanceData {
+  private async refreshTokenIfNeeded(userId: string): Promise<void> {
+    const connection = this.connections.get(userId);
+    if (!connection) return;
+
+    // Check if token is expired (with 5 minute buffer)
+    if (Date.now() < connection.expiresAt - 300000) {
+      return; // Token is still valid
+    }
+
+    this.logger.log(`Refreshing access token for user: ${userId}`);
+    
+    try {
+      const response = await axios.post(
+        `${this.OAUTH_BASE}/token`,
+        {
+          client_id: this.oauthConfig.getClientId(),
+          client_secret: this.oauthConfig.getClientSecret(),
+          refresh_token: connection.refreshToken,
+          grant_type: 'refresh_token',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      );
+
+      // Update connection with new token
+      connection.accessToken = response.data.access_token;
+      connection.expiresAt = Date.now() + (response.data.expires_in * 1000);
+      if (response.data.refresh_token) {
+        connection.refreshToken = response.data.refresh_token;
+      }
+
+      this.connections.set(userId, connection);
+      this.saveConnections(); // Persist token refresh
+      this.logger.log(`Access token refreshed successfully for user: ${userId}`);
+    } catch (error: any) {
+      this.logger.error(`Failed to refresh token: ${error.message}`);
+      throw new UnauthorizedException('Failed to refresh access token. Please reconnect Google Search Console.');
+    }
+  }
+
+  /**
+   * Process GSC API data with separate calls for accurate aggregation
+   */
+  private processGscDataMulti(
+    dto: GscDataQueryDto,
+    dailyRows: any[],
+    queryRows: any[],
+    pageRows: any[],
+  ): GscPerformanceData {
+    // Process daily rows for accurate totals
     let totalClicks = 0;
     let totalImpressions = 0;
-    const dailyMap = new Map();
+    let totalPositionWeighted = 0;
+    const dailyMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
 
-    rows.forEach((row: any) => {
-      totalClicks += row.clicks || 0;
-      totalImpressions += row.impressions || 0;
+    dailyRows.forEach((row: any) => {
+      const clicks = row.clicks || 0;
+      const impressions = row.impressions || 0;
+      const position = row.position || 0;
+      
+      totalClicks += clicks;
+      totalImpressions += impressions;
+      totalPositionWeighted += position * impressions;
+
+      const date = row.keys?.[0];
+      if (date) {
+        // Ensure date is in YYYY-MM-DD format
+        const normalizedDate = date.length === 10 ? date : date.split('T')[0];
+        if (!dailyMap.has(normalizedDate)) {
+          dailyMap.set(normalizedDate, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const daily = dailyMap.get(normalizedDate)!;
+        daily.clicks += clicks;
+        daily.impressions += impressions;
+        daily.positionWeighted += position * impressions;
+      }
+    });
+    
+    this.logger.log(`[GSC] Processed ${dailyRows.length} daily rows into ${dailyMap.size} unique dates`);
+
+    // Process query rows for top queries
+    const queryMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+    queryRows.forEach((row: any) => {
+      const clicks = row.clicks || 0;
+      const impressions = row.impressions || 0;
+      const position = row.position || 0;
+      const keys = row.keys || [];
+      const query = keys.find((k: string) => k && !k.match(/^\d{4}-\d{2}-\d{2}$/));
+      
+      if (query) {
+        if (!queryMap.has(query)) {
+          queryMap.set(query, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const queryData = queryMap.get(query)!;
+        queryData.clicks += clicks;
+        queryData.impressions += impressions;
+        queryData.positionWeighted += position * impressions;
+      }
     });
 
+    // Process page rows for top pages
+    const pageMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+    pageRows.forEach((row: any) => {
+      const clicks = row.clicks || 0;
+      const impressions = row.impressions || 0;
+      const position = row.position || 0;
+      const keys = row.keys || [];
+      const page = keys.find((k: string) => k && (k.startsWith('http') || k.startsWith('sc-domain:')));
+      
+      if (page) {
+        if (!pageMap.has(page)) {
+          pageMap.set(page, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const pageData = pageMap.get(page)!;
+        pageData.clicks += clicks;
+        pageData.impressions += impressions;
+        pageData.positionWeighted += position * impressions;
+      }
+    });
+
+    // Calculate averages
     const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+    const avgPosition = totalImpressions > 0 ? totalPositionWeighted / totalImpressions : 0;
+
+    // Build arrays
+    const dailyPerformance = Array.from(dailyMap.entries())
+      .map(([date, data]) => ({
+        date,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const topQueries = Array.from(queryMap.entries())
+      .map(([query, data]) => ({
+        query,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 20);
+
+    const topPages = Array.from(pageMap.entries())
+      .map(([page, data]) => ({
+        page,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 20);
 
     return {
       siteUrl: dto.siteUrl,
       totalClicks,
       totalImpressions,
       averageCtr: parseFloat(avgCtr.toFixed(2)),
-      averagePosition: 0,
-      dailyPerformance: [],
-      topQueries: [],
-      topPages: [],
+      averagePosition: parseFloat(avgPosition.toFixed(1)),
+      dailyPerformance,
+      topQueries,
+      topPages,
       topCountries: [],
       topDevices: [],
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Process GSC API data (legacy method - kept for backward compatibility)
+   */
+  private processGscData(dto: GscDataQueryDto, rows: any[]): GscPerformanceData {
+    let totalClicks = 0;
+    let totalImpressions = 0;
+    let totalPositionWeighted = 0; // Weighted by impressions for accurate average
+    const dailyMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+    const queryMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+    const pageMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+
+    this.logger.log(`[GSC] Processing ${rows.length} rows of data`);
+
+    rows.forEach((row: any) => {
+      const clicks = row.clicks || 0;
+      const impressions = row.impressions || 0;
+      const position = row.position || 0;
+      
+      totalClicks += clicks;
+      totalImpressions += impressions;
+      totalPositionWeighted += position * impressions; // Weight position by impressions
+
+      // Process by dimensions - keys array contains values in order of requested dimensions
+      const keys = row.keys || [];
+      
+      // Find date (always first if date dimension is requested, format: YYYY-MM-DD)
+      const dateKey = keys.find((k: string) => k && k.match(/^\d{4}-\d{2}-\d{2}$/));
+      if (dateKey) {
+        if (!dailyMap.has(dateKey)) {
+          dailyMap.set(dateKey, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const daily = dailyMap.get(dateKey)!;
+        daily.clicks += clicks;
+        daily.impressions += impressions;
+        daily.positionWeighted += position * impressions;
+      }
+
+      // Find query (any key that's not a date and not a URL)
+      const queryKey = keys.find((k: string) => 
+        k && 
+        !k.match(/^\d{4}-\d{2}-\d{2}$/) && 
+        !k.startsWith('http') &&
+        !k.startsWith('sc-domain:')
+      );
+      if (queryKey) {
+        if (!queryMap.has(queryKey)) {
+          queryMap.set(queryKey, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const queryData = queryMap.get(queryKey)!;
+        queryData.clicks += clicks;
+        queryData.impressions += impressions;
+        queryData.positionWeighted += position * impressions;
+      }
+
+      // Find page (any key that starts with http or is a domain property)
+      const pageKey = keys.find((k: string) => k && (k.startsWith('http') || k.startsWith('sc-domain:')));
+      if (pageKey) {
+        if (!pageMap.has(pageKey)) {
+          pageMap.set(pageKey, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const pageData = pageMap.get(pageKey)!;
+        pageData.clicks += clicks;
+        pageData.impressions += impressions;
+        pageData.positionWeighted += position * impressions;
+      }
+    });
+
+    // Calculate averages correctly
+    const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+    const avgPosition = totalImpressions > 0 ? totalPositionWeighted / totalImpressions : 0;
+
+    this.logger.log(`[GSC] Aggregated totals: ${totalClicks} clicks, ${totalImpressions} impressions, ${avgPosition.toFixed(1)} avg position`);
+
+    // Build daily performance array with weighted average position
+    // Ensure all dates in the range are included (fill missing dates with zeros)
+    // Parse dates as local dates (not UTC) to avoid timezone issues
+    const startDateParts = dto.startDate.split('-').map(Number);
+    const endDateParts = dto.endDate.split('-').map(Number);
+    const startDate = new Date(startDateParts[0], startDateParts[1] - 1, startDateParts[2]);
+    const endDate = new Date(endDateParts[0], endDateParts[1] - 1, endDateParts[2]);
+    const allDates: string[] = [];
+    
+    // Iterate through all dates from start to end (inclusive)
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+      allDates.push(dateStr);
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    const dailyPerformance = allDates.map((date) => {
+      const data = dailyMap.get(date);
+      if (data) {
+        return {
+          date,
+          clicks: data.clicks,
+          impressions: data.impressions,
+          ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+          position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+        };
+      } else {
+        // Fill missing dates with zeros
+        return {
+          date,
+          clicks: 0,
+          impressions: 0,
+          ctr: 0,
+          position: 0,
+        };
+      }
+    });
+    
+    this.logger.log(`[GSC] Built daily performance array with ${dailyPerformance.length} days (from ${dto.startDate} to ${dto.endDate})`);
+
+    // Build top queries (sorted by clicks) with weighted average position
+    const topQueries = Array.from(queryMap.entries())
+      .map(([query, data]) => ({
+        query,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 20);
+
+    // Build top pages (sorted by clicks) with weighted average position
+    const topPages = Array.from(pageMap.entries())
+      .map(([page, data]) => ({
+        page,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 20);
+
+    return {
+      siteUrl: dto.siteUrl,
+      totalClicks,
+      totalImpressions,
+      averageCtr: parseFloat(avgCtr.toFixed(2)),
+      averagePosition: parseFloat(avgPosition.toFixed(1)),
+      dailyPerformance,
+      topQueries,
+      topPages,
+      topCountries: [], // Will be populated if country dimension is requested
+      topDevices: [], // Will be populated if device dimension is requested
       startDate: dto.startDate,
       endDate: dto.endDate,
       generatedAt: new Date().toISOString(),

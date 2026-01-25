@@ -11,6 +11,8 @@ import { AiModule } from './modules/ai/ai.module';
 import { CroModule } from './modules/cro/cro.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { GscModule } from './modules/integrations/gsc.module';
+import { SearchConsoleModule } from './modules/search-console/search-console.module';
+import { GuestAuditModule } from './modules/guest-audit/guest-audit.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { HealthModule } from './modules/health/health.module';
 import { DatabaseModule } from './infrastructure/database/database.module';
@@ -49,6 +51,8 @@ const useRedis = !!process.env.REDIS_URL;
 
     // Platform Modules
     IntegrationsModule,
+    SearchConsoleModule, // Search Console dashboard module
+    GuestAuditModule.forRoot(), // Works with or without database (graceful fallback)
     NotificationsModule,
     HealthModule,
   ],

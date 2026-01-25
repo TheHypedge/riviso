@@ -20,3 +20,4 @@ export { GoogleAccountEntity } from './google-account.entity';
 export { GoogleTokenEntity } from './google-token.entity';
 export { GSCPropertyEntity } from './gsc-property.entity';
 export { GSCSyncLogEntity, type GSCSyncStatus } from './gsc-sync-log.entity';
+export { GuestAuditEntity } from './guest-audit.entity';

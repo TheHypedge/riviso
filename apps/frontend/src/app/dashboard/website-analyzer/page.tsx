@@ -530,87 +530,93 @@ export default function WebsiteAnalyzer() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6 px-1 sm:px-0">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Website Analyzer</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
-            {selectedWebsite
-              ? `Analyzing: ${selectedWebsite.name || selectedWebsite.url}. Change path below; switch root site via the selector above.`
-              : 'Enter any URL to analyze — or select a website above to inspect URLs within that domain (GSC-style)'}
-          </p>
-        </div>
-
-      {/* Search Bar — GSC-style: base from selector (read-only), path editable. No selector = full URL. */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 flex flex-wrap items-stretch gap-0 overflow-hidden rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
-            {selectedWebsite ? (
-              <>
-                <div className="flex items-center px-4 py-3 bg-gray-100 text-gray-700 font-mono text-sm border-r border-gray-300 truncate min-w-0">
-                  {getOrigin(selectedWebsite.url)}
+      <div className="space-y-3 sm:space-y-4 px-0 sm:px-0">
+        {/* Compact header + URL bar — single engaging strip */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:gap-4 p-4 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 mb-3 lg:mb-0 lg:min-w-0 lg:flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-primary-100 text-primary-600">
+                  <Globe className="w-5 h-5" />
                 </div>
-                <input
-                  type="text"
-                  value={path}
-                  onChange={(e) => setPath(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); analyzeWebsite(); } }}
-                  placeholder="/ or e.g. /blog"
-                  className="flex-1 min-w-[120px] px-4 py-3 outline-none"
-                  disabled={loading}
-                  aria-label="Path (editable)"
-                />
-              </>
-            ) : (
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); analyzeWebsite(); } }}
-                placeholder="Enter website URL (e.g., https://example.com)"
-                className="w-full px-4 py-3 outline-none border-0 rounded-lg focus:ring-0"
-                disabled={loading}
-              />
-            )}
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900">Website Analyzer</h1>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">
+                {selectedWebsite
+                  ? `Analyzing ${selectedWebsite.name || selectedWebsite.url} · Edit path below`
+                  : 'Enter URL or select a site above'}
+              </p>
+            </div>
+            <div className="flex-1 flex flex-col sm:flex-row gap-3 min-w-0">
+              <div className="flex-1 flex flex-wrap items-stretch gap-0 overflow-hidden rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-400 transition-shadow">
+                {selectedWebsite ? (
+                  <>
+                    <div className="flex items-center px-3 py-2.5 bg-gray-100 text-gray-600 font-mono text-xs sm:text-sm border-r border-gray-300 truncate min-w-0 max-w-[40%]">
+                      {getOrigin(selectedWebsite.url)}
+                    </div>
+                    <input
+                      type="text"
+                      value={path}
+                      onChange={(e) => setPath(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); analyzeWebsite(); } }}
+                      placeholder="/ or /blog"
+                      className="flex-1 min-w-[100px] px-3 py-2.5 text-sm outline-none"
+                      disabled={loading}
+                      aria-label="Path (editable)"
+                    />
+                  </>
+                ) : (
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); analyzeWebsite(); } }}
+                    placeholder="https://example.com"
+                    className="w-full px-3 py-2.5 text-sm outline-none border-0 rounded-lg focus:ring-0"
+                    disabled={loading}
+                  />
+                )}
+              </div>
+              <button
+                onClick={analyzeWebsite}
+                disabled={loading || (selectedWebsite ? false : !url)}
+                className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold text-sm whitespace-nowrap shadow-sm hover:shadow"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Analyzing…
+                  </span>
+                ) : results ? 'Re-analyze' : 'Analyze'}
+              </button>
+            </div>
           </div>
-          <button
-            onClick={analyzeWebsite}
-            disabled={loading || (selectedWebsite ? false : !url)}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Analyzing...
-              </span>
-            ) : results ? 'Re-analyze' : 'Analyze'}
-          </button>
+          {selectedWebsite && (
+            <p className="text-[11px] sm:text-xs text-gray-500 px-4 pb-3 pt-0 border-t border-gray-100 mt-3 lg:mt-0 lg:pt-0 lg:border-t-0 lg:mx-4 lg:mb-0 lg:px-0">
+              Root fixed · switch site above. Inspect any path in &apos;{selectedWebsite.name || getOrigin(selectedWebsite.url).replace(/^https?:\/\//, '')}&apos;.
+            </p>
+          )}
+          {error && <p className="text-red-600 text-sm px-4 pb-3">{error}</p>}
         </div>
-        {selectedWebsite && (
-          <p className="text-xs text-gray-500 mt-2">
-            Inspect any URL in &apos;{selectedWebsite.name || getOrigin(selectedWebsite.url).replace(/^https?:\/\//, '')}&apos;. Root domain is fixed; change it via the website selector above.
-          </p>
-        )}
-        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
-      </div>
 
       {/* Loading State */}
       {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600 mt-4">Analyzing website... This may take a few seconds</p>
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-primary-200 border-t-primary-600"></div>
+          <p className="text-gray-600 mt-3 text-sm">Analyzing…</p>
         </div>
       )}
 
       {/* Results */}
       {results && !loading && (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-3 sm:space-y-4">
           {/* Hero Overview Card */}
-          <div className="bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl shadow-xl overflow-hidden">
-            <div className="relative p-6 sm:p-8 lg:p-10">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
+          <div className="bg-gradient-to-br from-slate-800 via-indigo-800 to-slate-800 rounded-xl shadow-lg overflow-hidden border border-slate-700/50">
+            <div className="relative p-5 sm:p-6 lg:p-7">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 rounded-xl bg-white/10 backdrop-blur-sm">
@@ -647,7 +653,7 @@ export default function WebsiteAnalyzer() {
               </div>
 
               {results.onPageSEO && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-5">
                   {[
                     { icon: FileText, value: results.onPageSEO.headings?.h1?.length ?? 0, label: 'H1 Tags', accent: 'border-l-emerald-400 bg-emerald-500/10' },
                     { icon: FileText, value: (results.onPageSEO.headings?.h2?.length ?? 0) + (results.onPageSEO.headings?.h3?.length ?? 0), label: 'H2 + H3 Tags', accent: 'border-l-amber-400 bg-amber-500/10' },
@@ -656,17 +662,17 @@ export default function WebsiteAnalyzer() {
                   ].map((m, i) => (
                     <div
                       key={i}
-                      className={`rounded-xl border-l-4 p-4 sm:p-5 backdrop-blur-sm ${m.accent} border border-white/10 transition-all hover:scale-[1.02] hover:shadow-lg`}
+                      className={`rounded-lg border-l-4 p-3 sm:p-4 backdrop-blur-sm ${m.accent} border border-white/10 transition-all hover:scale-[1.01] hover:shadow-md`}
                     >
-                      <m.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white/80 mb-2" />
-                      <div className="text-xl sm:text-2xl font-bold text-white tabular-nums">{m.value}</div>
-                      <div className="text-xs sm:text-sm text-indigo-200/90">{m.label}</div>
+                      <m.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 mb-1.5" />
+                      <div className="text-lg sm:text-xl font-bold text-white tabular-nums">{m.value}</div>
+                      <div className="text-[11px] sm:text-xs text-indigo-200/90">{m.label}</div>
                     </div>
                   ))}
                 </div>
               )}
               {results.metrics && !results.onPageSEO && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-5">
                   {[
                     { icon: Users, value: formatNumber(results.metrics?.monthlyVisits), label: 'Monthly Visits' },
                     { icon: Search, value: formatNumber(results.metrics?.totalKeywords), label: 'Keywords' },
@@ -685,37 +691,37 @@ export default function WebsiteAnalyzer() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-md border border-gray-200/80 overflow-hidden">
             <div className="flex overflow-x-auto border-b border-gray-200 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <button
                 onClick={() => setActiveTab('onpage')}
-                className={`flex-1 min-w-[120px] sm:min-w-0 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 min-w-[100px] sm:min-w-0 px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all ${
                   activeTab === 'onpage'
                     ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <FileText className="w-4 h-4 shrink-0" />
                   <span>ON PAGE</span>
                 </div>
               </button>
               <button
                 onClick={() => setActiveTab('offpage')}
-                className={`flex-1 min-w-[120px] sm:min-w-0 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 min-w-[100px] sm:min-w-0 px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all ${
                   activeTab === 'offpage'
                     ? 'bg-emerald-50 text-emerald-600 border-b-2 border-emerald-600'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <ExternalLink className="w-4 h-4 shrink-0" />
                   <span>OFF PAGE</span>
                 </div>
               </button>
               <button
                 onClick={() => setActiveTab('technical')}
-                className={`flex-1 min-w-[120px] sm:min-w-0 px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all ${
+                className={`flex-1 min-w-[100px] sm:min-w-0 px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all ${
                   activeTab === 'technical'
                     ? 'bg-violet-50 text-violet-600 border-b-2 border-violet-600'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
