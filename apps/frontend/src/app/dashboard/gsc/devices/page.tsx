@@ -58,8 +58,10 @@ function DevicesPageContent() {
       setDevices(data);
       setRequestedRange({ start: dateRange.start, end: dateRange.end });
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to fetch devices data');
+      const errorMessage = e?.response?.data?.message || e?.message || 'Failed to fetch devices data';
+      setError(errorMessage);
       setDevices([]);
+      console.error('Failed to fetch GSC devices data:', errorMessage, e);
     } finally {
       setLoading(false);
     }
@@ -69,7 +71,7 @@ function DevicesPageContent() {
     if (selectedWebsite?.url) {
       fetchData();
     }
-  }, [selectedWebsite?.url]);
+  }, [selectedWebsite?.url, dateRange]);
 
   const getDeviceIcon = (device: string) => {
     const d = device.toLowerCase();

@@ -251,7 +251,172 @@
 
 ---
 
-### 2. SERP Data Ingestion
+### 2. Technical SEO Analysis Flow
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ User Analyzes Website URL                               │
+├──────────────────────────────────────────────────────────┤
+│ User enters URL in Website Analyzer                     │
+│   ↓                                                       │
+│ POST /api/v1/seo/analyze-url                            │
+│ { url: "https://example.com" }                          │
+│   ↓                                                       │
+│ SeoService.analyzeUrl()                                 │
+│   ↓                                                       │
+│ WebScraperService.scrapePage(url)                       │
+│   ├─→ Fetch HTML                                        │
+│   ├─→ Parse metadata (title, meta, canonical, robots)  │
+│   ├─→ Extract links (internal, external, broken)        │
+│   ├─→ Analyze performance (load time, resources)        │
+│   ├─→ Check mobile (viewport, touch targets)            │
+│   ├─→ Verify security (HTTPS, mixed content)             │
+│   └─→ Extract structured data (schema)                  │
+│   ↓                                                       │
+│ ScrapedSEOData object                                    │
+│   ↓                                                       │
+┌──────────────────────────────────────────────────────────┐
+│ TECHNICAL SEO SUMMARY BUILDER                            │
+│ (Decision-Critical Metrics Only)                        │
+│                                                           │
+│ buildTechnicalSeoSummary(scrapedData, url)              │
+│   ↓                                                       │
+│ Build 6 Pillars:                                         │
+│                                                           │
+│ 1. Crawl & Index Control                                 │
+│    ├─→ Indexable ratio (pass/fail)                      │
+│    ├─→ Noindex correctness (warn/pass)                  │
+│    ├─→ Canonical coverage (warn/pass)                  │
+│    ├─→ Crawl errors (fail/pass)                         │
+│    ├─→ Orphan URLs (info)                               │
+│    └─→ Robots.txt blocking (info)                       │
+│                                                           │
+│ 2. Site Architecture & Internal Authority               │
+│    ├─→ Average crawl depth (warn/pass)                  │
+│    ├─→ Internal links per page (fail/warn/pass)        │
+│    ├─→ Orphan pages (info)                              │
+│    ├─→ Broken internal links (fail/pass)                │
+│    └─→ URL structure consistency (pass)                  │
+│                                                           │
+│ 3. Page Experience & Core Web Vitals                     │
+│    ├─→ LCP (pass/warn/fail)                            │
+│    ├─→ CLS (info)                                        │
+│    ├─→ INP (info)                                        │
+│    ├─→ TTFB (pass/warn)                                 │
+│    ├─→ Render-blocking resources (warn/pass)            │
+│    └─→ Mobile vs desktop performance (info)              │
+│                                                           │
+│ 4. Canonicalization & Duplication                       │
+│    ├─→ Canonical self-reference (fail/pass)            │
+│    ├─→ HTTP vs HTTPS duplication (fail/pass)           │
+│    ├─→ WWW vs non-WWW duplication (info)                │
+│    ├─→ Duplicate indexable pages (info)                  │
+│    └─→ Canonical mismatch issues (pass)                 │
+│                                                           │
+│ 5. Mobile & Rendering Readiness                          │
+│    ├─→ Mobile usability errors (fail/pass)             │
+│    ├─→ Viewport correctness (fail/pass)                │
+│    ├─→ Tap target compliance (warn/pass)                │
+│    ├─→ Mobile CWV variance (info)                       │
+│    └─→ JS rendering compatibility (pass)                │
+│                                                           │
+│ 6. Security & Protocol Integrity                        │
+│    ├─→ HTTPS enabled (fail/pass)                       │
+│    ├─→ Mixed content issues (fail/pass)                 │
+│    ├─→ SSL validity (fail/pass)                         │
+│    └─→ Redirect correctness (fail/pass)                │
+│                                                           │
+│ For each metric:                                         │
+│ ├─→ Calculate status (pass/warn/fail/info)             │
+│ ├─→ Determine impact (low/medium/high/critical)        │
+│ ├─→ Add "why it matters" explanation                    │
+│ ├─→ Count affected pages                                │
+│ └─→ Assign fix priority (1-10)                          │
+│                                                           │
+│ Calculate pillar status:                                │
+│ ├─→ overallStatus: worst metric status                 │
+│ └─→ criticalIssues: count of fail + high-impact warn   │
+└──────────────────────────────────────────────────────────┘
+    ↓
+┌──────────────────────────────────────────────────────────┐
+│ TECHNICAL SEO ADVANCED BUILDER                           │
+│ (Hidden by Default)                                      │
+│                                                           │
+│ buildTechnicalSeoAdvanced(scrapedData, url)            │
+│   ↓                                                       │
+│ Build Advanced Categories:                               │
+│ • JavaScript & Rendering (detailed)                     │
+│ • International & Multilingual SEO                      │
+│ • Structured Data Diagnostics                           │
+│ • Log File Analysis                                      │
+│ • XML Sitemaps & Discovery                               │
+│ • Server & Hosting Performance                          │
+│ • Automation & Monitoring                                │
+│ • Crawl Budget Modeling                                  │
+│ • Anchor Text Analysis                                   │
+└──────────────────────────────────────────────────────────┘
+    ↓
+API Response:
+{
+  technicalSeo: {
+    categories: [...6 pillars with enhanced metrics...],
+    summaryScores: [
+      { name: "Technical Health", score: 85, max: 100 },
+      { name: "Performance Readiness", score: 88, max: 100 },
+      { name: "Mobile-First Compliance", score: 82, max: 100 },
+      { name: "Indexation Quality", score: 85, max: 100 }
+    ]
+  },
+  technicalSeoAdvanced: [...hidden categories...]
+}
+    ↓
+Frontend receives data
+    ↓
+┌──────────────────────────────────────────────────────────┐
+│ FRONTEND RENDERING                                       │
+│                                                           │
+│ 1. Display Summary Scores (4 KPI cards)                 │
+│                                                           │
+│ 2. Render 6 Pillars:                                     │
+│    ├─→ Category header with status badge                 │
+│    │   (✅ Good | ⚠️ Warning | ❌ Critical)            │
+│    ├─→ Subtitle explaining purpose                      │
+│    ├─→ Critical issues count badge                       │
+│    └─→ Expandable section                                │
+│                                                           │
+│ 3. For each metric (max 7 visible):                      │
+│    ├─→ Metric name                                       │
+│    ├─→ Value with unit                                   │
+│    ├─→ Status badge (pass/warn/fail/info)              │
+│    ├─→ Impact label (Low/Medium/High/Critical)          │
+│    ├─→ "Why this matters" tooltip (hover)               │
+│    ├─→ Estimated badge (if applicable)                   │
+│    └─→ Affected pages count                              │
+│                                                           │
+│ 4. Advanced Technical Diagnostics (collapsed):           │
+│    └─→ Only shown when user expands                      │
+│                                                           │
+│ 5. Metric Detail Modal (on click):                      │
+│    ├─→ "Why this matters" (prominent)                    │
+│    ├─→ Meaning                                           │
+│    ├─→ How it's measured                                 │
+│    ├─→ Current result with status                        │
+│    ├─→ Impact level                                       │
+│    ├─→ Fix priority (1-10 with visual bar)               │
+│    └─→ Improvement tips                                  │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Key Principles:**
+- ✅ Only decision-critical metrics visible by default
+- ✅ Impact and priority guide user actions
+- ✅ "Why this matters" explains business value
+- ✅ Advanced metrics available but hidden
+- ✅ AI references only visible metrics
+
+---
+
+### 3. SERP Data Ingestion
 
 ```
 ┌──────────────────────────────────────────────────────────┐

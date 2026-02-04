@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -15,20 +17,20 @@ async function bootstrap() {
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       // In development, allow localhost on any port
       if (process.env.NODE_ENV !== 'production') {
         if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
           return callback(null, true);
         }
       }
-      
+
       // Check against configured origin
       const allowedOrigins = corsOrigin.split(',').map(o => o.trim());
       if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         return callback(null, true);
       }
-      
+
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true,

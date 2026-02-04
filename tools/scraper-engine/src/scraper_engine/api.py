@@ -33,8 +33,8 @@ class IngestReferrersRequest(BaseModel):
 
 
 class OffPageAnalyzeRequest(BaseModel):
-    url: str
-    domain: str | None = None
+    url: str  # Starting URL (typically homepage)
+    domain: str | None = None  # Target domain for whole-site crawl
 
 
 @asynccontextmanager
@@ -97,8 +97,9 @@ async def ingest_referrers(req: IngestReferrersRequest):
 @app.post("/off-page-analyze")
 async def off_page_analyze(req: OffPageAnalyzeRequest):
     """
-    Sync Off-Page analysis: crawl URL + same-domain links, build link graph,
-    return metrics. No third-party APIs. Used when user clicks Off Page tab.
+    Sync Off-Page analysis: crawl entire site starting from URL, build link graph,
+    return metrics. No third-party APIs. Used when user clicks Link Signals tab.
+    Crawls the whole site (not just single URL) to discover all backlinks.
     """
     if not req.url.strip():
         raise HTTPException(400, "url required")
@@ -110,14 +111,23 @@ async def off_page_analyze(req: OffPageAnalyzeRequest):
         except Exception:
             raise HTTPException(400, "domain required or provide valid url")
     domain = domain.lower().replace("www.", "")
+    
+    # Use homepage as seed URL for whole-site crawl
+    # The crawler will follow all internal links to crawl the entire site
     seed_urls = [req.url.strip()]
-    cfg = CrawlConfig(max_pages_per_domain=200)
+    
+    # Increase max pages for whole-site crawl (was 200, now 500 for comprehensive analysis)
+    cfg = CrawlConfig(max_pages_per_domain=500)
+    
     try:
+        # Crawl entire site - crawler follows all internal links
         pages = await crawl(seed_urls, domain, cfg)
         metrics = build_graph_and_metrics(pages, domain)
+        logger.info("Whole-site crawl completed: %s pages, %s referring domains, %s backlinks",
+                   len(pages), metrics.get("referring_domains", 0), metrics.get("total_backlinks", 0))
     except Exception as e:
         logger.exception("off-page-analyze failed: %s", e)
-        raise HTTPException(500, f"Off-page analysis failed: {e}") from e
+        raise HTTPException(500, f"Link signals analysis failed: {e}") from e
     return {
         "demoData": False,
         "target_domain": domain,
@@ -127,7 +137,7 @@ async def off_page_analyze(req: OffPageAnalyzeRequest):
         "nofollow_count": metrics.get("nofollow_count", 0),
         "follow_pct": metrics.get("follow_pct", 0),
         "estimated_da": metrics.get("estimated_da", 0),
-        "pages_crawled": metrics.get("pages_crawled", 0),
+        "pages_crawled": len(pages),  # Use actual pages crawled count
         "raw": metrics,
     }
 

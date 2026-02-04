@@ -1,0 +1,74 @@
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { WebsiteAnalysisEntity } from '../entities/website-analysis.entity';
+import { BaseRepository } from './base.repository';
+
+// Note: This repository is not used as a NestJS provider.
+// We use TypeORM repositories directly via @InjectRepository in services.
+export class WebsiteAnalysisRepository extends BaseRepository<WebsiteAnalysisEntity> {
+  constructor(
+    @InjectRepository(WebsiteAnalysisEntity)
+    repository: Repository<WebsiteAnalysisEntity>,
+  ) {
+    super(repository);
+  }
+
+  /**
+   * Get the most recent completed analysis for a website
+   */
+  async findLatestByUrl(websiteUrl: string): Promise<WebsiteAnalysisEntity | null> {
+    return this.repository.findOne({
+      where: { websiteUrl, status: 'completed' },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Get all analyses for a website (for historical comparison)
+   */
+  async findByUrl(websiteUrl: string, limit: number = 10): Promise<WebsiteAnalysisEntity[]> {
+    return this.repository.find({
+      where: { websiteUrl },
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+  }
+
+  /**
+   * Get analyses within a date range for comparison
+   */
+  async findByUrlAndDateRange(
+    websiteUrl: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<WebsiteAnalysisEntity[]> {
+    return this.repository
+      .createQueryBuilder('analysis')
+      .where('analysis.websiteUrl = :websiteUrl', { websiteUrl })
+      .andWhere('analysis.status = :status', { status: 'completed' })
+      .andWhere('analysis.createdAt >= :startDate', { startDate })
+      .andWhere('analysis.createdAt <= :endDate', { endDate })
+      .orderBy('analysis.createdAt', 'DESC')
+      .getMany();
+  }
+
+  /**
+   * Get the latest analysis before a specific date (for comparison)
+   */
+  async findPreviousAnalysis(
+    websiteUrl: string,
+    beforeDate: Date,
+  ): Promise<WebsiteAnalysisEntity | null> {
+    return this.repository.findOne({
+      where: { websiteUrl, status: 'completed' },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Find by ID
+   */
+  async findById(id: string): Promise<WebsiteAnalysisEntity | null> {
+    return this.repository.findOne({ where: { id } });
+  }
+}

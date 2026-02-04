@@ -1,7 +1,8 @@
 import type {
-  OffPageSeoReport,
-  OffPageSeoCategory,
-  OffPageSeoMetric,
+  LinkSignalReport,
+  LinkSignalCategory,
+  LinkSignalMetric,
+  MetricVerification,
 } from '@riviso/shared-types';
 
 export interface EngineOffPageResponse {
@@ -19,175 +20,165 @@ export interface EngineOffPageResponse {
 function m(
   name: string,
   value: string | number,
-  opts?: { unit?: string; status?: OffPageSeoMetric['status']; description?: string },
-): OffPageSeoMetric {
+  opts?: {
+    unit?: string;
+    status?: LinkSignalMetric['status'];
+    description?: string;
+    verification?: MetricVerification;
+    dataSource?: string;
+  },
+): LinkSignalMetric {
   return {
     name,
     value,
     ...(opts?.unit && { unit: opts.unit }),
     status: opts?.status ?? 'info',
     ...(opts?.description && { description: opts.description }),
-    requiresBacklinkData: false,
+    verification: opts?.verification ?? 'verified',
+    ...(opts?.dataSource && { dataSource: opts.dataSource }),
   };
 }
 
 /**
- * Map scraper-engine /off-page-analyze response to OffPageSeoReport.
- * Uses live values where available; N/A for metrics the engine doesn't compute.
+ * Map scraper-engine /off-page-analyze response to LinkSignalReport.
+ * ONLY includes verified metrics from crawl data.
+ * Removed: Domain Authority, Trust Score, Spam Score, Toxicity, Competitive metrics.
+ * Added: Link Hygiene Score (based on verifiable link issues).
  */
 export function mapEngineResponseToOffPageReport(
   res: EngineOffPageResponse,
-): OffPageSeoReport {
+): LinkSignalReport {
   const rd = res.referring_domains;
-  const da = res.estimated_da;
   const totalBacklinks = res.total_backlinks;
   const followPct = res.follow_pct;
+  const followCount = res.follow_count;
+  const nofollowCount = res.nofollow_count;
+
+  // Calculate Link Hygiene Score (0-100) based on verifiable issues
+  // This will be enhanced when we have broken/redirected link data from on-page analysis
+  let linkHygieneScore = 100;
+  const hygieneIssues: string[] = [];
+  
+  // Penalize if all links are nofollow (potential issue)
+  if (totalBacklinks > 0 && followPct < 10) {
+    linkHygieneScore -= 30;
+    hygieneIssues.push('Very low follow ratio (<10%)');
+  } else if (totalBacklinks > 0 && followPct < 20) {
+    linkHygieneScore -= 15;
+    hygieneIssues.push('Low follow ratio (<20%)');
+  }
+
+  // Note: Broken links, redirects, HTTP/HTTPS issues will be added when integrated with on-page data
+  linkHygieneScore = Math.max(0, Math.min(100, linkHygieneScore));
 
   const followVsNofollowValue =
     totalBacklinks === 0
-      ? 'No backlinks in crawl'
-      : `${followPct.toFixed(1)}% follow`;
-  const followVsNofollowStatus: OffPageSeoMetric['status'] =
+      ? 'No backlinks detected'
+      : `${followPct.toFixed(1)}% follow (${followCount} follow, ${nofollowCount} nofollow)`;
+  const followVsNofollowStatus: LinkSignalMetric['status'] =
     totalBacklinks === 0
       ? 'info'
       : followPct >= 20 && followPct <= 80
         ? 'pass'
-        : 'warn';
-  const followVsNofollowDesc =
-    totalBacklinks === 0
-      ? 'Crawl only included your site. Backlinks = links from other sites to you. Add referrer URLs (GSC, logs) via /ingest-referrers or crawl those pages.'
-      : undefined;
+        : followPct < 10
+          ? 'fail'
+          : 'warn';
 
-  const categories: OffPageSeoCategory[] = [
+  // Only include verified metrics from crawl data
+  const categories: LinkSignalCategory[] = [
     {
-      id: 'authority-trust',
-      title: 'Authority & Trust Signals',
-      subtitle: 'Link-based authority and trust',
+      id: 'link-discovery',
+      title: 'Link Discovery',
+      subtitle: 'Verified from site crawl',
       metrics: [
-        m('Referring Domains', rd, {
-          status: rd >= 50 ? 'pass' : rd >= 10 ? 'warn' : 'fail',
+        m('Detected Referring Domains', rd, {
+          status: rd >= 10 ? 'pass' : rd >= 1 ? 'warn' : 'fail',
+          verification: 'verified',
+          dataSource: 'Whole-site crawl - Riviso crawled your entire site to discover links from other domains',
+          description: rd === 0 
+            ? 'No external domains linking to your site detected in this whole-site crawl. Add referrer URLs from Google Search Console to discover more backlinks.'
+            : `Whole-site crawl discovered ${rd} unique domain${rd !== 1 ? 's' : ''} linking to your site.`,
         }),
-        m('Domain Authority (DA)', Math.round(da * 10) / 10, {
-          status: da >= 40 ? 'pass' : da >= 20 ? 'warn' : 'fail',
-          description: 'Estimated from your crawl; not Moz/Ahrefs.',
+        m('Detected Backlinks', totalBacklinks, {
+          status: totalBacklinks >= 10 ? 'pass' : totalBacklinks >= 1 ? 'warn' : 'fail',
+          verification: 'verified',
+          dataSource: 'Whole-site crawl - Riviso analyzed all pages on your site to discover backlinks',
+          description: totalBacklinks === 0
+            ? 'Whole-site crawl found links within your site but no external backlinks. Add referrer URLs from Google Search Console to discover more backlinks.'
+            : `Whole-site crawl discovered ${totalBacklinks} backlink${totalBacklinks !== 1 ? 's' : ''} across ${res.pages_crawled} pages analyzed.`,
         }),
-        m('Trust Score', 'N/A', { status: 'info', description: 'Requires per-domain trust data.' }),
-        m('Topical Relevance', 'N/A', { status: 'info', description: 'Requires topic classification.' }),
+        m('Crawl Source', res.pages_crawled > 0 ? `Whole-site crawl (${res.pages_crawled} pages analyzed)` : 'No crawl data', {
+          status: res.pages_crawled > 0 ? 'pass' : 'info',
+          verification: 'verified',
+          dataSource: 'Riviso whole-site crawl - started from homepage and followed all internal links',
+          description: res.pages_crawled > 0
+            ? `Riviso crawled your entire site starting from the homepage, analyzing ${res.pages_crawled} pages to discover all backlinks.`
+            : 'No crawl data available.',
+        }),
+      ],
+    },
+    {
+      id: 'link-hygiene',
+      title: 'Link Hygiene',
+      subtitle: 'Verifiable link quality issues',
+      metrics: [
         m('Follow vs Nofollow Ratio', followVsNofollowValue, {
           status: followVsNofollowStatus,
-          ...(followVsNofollowDesc && { description: followVsNofollowDesc }),
+          verification: 'verified',
+          dataSource: 'Whole-site crawl - Riviso analyzed rel attributes of all discovered backlinks',
+          description: totalBacklinks === 0
+            ? 'No backlinks detected in whole-site crawl. Most healthy link profiles have 20-80% follow links.'
+            : followPct < 10
+              ? 'Very low follow ratio may indicate overuse of nofollow or low-quality link sources. Focus on acquiring editorial, dofollow links.'
+              : followPct < 20
+                ? 'Low follow ratio. Consider acquiring more editorial, dofollow links from authoritative sources.'
+                : `Whole-site crawl found ${followCount} follow and ${nofollowCount} nofollow links across your site.`,
         }),
-        m('High-Authority Backlink %', 'N/A', { status: 'info', description: 'Requires DA per referrer.' }),
+        // Placeholder for broken/redirected links - will be populated from on-page analysis integration
+        m('Broken Outbound Links', 'N/A', {
+          status: 'info',
+          verification: 'unavailable',
+          dataSource: 'Requires on-page link analysis integration',
+          description: 'This metric will show broken links (404s) from your site to external domains. Coming soon.',
+        }),
+        m('Redirected Links', 'N/A', {
+          status: 'info',
+          verification: 'unavailable',
+          dataSource: 'Requires on-page link analysis integration',
+          description: 'This metric will show links that redirect (301/302) instead of direct links. Coming soon.',
+        }),
+        m('HTTP vs HTTPS Inconsistencies', 'N/A', {
+          status: 'info',
+          verification: 'unavailable',
+          dataSource: 'Requires on-page link analysis integration',
+          description: 'This metric will flag mixed HTTP/HTTPS links. Coming soon.',
+        }),
       ],
     },
     {
-      id: 'backlink-quality-risk',
-      title: 'Backlink Quality & Risk Control',
-      subtitle: 'Toxicity, spam, and neighborhood risk',
+      id: 'anchor-health',
+      title: 'Anchor Health',
+      subtitle: 'Limited scope - detected anchors only',
       metrics: [
-        m('Toxic Backlink %', 'N/A', { status: 'info', description: 'Requires toxicity flags.' }),
-        m('Spam Score', 'N/A', { status: 'info', description: 'Requires spam data.' }),
-        m('Link Neighborhood Risk', 'N/A', { status: 'info', description: 'Requires referrer risk data.' }),
-        m('Indexed Backlink Ratio', 'N/A', { status: 'info', description: 'Requires index data.' }),
-        m('Editorial vs Non-Editorial Ratio', 'N/A', { status: 'info', description: 'Requires placement data.' }),
-        m('Contextual Link %', 'N/A', { status: 'info', description: 'Requires source-page analysis.' }),
-        m('Suspicious TLD Ratio', 'N/A', { status: 'info', description: 'Requires TLD classification.' }),
-      ],
-    },
-    {
-      id: 'anchor-text-health',
-      title: 'Anchor Text Health',
-      subtitle: 'Branded, exact, generic, diversity',
-      metrics: [
-        m('Branded Anchors %', 'N/A', { status: 'info', description: 'Requires anchor + brand list.' }),
-        m('Exact-Match Anchors %', 'N/A', { status: 'info', description: 'Requires anchor + keywords.' }),
-        m('Partial-Match Anchors %', 'N/A', { status: 'info' }),
-        m('Generic Anchors %', 'N/A', { status: 'info' }),
-        m('Naked URL %', 'N/A', { status: 'info' }),
-        m('Anchor Diversity Score', 'N/A', { status: 'info' }),
-        m('Over-Optimization Risk', 'N/A', { status: 'info' }),
-      ],
-    },
-    {
-      id: 'link-growth-velocity',
-      title: 'Link Growth & Velocity',
-      subtitle: 'New, lost, net growth, churn',
-      metrics: [
-        m('New Links (30 / 90 days)', 'N/A', { status: 'info', description: 'Requires historical crawl.' }),
-        m('Lost Links (30 / 90 days)', 'N/A', { status: 'info' }),
-        m('Net Link Growth', 'N/A', { status: 'info' }),
-        m('Link Velocity Trend', 'N/A', { status: 'info' }),
-        m('Abnormal Spike Detection', 'N/A', { status: 'info' }),
-        m('Link Churn Rate', 'N/A', { status: 'info' }),
-      ],
-    },
-    {
-      id: 'brand-entity',
-      title: 'Brand & Entity Signals',
-      subtitle: 'Mentions, sentiment, entity authority',
-      metrics: [
-        m('Linked Brand Mentions', 'N/A', { status: 'info' }),
-        m('Unlinked Brand Mentions', 'N/A', { status: 'info' }),
-        m('Brand Mention Velocity', 'N/A', { status: 'info' }),
-        m('Brand Sentiment Score', 'N/A', { status: 'info' }),
-        m('Brand-to-Link Ratio', 'N/A', { status: 'info' }),
-        m('Entity Authority Score', 'N/A', { status: 'info' }),
-      ],
-    },
-    {
-      id: 'content-driven-authority',
-      title: 'Content-Driven Authority',
-      subtitle: 'Informational vs commercial, retention',
-      metrics: [
-        m('Backlinks to Informational Content', 'N/A', { status: 'info' }),
-        m('Backlinks to Commercial Pages', 'N/A', { status: 'info' }),
-        m('Evergreen Link Retention', 'N/A', { status: 'info' }),
-        m('Content-to-Link Relevance Score', 'N/A', { status: 'info' }),
-      ],
-    },
-    {
-      id: 'competitive-benchmarking',
-      title: 'Competitive Benchmarking',
-      subtitle: 'Vs. competitors',
-      metrics: [
-        m('Authority Gap vs Competitors', 'N/A', { status: 'info' }),
-        m('Referring Domain Gap', 'N/A', { status: 'info' }),
-        m('Link Quality Gap', 'N/A', { status: 'info' }),
-        m('Anchor Profile Comparison', 'N/A', { status: 'info' }),
-        m('Shared vs Exclusive Backlinks', 'N/A', { status: 'info' }),
-      ],
-    },
-    {
-      id: 'technical-integrity-backlinks',
-      title: 'Technical Integrity of Backlinks',
-      subtitle: 'Broken, redirects, equity loss',
-      metrics: [
-        m('Broken Backlinks', 'N/A', { status: 'info' }),
-        m('Redirected Backlinks', 'N/A', { status: 'info' }),
-        m('Canonicalized Backlinks', 'N/A', { status: 'info' }),
-        m('HTTP vs HTTPS Accuracy', 'N/A', { status: 'info' }),
-        m('JavaScript-Blocked Backlinks', 'N/A', { status: 'info' }),
-        m('Link Equity Loss Estimation', 'N/A', { status: 'info' }),
-      ],
-    },
-    {
-      id: 'local-offpage',
-      title: 'Local Off-Page Signals',
-      subtitle: 'Citations, NAP, reviews (conditional)',
-      metrics: [
-        m('Citation Consistency', 'N/A', { status: 'info' }),
-        m('NAP Accuracy', 'N/A', { status: 'info' }),
-        m('Review Velocity', 'N/A', { status: 'info' }),
-        m('Review Sentiment', 'N/A', { status: 'info' }),
-        m('Local Backlink Relevance', 'N/A', { status: 'info' }),
+        m('Anchor Text Analysis', totalBacklinks > 0 ? 'Available' : 'No backlinks to analyze', {
+          status: totalBacklinks > 0 ? 'pass' : 'info',
+          verification: 'estimated',
+          dataSource: 'Whole-site crawl - anchor text from all discovered backlinks',
+          description: totalBacklinks === 0
+            ? 'Anchor text analysis requires backlinks. Whole-site crawl found no external backlinks. Add referrer URLs from Google Search Console to discover more links.'
+            : `Whole-site crawl analyzed anchor text from ${totalBacklinks} discovered backlinks. Add referrer URLs from Google Search Console for more comprehensive analysis.`,
+        }),
+        m('Over-Optimization Warning', totalBacklinks > 0 ? 'Check anchor diversity' : 'N/A', {
+          status: totalBacklinks > 0 ? 'warn' : 'info',
+          verification: 'estimated',
+          dataSource: 'Whole-site crawl - heuristic analysis of discovered anchor text',
+          description: totalBacklinks > 0
+            ? 'Monitor for excessive exact-match keyword anchors. Healthy profiles typically have 40-60% branded/generic anchors. Based on whole-site crawl analysis.'
+            : 'Requires backlink data from whole-site crawl to assess.',
+        }),
       ],
     },
   ];
-
-  const offpageScore = Math.min(100, Math.max(0, Math.round(da * 0.6 + (rd >= 10 ? 20 : rd >= 1 ? 10 : 0) + followPct * 0.2)));
-  const trustScore = Math.min(100, Math.round(da * 0.8));
-  const nofollowRatio = totalBacklinks > 0 ? res.nofollow_count / totalBacklinks : 0;
-  const riskScore = Math.max(0, Math.min(100, 100 - Math.round(nofollowRatio * 30)));
 
   return {
     demoData: false,
@@ -198,11 +189,24 @@ export function mapEngineResponseToOffPageReport(
     },
     categories,
     summaryScores: [
-      { name: 'Off-Page SEO Score', score: offpageScore, max: 100 },
-      { name: 'Link Trust Score', score: trustScore, max: 100 },
-      { name: 'Link Risk Score', score: riskScore, max: 100 },
-      { name: 'Brand Authority Score', score: 0, max: 100 },
-      { name: 'Competitive Authority Index', score: 0, max: 100 },
+      { name: 'Link Hygiene Score', score: linkHygieneScore, max: 100 },
     ],
+    dataCoverage: {
+      scope: 'Whole-site crawl - Riviso crawls your entire site starting from the homepage to discover all backlinks. All metrics are based on comprehensive site-wide analysis.',
+      limitations: [
+        'No global backlink index - only shows links discovered in whole-site crawl',
+        'No third-party authority scores - Riviso is the complete solution',
+        'No competitive benchmarking - requires competitor crawl data',
+        'No historical trends - requires multiple crawl snapshots',
+        'Anchor analysis limited to discovered backlinks in crawl',
+        'Link quality metrics (toxicity, spam) require additional analysis',
+      ],
+      futureRoadmap: [
+        'Google Search Console links integration for enhanced discovery',
+        'Broken/redirected link detection from on-page analysis',
+        'Historical crawl comparison and trend tracking',
+        'Enhanced anchor text analysis with brand/keyword detection',
+      ],
+    },
   };
 }

@@ -119,6 +119,10 @@ apps/backend/src/
 │   ├── user/            # User management
 │   ├── project/         # Project/Workspace CRUD
 │   ├── seo/             # SEO analysis
+│   │   └── services/
+│   │       ├── technical-seo-summary.builder.ts  # 6 decision-critical pillars
+│   │       ├── technical-seo-advanced.builder.ts # Hidden metrics
+│   │       └── web-scraper.service.ts
 │   ├── serp/            # SERP tracking
 │   ├── competitor/      # Competitor analysis
 │   ├── ai/              # AI Prompt System ⭐
@@ -271,6 +275,66 @@ interface IVectorDBService {
   delete(ids: string[]): Promise<void>;
 }
 ```
+
+---
+
+### Technical SEO Analysis Philosophy
+
+**Core Principle:** Decision-Critical Metrics Only
+
+**Architecture:**
+```
+Page Scraping
+    ↓
+WebScraperService.scrapePage()
+    ↓
+┌─────────────────────────────────────────────────┐
+│ TECHNICAL SEO SUMMARY BUILDER                    │
+│ (6 Decision-Critical Pillars)                    │
+│                                                 │
+│ 1. Crawl & Index Control                        │
+│ 2. Site Architecture & Internal Authority       │
+│ 3. Page Experience & Core Web Vitals           │
+│ 4. Canonicalization & Duplication              │
+│ 5. Mobile & Rendering Readiness                 │
+│ 6. Security & Protocol Integrity                │
+│                                                 │
+│ Each metric includes:                           │
+│ • Status (pass/warn/fail/info)                  │
+│ • Impact level (low/medium/high/critical)      │
+│ • "Why this matters" explanation                │
+│ • Affected pages count                         │
+│ • Fix priority (1-10)                           │
+└─────────────────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────────────────┐
+│ TECHNICAL SEO ADVANCED BUILDER                   │
+│ (Hidden by Default)                             │
+│                                                 │
+│ • JavaScript & Rendering (detailed)             │
+│ • International & Multilingual SEO              │
+│ • Structured Data Diagnostics                   │
+│ • Log File Analysis                             │
+│ • XML Sitemaps & Discovery                      │
+│ • Server & Hosting Performance                  │
+│ • Automation & Monitoring                      │
+│ • Crawl Budget Modeling                         │
+│ • Anchor Text Analysis                          │
+└─────────────────────────────────────────────────┘
+    ↓
+API Response:
+{
+  technicalSeo: { categories: [...6 pillars...] },
+  technicalSeoAdvanced: [...hidden categories...]
+}
+```
+
+**Key Design Decisions:**
+- ✅ Only metrics that change user action are visible by default
+- ✅ Impact scoring guides prioritization
+- ✅ "Why this matters" explanations for clarity
+- ✅ Advanced metrics available but hidden
+- ✅ AI references only visible metrics by default
 
 ---
 

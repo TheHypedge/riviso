@@ -21,6 +21,76 @@ export class SearchConsoleController {
 
   constructor(private readonly searchConsoleService: SearchConsoleService) {}
 
+  @Get('overview')
+  @ApiOperation({ summary: 'Get GSC overview for dashboard (last 28 days vs previous 28 days)' })
+  async getOverview(@Request() req: { user: { id: string } }, @Query('websiteId') websiteId?: string) {
+    this.logger.log(`Overview data requested by user ${req.user.id} for website ${websiteId || 'default'}`);
+
+    // Default to last 28 days
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 1); // Yesterday (GSC data has 2-day delay)
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 27);
+
+    // Previous period for comparison
+    const prevEndDate = new Date(startDate);
+    prevEndDate.setDate(prevEndDate.getDate() - 1);
+    const prevStartDate = new Date(prevEndDate);
+    prevStartDate.setDate(prevStartDate.getDate() - 27);
+
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    try {
+      // Fetch current period data
+      const currentData = await this.searchConsoleService.getPerformanceData(req.user.id, {
+        websiteId: websiteId || '',
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+      });
+
+      // Fetch previous period data for comparison
+      let prevData: typeof currentData | null = null;
+      try {
+        prevData = await this.searchConsoleService.getPerformanceData(req.user.id, {
+          websiteId: websiteId || '',
+          startDate: formatDate(prevStartDate),
+          endDate: formatDate(prevEndDate),
+        });
+      } catch {
+        // Ignore errors for previous period
+      }
+
+      // Calculate changes
+      const calcChange = (current: number, prev: number | undefined) => {
+        if (!prev || prev === 0) return 0;
+        return ((current - prev) / prev) * 100;
+      };
+
+      return {
+        clicks: currentData.totalClicks,
+        impressions: currentData.totalImpressions,
+        ctr: currentData.averageCtr,
+        position: currentData.averagePosition,
+        clicksChange: calcChange(currentData.totalClicks, prevData?.totalClicks),
+        impressionsChange: calcChange(currentData.totalImpressions, prevData?.totalImpressions),
+        ctrChange: calcChange(currentData.averageCtr, prevData?.averageCtr),
+        positionChange: prevData ? currentData.averagePosition - prevData.averagePosition : 0,
+        topQueries: currentData.topQueries?.slice(0, 5) || [],
+        topPages: currentData.topPages?.slice(0, 5) || [],
+        dailyData: currentData.dailyPerformance?.map(d => ({
+          date: d.date.slice(5), // MM-DD format
+          clicks: d.clicks,
+          impressions: d.impressions,
+        })) || [],
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+      };
+    } catch (error: any) {
+      this.logger.error(`Error in getOverview endpoint: ${error?.message || error}`, error?.stack);
+      throw error;
+    }
+  }
+
   @Get('insights')
   @ApiOperation({ summary: 'Get Insights: Your content, Queries, Top countries, Additional traffic sources (GSC)' })
   async getInsights(@Request() req: { user: { id: string } }, @Query() query: GscQueryDto) {
@@ -28,14 +98,24 @@ export class SearchConsoleController {
       throw new BadRequestException('websiteId, startDate, and endDate are required');
     }
     this.logger.log(`Insights data requested by user ${req.user.id} for website ${query.websiteId}`);
-    return this.searchConsoleService.getInsights(req.user.id, query);
+    try {
+      return await this.searchConsoleService.getInsights(req.user.id, query);
+    } catch (error: any) {
+      this.logger.error(`Error in getInsights endpoint: ${error?.message || error}`, error?.stack);
+      throw error;
+    }
   }
 
   @Get('performance')
   @ApiOperation({ summary: 'Get search performance data (default view)' })
   async getPerformance(@Request() req: { user: { id: string } }, @Query() query: GscQueryDto) {
     this.logger.log(`Performance data requested by user ${req.user.id} for website ${query.websiteId}`);
-    return this.searchConsoleService.getPerformanceData(req.user.id, query);
+    try {
+      return await this.searchConsoleService.getPerformanceData(req.user.id, query);
+    } catch (error: any) {
+      this.logger.error(`Error in getPerformance endpoint: ${error?.message || error}`, error?.stack);
+      throw error;
+    }
   }
 
   @Get('pages')

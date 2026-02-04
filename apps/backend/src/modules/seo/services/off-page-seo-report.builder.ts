@@ -22,6 +22,8 @@ function om(
     status?: OffPageSeoMetric['status'];
     description?: string;
     demo?: boolean;
+    verification?: 'verified' | 'estimated' | 'unavailable';
+    dataSource?: string;
   },
 ): OffPageSeoMetric {
   return {
@@ -30,7 +32,8 @@ function om(
     ...(opts?.unit && { unit: opts.unit }),
     status: opts?.status ?? 'info',
     ...(opts?.description && { description: opts.description }),
-    requiresBacklinkData: !opts?.demo,
+    verification: opts?.verification ?? (opts?.demo ? 'estimated' : 'verified'),
+    ...(opts?.dataSource && { dataSource: opts.dataSource }),
   };
 }
 

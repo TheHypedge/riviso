@@ -68,8 +68,10 @@ function QueriesPageContent() {
       setQueries(data);
       setRequestedRange({ start: dateRange.start, end: dateRange.end });
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to fetch queries data');
+      const errorMessage = e?.response?.data?.message || e?.message || 'Failed to fetch queries data';
+      setError(errorMessage);
       setQueries([]);
+      console.error('Failed to fetch GSC queries data:', errorMessage, e);
     } finally {
       setLoading(false);
     }
@@ -79,7 +81,7 @@ function QueriesPageContent() {
     if (selectedWebsite?.url) {
       fetchData();
     }
-  }, [selectedWebsite?.url]);
+  }, [selectedWebsite?.url, dateRange]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters({ ...filters, [key]: value });

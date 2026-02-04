@@ -1,5 +1,6 @@
 import { Injectable, Logger, UnauthorizedException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
 import {
   GscDataQueryDto,
@@ -12,6 +13,7 @@ import { GscConnectionStore } from './gsc-connection.store';
 
 export interface GSCConnection {
   userId: string;
+  email?: string;  // Store email for fallback lookup
   siteUrl: string;
   accessToken: string;
   refreshToken: string;
@@ -41,10 +43,78 @@ export class GoogleSearchConsoleService implements OnModuleInit {
   /**
    * Load connections from file on module initialization
    */
-  onModuleInit() {
+  async onModuleInit() {
     this.logger.log('Loading GSC connections from persistent storage...');
     this.connections = this.connectionStore.loadConnections();
     this.logger.log(`Loaded ${this.connections.size} GSC connection(s) on startup`);
+
+    // Proactively refresh expired tokens on startup
+    if (this.connections.size > 0) {
+      this.logger.log('Checking for expired tokens and refreshing...');
+      await this.refreshExpiredTokensOnStartup();
+    }
+  }
+
+  /**
+   * Refresh all expired tokens on startup
+   */
+  private async refreshExpiredTokensOnStartup(): Promise<void> {
+    const now = Date.now();
+    const userIds = Array.from(this.connections.keys());
+
+    for (const userId of userIds) {
+      const connection = this.connections.get(userId);
+      if (!connection) continue;
+
+      // If token is expired or expires within 5 minutes
+      if (now >= connection.expiresAt - 300000) {
+        this.logger.log(`[Startup] Token expired for user ${userId}, refreshing...`);
+        try {
+          await this.refreshTokenIfNeeded(userId);
+        } catch (error: any) {
+          this.logger.warn(`[Startup] Failed to refresh token for user ${userId}: ${error.message}`);
+          // Continue with other users even if one fails
+        }
+      } else {
+        const minutesUntilExpiry = Math.floor((connection.expiresAt - now) / 1000 / 60);
+        this.logger.log(`[Startup] Token valid for user ${userId} (${minutesUntilExpiry} minutes until expiry)`);
+      }
+    }
+  }
+
+  /**
+   * Proactively refresh tokens every hour
+   * Refreshes tokens that will expire within 15 minutes
+   */
+  @Cron(CronExpression.EVERY_HOUR)
+  async proactiveTokenRefresh(): Promise<void> {
+    if (this.connections.size === 0) {
+      return; // No connections to refresh
+    }
+
+    this.logger.log(`[Cron] Running proactive token refresh for ${this.connections.size} connection(s)`);
+    const now = Date.now();
+    const userIds = Array.from(this.connections.keys());
+
+    for (const userId of userIds) {
+      const connection = this.connections.get(userId);
+      if (!connection) continue;
+
+      // Refresh if token expires within 15 minutes
+      if (now >= connection.expiresAt - 900000) {
+        this.logger.log(`[Cron] Token expiring soon for user ${userId}, refreshing proactively...`);
+        try {
+          await this.refreshTokenIfNeeded(userId);
+          this.logger.log(`[Cron] Successfully refreshed token for user ${userId}`);
+        } catch (error: any) {
+          this.logger.warn(`[Cron] Failed to refresh token for user ${userId}: ${error.message}`);
+          // Continue with other users
+        }
+      } else {
+        const minutesUntilExpiry = Math.floor((connection.expiresAt - now) / 1000 / 60);
+        this.logger.debug(`[Cron] Token still valid for user ${userId} (${minutesUntilExpiry} minutes remaining)`);
+      }
+    }
   }
 
   /**
@@ -52,6 +122,49 @@ export class GoogleSearchConsoleService implements OnModuleInit {
    */
   private saveConnections(): void {
     this.connectionStore.saveConnections(this.connections);
+  }
+
+  /**
+   * Find connection by userId, with email fallback
+   * This handles cases where userId changes but email remains the same
+   */
+  private findConnection(userId: string, email?: string): GSCConnection | undefined {
+    // First try direct userId lookup
+    let connection = this.connections.get(userId);
+    if (connection) {
+      return connection;
+    }
+
+    // Fallback: search by email if provided
+    if (email) {
+      const emailLower = email.toLowerCase();
+      for (const conn of this.connections.values()) {
+        if (conn.email?.toLowerCase() === emailLower) {
+          this.logger.log(`[Connection] Found connection by email fallback for: ${email} (stored userId: ${conn.userId}, requested: ${userId})`);
+          // Migrate the connection to the new userId
+          this.connections.delete(conn.userId);
+          conn.userId = userId;
+          this.connections.set(userId, conn);
+          this.saveConnections();
+          this.logger.log(`[Connection] Migrated connection from old userId to: ${userId}`);
+          return conn;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Set user email for connection lookup (called from controller)
+   */
+  setUserEmail(userId: string, email: string): void {
+    const connection = this.connections.get(userId);
+    if (connection && !connection.email) {
+      connection.email = email.toLowerCase();
+      this.saveConnections();
+      this.logger.log(`[Connection] Added email to existing connection for user ${userId}`);
+    }
   }
 
   /**
@@ -97,8 +210,8 @@ export class GoogleSearchConsoleService implements OnModuleInit {
    * Handle OAuth callback
    * Validates state (userId) and exchanges code for tokens
    */
-  async handleOAuthCallback(code: string, state: string, userId: string): Promise<GSCConnection> {
-    this.logger.log(`[OAuth] Handling callback for user: ${userId}`);
+  async handleOAuthCallback(code: string, state: string, userId: string, email?: string): Promise<GSCConnection> {
+    this.logger.log(`[OAuth] Handling callback for user: ${userId}, email: ${email || 'not provided'}`);
     this.logger.debug(`[OAuth] State parameter: ${state.substring(0, 20)}...`);
 
     // Validate state matches userId (basic security check)
@@ -129,9 +242,10 @@ export class GoogleSearchConsoleService implements OnModuleInit {
       const primarySite = sites[0];
       this.logger.log(`[OAuth] Using primary property: ${primarySite.siteUrl}`);
 
-      // Store connection in memory
+      // Store connection in memory (with email for cross-account lookup)
       const connection: GSCConnection = {
         userId,
+        email: email?.toLowerCase(),
         siteUrl: primarySite.siteUrl,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || tokens.access_token,
@@ -225,15 +339,15 @@ export class GoogleSearchConsoleService implements OnModuleInit {
   }
 
   /**
-   * Get connection status
+   * Get connection status (with email fallback for cross-account lookup)
    */
-  async getConnectionStatus(userId: string): Promise<{
+  async getConnectionStatus(userId: string, email?: string): Promise<{
     connected: boolean;
     siteUrl?: string;
     connectedAt?: string;
     lastSyncAt?: string | null;
   }> {
-    const connection = this.connections.get(userId);
+    const connection = this.findConnection(userId, email);
     return {
       connected: !!connection,
       siteUrl: connection?.siteUrl,
@@ -247,27 +361,31 @@ export class GoogleSearchConsoleService implements OnModuleInit {
    */
   async disconnect(userId: string): Promise<boolean> {
     this.connections.delete(userId);
+    this.saveConnections(); // Persist the disconnection
     this.logger.log(`GSC disconnected for user: ${userId}`);
     return true;
   }
 
   /**
-   * Get sites for user
+   * Get sites for user (with email fallback)
    */
-  async getSites(userId: string): Promise<GscSite[]> {
-    const connection = this.connections.get(userId);
+  async getSites(userId: string, email?: string): Promise<GscSite[]> {
+    const connection = this.findConnection(userId, email);
     if (!connection) {
       throw new UnauthorizedException('Google Search Console not connected');
     }
+
+    // Refresh token if needed
+    await this.refreshTokenIfNeeded(userId);
 
     return this.fetchSitesFromGoogle(connection.accessToken);
   }
 
   /**
-   * Get performance data
+   * Get performance data (with email fallback)
    */
-  async getPerformanceData(userId: string, dto: GscDataQueryDto): Promise<GscPerformanceData> {
-    const connection = this.connections.get(userId);
+  async getPerformanceData(userId: string, dto: GscDataQueryDto, email?: string): Promise<GscPerformanceData> {
+    const connection = this.findConnection(userId, email);
     if (!connection) {
       throw new UnauthorizedException('Google Search Console not connected');
     }
@@ -388,11 +506,13 @@ export class GoogleSearchConsoleService implements OnModuleInit {
 
     // Check if token is expired (with 5 minute buffer)
     if (Date.now() < connection.expiresAt - 300000) {
+      this.logger.debug(`[Token] Access token still valid for user ${userId} (expires in ${Math.floor((connection.expiresAt - Date.now()) / 1000 / 60)} minutes)`);
       return; // Token is still valid
     }
 
-    this.logger.log(`Refreshing access token for user: ${userId}`);
-    
+    this.logger.log(`[Token] Access token expired or expiring soon for user ${userId}, refreshing...`);
+    this.logger.debug(`[Token] Expired at: ${new Date(connection.expiresAt).toISOString()}, Current time: ${new Date().toISOString()}`);
+
     try {
       const response = await axios.post(
         `${this.OAUTH_BASE}/token`,
@@ -414,14 +534,27 @@ export class GoogleSearchConsoleService implements OnModuleInit {
       connection.expiresAt = Date.now() + (response.data.expires_in * 1000);
       if (response.data.refresh_token) {
         connection.refreshToken = response.data.refresh_token;
+        this.logger.log(`[Token] New refresh token received for user ${userId}`);
       }
 
       this.connections.set(userId, connection);
-      this.saveConnections(); // Persist token refresh
-      this.logger.log(`Access token refreshed successfully for user: ${userId}`);
+      this.saveConnections(); // Persist token refresh immediately
+      this.logger.log(`[Token] Access token refreshed successfully for user ${userId}, new expiry: ${new Date(connection.expiresAt).toISOString()}`);
     } catch (error: any) {
-      this.logger.error(`Failed to refresh token: ${error.message}`);
-      throw new UnauthorizedException('Failed to refresh access token. Please reconnect Google Search Console.');
+      const errorDetail = error?.response?.data?.error_description || error?.response?.data?.error || error?.message;
+      this.logger.error(`[Token] Failed to refresh token for user ${userId}: ${errorDetail}`);
+      this.logger.error(`[Token] Error response:`, error?.response?.data);
+
+      // Check if it's a permanent error (invalid refresh token)
+      if (error?.response?.data?.error === 'invalid_grant') {
+        this.logger.warn(`[Token] Refresh token is invalid or revoked for user ${userId}. User needs to re-authenticate.`);
+        // Don't delete the connection - let the user manually reconnect
+        throw new UnauthorizedException('Your Google Search Console connection has expired. Please reconnect to continue using this feature.');
+      }
+
+      // For temporary errors (network issues, etc.), keep the connection and retry later
+      this.logger.warn(`[Token] Temporary error refreshing token for user ${userId}. Will retry on next request.`);
+      throw new UnauthorizedException('Failed to refresh access token. Please try again or reconnect Google Search Console.');
     }
   }
 

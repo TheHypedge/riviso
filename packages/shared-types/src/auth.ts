@@ -26,6 +26,42 @@ export interface UserInfo {
   name: string;
   role: UserRole;
   workspaces: string[];
+  emailVerified: boolean;
+  onboardingCompleted?: boolean;
+  websiteCount?: number;
+  maxWebsites?: number; // -1 for unlimited (admin)
+}
+
+// Admin dashboard types
+export interface SystemStats {
+  totalUsers: number;
+  verifiedUsers: number;
+  unverifiedUsers: number;
+  totalWebsites: number;
+  usersRegisteredToday: number;
+  usersRegisteredThisWeek: number;
+  usersRegisteredThisMonth: number;
+}
+
+export interface AdminUserInfo extends UserInfo {
+  createdAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+  websites?: string[];
+}
+
+export interface RegistrationResponse {
+  message: string;
+  email: string;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
 }
 
 export enum UserRole {

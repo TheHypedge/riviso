@@ -61,6 +61,19 @@ export class UserController {
     return { success: true };
   }
 
+  @Post('me/complete-onboarding')
+  @ApiOperation({ summary: 'Mark onboarding as completed' })
+  async completeOnboarding(@Request() req: { user: { id: string } }) {
+    await this.userService.completeOnboarding(req.user.id);
+    return { success: true };
+  }
+
+  @Get('me/website-limit')
+  @ApiOperation({ summary: 'Check if user can add more websites' })
+  checkWebsiteLimit(@Request() req: { user: { id: string } }) {
+    return this.userService.canAddWebsite(req.user.id);
+  }
+
   @Get('me/integrations')
   @ApiOperation({ summary: 'List connected integrations' })
   getIntegrations(@Request() req: { user: { id: string } }) {

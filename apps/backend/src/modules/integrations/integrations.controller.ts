@@ -16,8 +16,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { IntegrationsService } from './integrations.service';
 import { ConnectIntegrationDto } from './dto/connect-integration.dto';
 import { GoogleSearchConsoleService as GSCService } from './services/gsc.service';
+import { GscOAuthService } from './services/gsc-oauth.service';
+import { GscPropertyService } from './services/gsc-property.service';
 import { GscDataQueryDto } from '@riviso/shared-types';
 import { OAuthConfig } from '../../common/config/oauth.config';
+import { GSCPropertyRepository } from '../../infrastructure/database/repositories/gsc-property.repository';
 
 @ApiTags('Integrations')
 @Controller('integrations')
@@ -28,6 +31,9 @@ export class IntegrationsController {
     private readonly integrationsService: IntegrationsService,
     private readonly gscService: GSCService,
     private readonly oauthConfig: OAuthConfig,
+    private readonly gscOAuthService: GscOAuthService,
+    private readonly gscPropertyService: GscPropertyService,
+    private readonly gscPropertyRepo: GSCPropertyRepository,
   ) {
     // Log OAuth configuration on startup for debugging
     try {
@@ -94,40 +100,47 @@ export class IntegrationsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get Google Search Console connection status' })
-  async getGscStatus(@Request() req: { user: { id: string } }) {
-    const status = await this.gscService.getConnectionStatus(req.user.id);
-    const connected = !!status && !!status.siteUrl;
-    
-    // Fetch all sites/properties if connected
-    let properties: any[] = [];
-    if (connected) {
-      try {
-        const sites = await this.gscService.getSites(req.user.id);
-        properties = sites.map(site => ({
-          id: site.siteUrl,
-          gscPropertyUrl: site.siteUrl,
-          permissionLevel: site.permissionLevel,
+  async getGscStatus(@Request() req: { user: { id: string; email?: string } }) {
+    this.logger.log(`[GSC Status] Checking status for user: ${req.user.id}`);
+
+    try {
+      // Get properties from database
+      const dbProperties = await this.gscPropertyRepo.findByUserId(req.user.id);
+      const connected = dbProperties.length > 0;
+
+      const properties = dbProperties.map(prop => ({
+        id: prop.id,
+        gscPropertyUrl: prop.gscPropertyUrl,
+        permissionLevel: prop.permissionLevel,
+        lastSyncedAt: prop.lastSyncedAt?.toISOString() || null,
+        googleAccountId: prop.googleAccountId,
+      }));
+
+      const integration = connected && dbProperties[0]
+        ? {
+            connected: true,
+            connectedAt: dbProperties[0].createdAt?.toISOString(),
+            siteUrl: dbProperties[0].gscPropertyUrl,
+          }
+        : undefined;
+
+      return { connected, properties, integration };
+    } catch (error: any) {
+      this.logger.warn(`[GSC Status] Error checking status: ${error.message}`);
+      // Fallback to file-based service for backward compatibility
+      const status = await this.gscService.getConnectionStatus(req.user.id, req.user.email);
+      const connected = !!status && !!status.siteUrl;
+      return {
+        connected,
+        properties: connected ? [{
+          id: status.siteUrl,
+          gscPropertyUrl: status.siteUrl,
+          permissionLevel: 'owner',
           lastSyncedAt: null,
-        }));
-      } catch (error) {
-        this.logger.warn(`Failed to fetch GSC sites for status: ${error.message}`);
-        // If we have a connection but can't fetch sites, still return connected status
-        // with the stored siteUrl as a fallback
-        if (status.siteUrl) {
-          properties = [{
-            id: status.siteUrl,
-            gscPropertyUrl: status.siteUrl,
-            permissionLevel: 'owner',
-            lastSyncedAt: null,
-          }];
-        }
-      }
+        }] : [],
+        integration: status ? { connected: true, connectedAt: status.connectedAt } : undefined,
+      };
     }
-    
-    const integration = status
-      ? { connected: true, connectedAt: status.connectedAt, lastSyncAt: status.lastSyncAt ?? undefined }
-      : undefined;
-    return { connected, properties, integration };
   }
 
   @Post('gsc/callback')
@@ -135,33 +148,160 @@ export class IntegrationsController {
   // No JWT guard - this is a public OAuth callback endpoint
   // Security: userId is extracted from state parameter
   async handleGscCallback(
-    @Body() dto: { code: string; state: string },
-    @Request() req: { user?: { id: string } },
+    @Body() dto: { code: string; state: string; email?: string },
+    @Request() req: { user?: { id: string; email?: string } },
   ) {
-    this.logger.log(`[OAuth Callback] Received callback with state: ${dto.state.substring(0, 20)}...`);
-    
+    this.logger.log(`[OAuth Callback] Received callback with state: ${dto.state?.substring(0, 20) || 'missing'}...`);
+
+    // Validate required parameters
+    if (!dto.code) {
+      throw new BadRequestException(
+        'Authorization was cancelled or failed. Please try connecting again.',
+      );
+    }
+
+    if (!dto.state) {
+      throw new BadRequestException(
+        'Invalid connection request. Please go back to Settings and try connecting again.',
+      );
+    }
+
     // Derive userId from state (state contains userId for security)
     // Prefer JWT user if available (more secure), otherwise use state
     const userId = req.user?.id || dto.state;
-    
-    if (!userId) {
-      this.logger.error('[OAuth Callback] No userId found in state or JWT');
-      throw new BadRequestException('Invalid OAuth state parameter');
-    }
+    // Get email from JWT, dto, or decode from state if it contains email
+    const userEmail = req.user?.email || dto.email;
 
-    this.logger.log(`[OAuth Callback] Processing callback for user: ${userId}`);
+    this.logger.log(`[OAuth Callback] Processing callback for user: ${userId}, email: ${userEmail || 'not provided'}`);
 
     try {
-      const connection = await this.gscService.handleOAuthCallback(dto.code, dto.state, userId);
-      this.logger.log(`[OAuth Callback] Successfully connected GSC for user: ${userId}`);
+      // Use the database-backed OAuth service
+      const result = await this.gscOAuthService.handleCallback(dto.code, dto.state);
+      const { sites, googleAccountId, email } = result;
+
+      this.logger.log(`[OAuth Callback] Successfully authenticated GSC for user: ${userId}, found ${sites.length} properties`);
+
+      // Return sites for property selection
       return {
         success: true,
-        connection,
-        message: 'Google Search Console connected successfully',
+        requiresPropertySelection: sites.length > 0,
+        googleAccountId,
+        email,
+        sites: sites.map(s => ({
+          siteUrl: s.siteUrl,
+          permissionLevel: s.permissionLevel,
+        })),
+        message: sites.length > 1
+          ? 'Please select a Google Search Console property to connect'
+          : 'Google Search Console connected successfully',
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`[OAuth Callback] Failed to handle callback: ${error.message}`, error.stack);
-      throw error;
+      // Re-throw with user-friendly message if not already a handled exception
+      if (error instanceof BadRequestException || error.status === 400 || error.status === 401) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'Something went wrong while connecting to Google Search Console. Please try again.',
+      );
+    }
+  }
+
+  @Post('gsc/select-property')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Select a GSC property to connect' })
+  async selectGscProperty(
+    @Body() dto: { googleAccountId: string; siteUrl: string; permissionLevel?: string },
+    @Request() req: { user: { id: string } },
+  ) {
+    this.logger.log(`[GSC Property] User ${req.user.id} selecting property: ${dto.siteUrl}`);
+
+    if (!dto.googleAccountId) {
+      throw new BadRequestException(
+        'Google account not found. Please try connecting again from Settings.',
+      );
+    }
+
+    if (!dto.siteUrl) {
+      throw new BadRequestException(
+        'Please select a property to connect.',
+      );
+    }
+
+    try {
+      // Save the selected property to database
+      const result = await this.gscPropertyService.saveProperty(
+        req.user.id,
+        dto.googleAccountId,
+        dto.siteUrl,
+        dto.permissionLevel || 'siteOwner',
+        null, // websiteId - can be linked later
+      );
+
+      this.logger.log(`[GSC Property] Property saved: ${dto.siteUrl} for user ${req.user.id}`);
+
+      return {
+        success: true,
+        propertyId: result.id,
+        siteUrl: dto.siteUrl,
+        message: 'Google Search Console connected successfully! You can now view your search analytics.',
+      };
+    } catch (error: any) {
+      this.logger.error(`[GSC Property] Failed to save property: ${error.message}`, error.stack);
+      throw new BadRequestException(
+        'Unable to save the connection. Please try again or contact support if the problem persists.',
+      );
+    }
+  }
+
+  @Get('gsc/validate')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Validate GSC connection is working' })
+  async validateGscConnection(@Request() req: { user: { id: string } }) {
+    this.logger.log(`[GSC Validate] Validating connection for user: ${req.user.id}`);
+
+    try {
+      // Check if user has GSC properties
+      const properties = await this.gscPropertyRepo.findByUserId(req.user.id);
+
+      if (!properties || properties.length === 0) {
+        return {
+          valid: false,
+          message: 'Google Search Console is not connected. Please connect your account in Settings.',
+          needsReconnect: true,
+        };
+      }
+
+      // Try to get a valid access token for the first property
+      const property = properties[0];
+      try {
+        await this.gscPropertyService.getAccessTokenForProperty(property.id);
+        return {
+          valid: true,
+          message: 'Google Search Console connection is active.',
+          properties: properties.map(p => ({
+            id: p.id,
+            siteUrl: p.gscPropertyUrl,
+            permissionLevel: p.permissionLevel,
+          })),
+        };
+      } catch (tokenError: any) {
+        this.logger.warn(`[GSC Validate] Token validation failed: ${tokenError.message}`);
+        return {
+          valid: false,
+          message: 'Your Google Search Console connection has expired. Please reconnect.',
+          needsReconnect: true,
+        };
+      }
+    } catch (error: any) {
+      this.logger.error(`[GSC Validate] Validation error: ${error.message}`);
+      return {
+        valid: false,
+        message: 'Unable to validate connection. Please try again.',
+        needsReconnect: false,
+      };
     }
   }
 
@@ -199,8 +339,41 @@ export class IntegrationsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Disconnect Google Search Console' })
   async disconnectGsc(@Request() req: { user: { id: string } }) {
-    await this.gscService.disconnect(req.user.id);
-    return { success: true, message: 'Google Search Console disconnected' };
+    this.logger.log(`[GSC Disconnect] Disconnecting GSC for user: ${req.user.id}`);
+
+    let disconnected = false;
+
+    // Disconnect from database-backed storage
+    try {
+      await this.gscOAuthService.disconnect(req.user.id);
+      this.logger.log(`[GSC Disconnect] Database tokens cleared for user: ${req.user.id}`);
+      disconnected = true;
+    } catch (dbError: any) {
+      this.logger.warn(`[GSC Disconnect] Database disconnect warning: ${dbError.message}`);
+    }
+
+    // Also delete GSC properties from database
+    try {
+      const deleted = await this.gscPropertyRepo.deleteByUserId(req.user.id);
+      this.logger.log(`[GSC Disconnect] Deleted ${deleted} GSC properties for user: ${req.user.id}`);
+      if (deleted > 0) disconnected = true;
+    } catch (propError: any) {
+      this.logger.warn(`[GSC Disconnect] Property delete warning: ${propError.message}`);
+    }
+
+    // Also disconnect from file-based storage (legacy)
+    try {
+      await this.gscService.disconnect(req.user.id);
+      this.logger.log(`[GSC Disconnect] File-based connection cleared for user: ${req.user.id}`);
+      disconnected = true;
+    } catch (fileError: any) {
+      this.logger.warn(`[GSC Disconnect] File-based disconnect warning: ${fileError.message}`);
+    }
+
+    return {
+      success: true,
+      message: 'Google Search Console has been disconnected. You can reconnect anytime.',
+    };
   }
 
   @Get()

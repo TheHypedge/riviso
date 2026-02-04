@@ -2,6 +2,8 @@ import { Injectable, Logger, BadRequestException, UnauthorizedException, Inject,
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { GSCService } from '../integrations/services/gsc.service';
+import { GscPropertyService } from '../integrations/services/gsc-property.service';
+import { GSCPropertyRepository } from '../../infrastructure/database/repositories/gsc-property.repository';
 import { WebScraperService } from '../seo/services/web-scraper.service';
 import { GscQueryDto } from './dto/gsc-query.dto';
 import { GscDimension } from '@riviso/shared-types';
@@ -15,55 +17,99 @@ export class SearchConsoleService {
     @Inject(forwardRef(() => GSCService))
     private readonly gscService: GSCService,
     private readonly configService: ConfigService,
+    private readonly gscPropertyService: GscPropertyService,
+    private readonly gscPropertyRepo: GSCPropertyRepository,
     @Optional() private readonly webScraperService?: WebScraperService,
   ) {}
 
   /**
    * Get GSC connection access token (internal method)
+   * Uses database-backed token storage with automatic refresh
    */
   private async getAccessToken(userId: string): Promise<string> {
-    // Check connection status
-    const connectionStatus = await this.gscService.getConnectionStatus(userId);
-    if (!connectionStatus.connected) {
-      throw new UnauthorizedException('Google Search Console not connected');
-    }
-    
-    // Access internal connections map
-    const gscServiceInternal = this.gscService as any;
-    const connections = gscServiceInternal.connections as Map<string, any>;
-    
-    if (!connections) {
-      throw new UnauthorizedException('GSC service not properly initialized');
-    }
-    
-    const connection = connections.get(userId);
-    if (!connection) {
-      throw new UnauthorizedException('GSC connection not found');
-    }
-    
-    // Check if token needs refresh (expires in less than 5 minutes)
-    if (Date.now() >= connection.expiresAt - 300000) {
-      this.logger.log(`Refreshing access token for user: ${userId}`);
-      await this.refreshAccessToken(userId, connection);
-      // Re-fetch connection after refresh
-      const refreshedConnection = connections.get(userId);
-      if (refreshedConnection) {
-        return refreshedConnection.accessToken;
+    try {
+      // First try database-backed approach (new OAuth flow)
+      const properties = await this.gscPropertyRepo.findByUserId(userId);
+
+      if (properties && properties.length > 0) {
+        // Use the first (most recent) property
+        const property = properties[0];
+        this.logger.log(`Using database-backed token for user ${userId}, property: ${property.gscPropertyUrl}`);
+
+        try {
+          const accessToken = await this.gscPropertyService.getAccessTokenForProperty(property.id);
+          return accessToken;
+        } catch (dbError: any) {
+          this.logger.warn(`Database token retrieval failed: ${dbError.message}, falling back to file-based`);
+          // Check if it's an auth error that needs reconnection
+          if (dbError instanceof UnauthorizedException) {
+            throw new UnauthorizedException(
+              'Your Google Search Console connection has expired. Please reconnect in Settings > Integrations.',
+            );
+          }
+        }
       }
+
+      // Fallback to file-based approach (legacy connections)
+      const connectionStatus = await this.gscService.getConnectionStatus(userId);
+      if (!connectionStatus.connected) {
+        this.logger.warn(`GSC not connected for user ${userId}`);
+        throw new UnauthorizedException(
+          'Google Search Console is not connected. Please connect your account in Settings > Integrations to view search analytics.',
+        );
+      }
+
+      // Access internal connections map (file-based legacy)
+      const gscServiceInternal = this.gscService as any;
+      const connections = gscServiceInternal.connections as Map<string, any>;
+
+      if (!connections) {
+        this.logger.error(`GSC connections map not found for user ${userId}`);
+        throw new UnauthorizedException(
+          'Unable to access your Google Search Console connection. Please try reconnecting.',
+        );
+      }
+
+      const connection = connections.get(userId);
+      if (!connection) {
+        this.logger.warn(`GSC connection not found in map for user ${userId}`);
+        throw new UnauthorizedException(
+          'Your Google Search Console connection was not found. Please reconnect in Settings > Integrations.',
+        );
+      }
+
+      // Check if token needs refresh (expires in less than 5 minutes)
+      if (Date.now() >= connection.expiresAt - 300000) {
+        this.logger.log(`Refreshing access token for user: ${userId}`);
+        await this.refreshAccessToken(userId, connection);
+        // Re-fetch connection after refresh
+        const refreshedConnection = connections.get(userId);
+        if (refreshedConnection) {
+          return refreshedConnection.accessToken;
+        }
+      }
+
+      return connection.accessToken;
+    } catch (error: any) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      this.logger.error(`Error getting access token for user ${userId}: ${error?.message || error}`);
+      throw new UnauthorizedException(
+        'Unable to access Google Search Console. Please try reconnecting your account in Settings.',
+      );
     }
-    
-    return connection.accessToken;
   }
 
   /**
-   * Refresh access token
+   * Refresh access token (file-based legacy)
    */
   private async refreshAccessToken(userId: string, connection: any): Promise<void> {
     try {
       const gscServiceInternal = this.gscService as any;
       const oauthConfig = gscServiceInternal.oauthConfig;
       const connections = gscServiceInternal.connections as Map<string, any>;
-      
+
       const response = await axios.post(
         'https://oauth2.googleapis.com/token',
         {
@@ -88,7 +134,7 @@ export class SearchConsoleService {
 
       // Update connection in map
       connections.set(userId, connection);
-      
+
       // Save updated connection (via connection store)
       const connectionStore = gscServiceInternal.connectionStore;
       if (connectionStore) {
@@ -97,33 +143,47 @@ export class SearchConsoleService {
       this.logger.log(`Access token refreshed successfully for user: ${userId}`);
     } catch (error: any) {
       this.logger.error(`Failed to refresh token: ${error.message}`);
-      throw new UnauthorizedException('Failed to refresh access token. Please reconnect Google Search Console.');
+      throw new UnauthorizedException(
+        'Your Google Search Console session has expired. Please reconnect in Settings > Integrations.',
+      );
     }
   }
 
   /**
    * Map website URL to GSC property URL
-   * This ensures we only fetch data for the mapped website property
+   * First checks database for stored property, then falls back to matching
    */
   private async getMappedProperty(userId: string, websiteUrl: string): Promise<string> {
+    // First check database for stored GSC property (from new OAuth flow)
+    const dbProperties = await this.gscPropertyRepo.findByUserId(userId);
+    if (dbProperties && dbProperties.length > 0) {
+      // Use the stored property from database
+      const storedProperty = dbProperties[0].gscPropertyUrl;
+      this.logger.log(`Using database-stored GSC property for user ${userId}: ${storedProperty}`);
+      return storedProperty;
+    }
+
+    // Fall back to file-based connection and matching logic
     // Get user's GSC connection
     const connection = await this.gscService.getConnectionStatus(userId);
     if (!connection.connected || !connection.siteUrl) {
-      throw new UnauthorizedException('Google Search Console not connected');
+      throw new UnauthorizedException(
+        'Google Search Console is not connected. Please connect your account in Settings > Integrations.',
+      );
     }
 
     // Get all available GSC properties
     const sites = await this.gscService.getSites(userId);
-    
+
     // Match website URL to GSC property
     try {
       const url = new URL(websiteUrl);
       const domain = url.hostname.replace(/^www\./, '');
-      
+
       // Try to find matching property
       for (const site of sites) {
         const siteUrl = site.siteUrl;
-        
+
         // Match domain property
         if (siteUrl.startsWith('sc-domain:')) {
           const propDomain = siteUrl.replace('sc-domain:', '');
@@ -132,7 +192,7 @@ export class SearchConsoleService {
             return siteUrl;
           }
         }
-        
+
         // Match URL prefix property
         if (siteUrl.startsWith('http')) {
           try {
@@ -147,41 +207,202 @@ export class SearchConsoleService {
           }
         }
       }
-      
+
       // If no exact match, use the first available property (fallback)
       if (sites.length > 0) {
         this.logger.warn(`No exact match found for ${websiteUrl}, using first available property: ${sites[0].siteUrl}`);
         return sites[0].siteUrl;
       }
-      
-      throw new BadRequestException(`No GSC property found matching website: ${websiteUrl}`);
-    } catch (error) {
-      this.logger.error(`Error mapping website to GSC property: ${error.message}`);
-      throw new BadRequestException(`Failed to map website to GSC property: ${error.message}`);
+
+      throw new BadRequestException(
+        'No matching Google Search Console property found for your website. Please make sure the website you are analyzing is verified in Google Search Console.',
+      );
+    } catch (error: any) {
+      this.logger.error(`Error mapping website to GSC property for user ${userId}: ${error?.message || error}`);
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'Unable to find a matching Search Console property. Please verify your website is added to Google Search Console.',
+      );
     }
   }
 
   /**
    * Get search performance data
+   * Uses database-backed token for new OAuth connections, falls back to legacy for old connections
    */
   async getPerformanceData(userId: string, dto: GscQueryDto) {
-    const propertyUrl = await this.getMappedProperty(userId, dto.websiteId);
-    
-    // Use existing GSC service method
-    return this.gscService.getPerformanceData(userId, {
+    try {
+      this.logger.log(`Getting performance data for user ${userId}, website ${dto.websiteId}`);
+      const propertyUrl = await this.getMappedProperty(userId, dto.websiteId);
+
+      // Get access token (will use database-backed token if available)
+      const accessToken = await this.getAccessToken(userId);
+
+      // Make direct API call using the token
+      const apiUrl = `${this.GSC_API_BASE}/sites/${encodeURIComponent(propertyUrl)}/searchAnalytics/query`;
+
+      // Get daily totals for accurate metrics
+      const dailyRequest = {
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        dimensions: [GscDimension.DATE],
+        rowLimit: 1000,
+      };
+
+      this.logger.log(`[GSC] Fetching daily data for property: ${propertyUrl}`);
+      const dailyResponse = await axios.post(apiUrl, dailyRequest, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const dailyRows = dailyResponse.data?.rows || [];
+
+      // Get query breakdown
+      const queryRequest = {
+        startDate: dto.startDate,
+        endDate: dto.endDate,
+        dimensions: [GscDimension.DATE, GscDimension.QUERY],
+        rowLimit: 10000,
+      };
+
+      const queryResponse = await axios.post(apiUrl, queryRequest, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const queryRows = queryResponse.data?.rows || [];
+
+      // Process data
+      const processedData = this.processPerformanceData(dto, dailyRows, queryRows, propertyUrl);
+      this.logger.log(`Performance data retrieved successfully for user ${userId}: ${processedData.totalClicks} clicks`);
+      return processedData;
+    } catch (error: any) {
+      this.logger.error(`Error getting performance data for user ${userId}: ${error?.message || error}`, error?.stack);
+
+      // Handle 401 specifically with user-friendly message
+      if (error?.response?.status === 401) {
+        throw new UnauthorizedException(
+          'Your Google Search Console connection has expired. Please reconnect in Settings > Integrations.',
+        );
+      }
+
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to fetch performance data: ${error?.message || 'Unknown error'}. Please ensure Google Search Console is connected.`);
+    }
+  }
+
+  /**
+   * Process performance data from GSC API
+   */
+  private processPerformanceData(
+    dto: GscQueryDto,
+    dailyRows: any[],
+    queryRows: any[],
+    propertyUrl: string,
+  ) {
+    let totalClicks = 0;
+    let totalImpressions = 0;
+    let totalPositionWeighted = 0;
+    const dailyMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+
+    dailyRows.forEach((row: any) => {
+      const clicks = row.clicks || 0;
+      const impressions = row.impressions || 0;
+      const position = row.position || 0;
+
+      totalClicks += clicks;
+      totalImpressions += impressions;
+      totalPositionWeighted += position * impressions;
+
+      const date = row.keys?.[0];
+      if (date) {
+        const normalizedDate = date.length === 10 ? date : date.split('T')[0];
+        if (!dailyMap.has(normalizedDate)) {
+          dailyMap.set(normalizedDate, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const daily = dailyMap.get(normalizedDate)!;
+        daily.clicks += clicks;
+        daily.impressions += impressions;
+        daily.positionWeighted += position * impressions;
+      }
+    });
+
+    // Process query rows for top queries
+    const queryMap = new Map<string, { clicks: number; impressions: number; positionWeighted: number }>();
+    queryRows.forEach((row: any) => {
+      const clicks = row.clicks || 0;
+      const impressions = row.impressions || 0;
+      const position = row.position || 0;
+      const keys = row.keys || [];
+      const query = keys.find((k: string) => k && !k.match(/^\d{4}-\d{2}-\d{2}$/));
+
+      if (query) {
+        if (!queryMap.has(query)) {
+          queryMap.set(query, { clicks: 0, impressions: 0, positionWeighted: 0 });
+        }
+        const queryData = queryMap.get(query)!;
+        queryData.clicks += clicks;
+        queryData.impressions += impressions;
+        queryData.positionWeighted += position * impressions;
+      }
+    });
+
+    // Calculate averages
+    const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+    const avgPosition = totalImpressions > 0 ? totalPositionWeighted / totalImpressions : 0;
+
+    // Build arrays
+    const dailyPerformance = Array.from(dailyMap.entries())
+      .map(([date, data]) => ({
+        date,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const topQueries = Array.from(queryMap.entries())
+      .map(([query, data]) => ({
+        query,
+        clicks: data.clicks,
+        impressions: data.impressions,
+        ctr: data.impressions > 0 ? (data.clicks / data.impressions) * 100 : 0,
+        position: data.impressions > 0 ? data.positionWeighted / data.impressions : 0,
+      }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 20);
+
+    return {
       siteUrl: propertyUrl,
+      totalClicks,
+      totalImpressions,
+      averageCtr: parseFloat(avgCtr.toFixed(2)),
+      averagePosition: parseFloat(avgPosition.toFixed(1)),
+      dailyPerformance,
+      topQueries,
+      topPages: [],
       startDate: dto.startDate,
       endDate: dto.endDate,
-      dimensions: dto.dimensions || [GscDimension.DATE, GscDimension.QUERY],
-    });
+    };
   }
 
   /**
    * Get top pages
    */
   async getTopPages(userId: string, dto: GscQueryDto) {
-    const propertyUrl = await this.getMappedProperty(userId, dto.websiteId);
-    const accessToken = await this.getAccessToken(userId);
+    try {
+      this.logger.log(`Getting top pages for user ${userId}, website ${dto.websiteId}`);
+      const propertyUrl = await this.getMappedProperty(userId, dto.websiteId);
+      const accessToken = await this.getAccessToken(userId);
 
     const response = await axios.post(
       `${this.GSC_API_BASE}/sites/${encodeURIComponent(propertyUrl)}/searchAnalytics/query`,
@@ -231,6 +452,13 @@ export class SearchConsoleService {
       }))
       .sort((a, b) => b.clicks - a.clicks)
       .slice(0, dto.rowLimit || 100);
+    } catch (error: any) {
+      this.logger.error(`Error getting top pages for user ${userId}: ${error?.message || error}`, error?.stack);
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to fetch pages data: ${error?.message || 'Unknown error'}. Please ensure Google Search Console is connected.`);
+    }
   }
 
   /**
@@ -468,26 +696,50 @@ export class SearchConsoleService {
    * All from Google Search Console. Trending = current vs prior period.
    */
   async getInsights(userId: string, dto: GscQueryDto) {
-    const { startDate, endDate, websiteId } = dto;
-    const { priorStart, priorEnd } = this.priorPeriod(startDate, endDate);
+    try {
+      const { startDate, endDate, websiteId } = dto;
+      const { priorStart, priorEnd } = this.priorPeriod(startDate, endDate);
 
-    const [
-      perf,
-      pagesCurrent,
-      pagesPrior,
-      queriesCurrent,
-      queriesPrior,
-      countries,
-      appearance,
-    ] = await Promise.all([
-      this.getPerformanceData(userId, { ...dto, dimensions: [GscDimension.DATE] }),
-      this.fetchAggregatedByDimension(userId, websiteId, startDate, endDate, 'page'),
-      this.fetchAggregatedByDimension(userId, websiteId, priorStart, priorEnd, 'page'),
-      this.fetchAggregatedByDimension(userId, websiteId, startDate, endDate, 'query'),
-      this.fetchAggregatedByDimension(userId, websiteId, priorStart, priorEnd, 'query'),
-      this.getCountries(userId, { ...dto, startDate, endDate, websiteId }),
-      this.getSearchAppearance(userId, { ...dto, startDate, endDate, websiteId }),
-    ]);
+      this.logger.log(`Fetching insights for user ${userId}, website ${websiteId}, dates ${startDate} to ${endDate}`);
+
+      const [
+        perf,
+        pagesCurrent,
+        pagesPrior,
+        queriesCurrent,
+        queriesPrior,
+        countries,
+        appearance,
+      ] = await Promise.all([
+        this.getPerformanceData(userId, { ...dto, dimensions: [GscDimension.DATE] }).catch((e) => {
+          this.logger.error(`Failed to get performance data: ${e.message}`);
+          return { totalClicks: 0, totalImpressions: 0, averageCtr: 0, averagePosition: 0 };
+        }),
+        this.fetchAggregatedByDimension(userId, websiteId, startDate, endDate, 'page').catch((e) => {
+          this.logger.error(`Failed to fetch current pages: ${e.message}`);
+          return [];
+        }),
+        this.fetchAggregatedByDimension(userId, websiteId, priorStart, priorEnd, 'page').catch((e) => {
+          this.logger.error(`Failed to fetch prior pages: ${e.message}`);
+          return [];
+        }),
+        this.fetchAggregatedByDimension(userId, websiteId, startDate, endDate, 'query').catch((e) => {
+          this.logger.error(`Failed to fetch current queries: ${e.message}`);
+          return [];
+        }),
+        this.fetchAggregatedByDimension(userId, websiteId, priorStart, priorEnd, 'query').catch((e) => {
+          this.logger.error(`Failed to fetch prior queries: ${e.message}`);
+          return [];
+        }),
+        this.getCountries(userId, { ...dto, startDate, endDate, websiteId }).catch((e) => {
+          this.logger.error(`Failed to get countries: ${e.message}`);
+          return [];
+        }),
+        this.getSearchAppearance(userId, { ...dto, startDate, endDate, websiteId }).catch((e) => {
+          this.logger.error(`Failed to get search appearance: ${e.message}`);
+          return [];
+        }),
+      ]);
 
     const yourContent = this.buildTrending(
       pagesCurrent.map((p) => ({ key: p.key, clicks: p.clicks, impressions: p.impressions })),
@@ -506,27 +758,36 @@ export class SearchConsoleService {
       impressions: a.impressions,
     }));
 
-    const kpis = perf as any;
-    return {
-      startDate,
-      endDate,
-      totalClicks: kpis.totalClicks ?? 0,
-      totalImpressions: kpis.totalImpressions ?? 0,
-      averageCtr: kpis.averageCtr ?? 0,
-      averagePosition: kpis.averagePosition ?? 0,
-      yourContent: {
-        top: yourContent.top,
-        trendingUp: yourContent.trendingUp,
-        trendingDown: yourContent.trendingDown,
-      },
-      queries: {
-        top: queries.top,
-        trendingUp: queries.trendingUp,
-        trendingDown: queries.trendingDown,
-      },
-      topCountries: countries,
-      additionalTrafficSources,
-    };
+      const kpis = perf as any;
+      return {
+        startDate,
+        endDate,
+        totalClicks: kpis.totalClicks ?? 0,
+        totalImpressions: kpis.totalImpressions ?? 0,
+        averageCtr: kpis.averageCtr ?? 0,
+        averagePosition: kpis.averagePosition ?? 0,
+        yourContent: {
+          top: yourContent.top,
+          trendingUp: yourContent.trendingUp,
+          trendingDown: yourContent.trendingDown,
+        },
+        queries: {
+          top: queries.top,
+          trendingUp: queries.trendingUp,
+          trendingDown: queries.trendingDown,
+        },
+        topCountries: countries,
+        additionalTrafficSources,
+      };
+    } catch (error: any) {
+      this.logger.error(`Error in getInsights for user ${userId}: ${error?.message || error}`, error?.stack);
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'Unable to load insights from Google Search Console. Please check your connection in Settings > Integrations.',
+      );
+    }
   }
 
   private searchAppearanceLabel(appearance: string): string {

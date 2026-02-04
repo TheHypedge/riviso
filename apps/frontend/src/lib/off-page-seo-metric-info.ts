@@ -22,21 +22,38 @@ export interface MetricInfo {
   resources?: MetricResource[];
 }
 
-/** Shared resources for verifying off-page metrics. */
+/** Shared resources for learning about link signals (Riviso-focused, no external tools). */
 const BACKLINK_RESOURCES: MetricResource[] = [
-  { label: 'Ahrefs Backlink Checker', url: 'https://ahrefs.com/backlink-checker' },
-  { label: 'Moz Link Explorer', url: 'https://moz.com/link-explorer' },
-  { label: 'Majestic Site Explorer', url: 'https://majestic.com/reports/site-explorer' },
+  { label: 'Link Building Guide', url: 'https://developers.google.com/search/docs/fundamentals/seo-starter-guide' },
+  { label: 'Understanding Backlinks', url: 'https://developers.google.com/search/docs/fundamentals/seo-starter-guide' },
 ];
 
 const METRIC_INFO: Record<string, MetricInfo> = {
-  'Referring Domains': {
-    meaning: 'Count of unique domains linking to your site. Signals breadth of endorsement; search engines use it as a diversity proxy.',
-    howMeasured: 'Backlink index from Majestic, Ahrefs, or Moz. Distinct source domains are counted after normalizing (e.g. strip www, resolve redirects).',
-    improvementTips: ['Earn links from diverse, relevant sites.', 'Focus on quality over quantity.', 'Avoid PBNs and link schemes.'],
-    dataSources: 'Majestic, Ahrefs, Moz Link Explorer, Serpstat, Semrush Backlink Analytics.',
+  'Detected Referring Domains': {
+    meaning: 'Count of unique domains linking to your site discovered through site crawl. Signals breadth of endorsement; search engines use it as a diversity proxy.',
+    howMeasured: 'Riviso crawls your site and analyzes discovered backlinks. Distinct source domains are counted after normalizing (e.g. strip www, resolve redirects).',
+    improvementTips: ['Add referrer URLs from Google Search Console to discover more backlinks.', 'Earn links from diverse, relevant sites.', 'Focus on quality over quantity.', 'Avoid PBNs and link schemes.'],
+    dataSources: 'Riviso site crawl engine - analyzes discovered backlinks from crawl and provided referrer URLs.',
     riskThresholds: 'Good: ≥50 | Warning: 10–49 | Needs improvement: <10 (adjust by niche).',
-    howToVerify: 'Enter your domain in Ahrefs Site Explorer or Moz Link Explorer and compare "Referring domains" / "Linking domains".',
+    howToVerify: 'Run regular site crawls and add referrer URLs from Google Search Console. Compare results over time to track growth.',
+    resources: BACKLINK_RESOURCES,
+  },
+  'Detected Backlinks': {
+    meaning: 'Total number of links from external domains pointing to your site, discovered through site crawl. Higher numbers indicate broader link coverage.',
+    howMeasured: 'Riviso crawls your site and counts all discovered backlinks. Includes links found in crawl and referrer URLs from Google Search Console.',
+    improvementTips: ['Add referrer URLs from Google Search Console to discover more backlinks.', 'Focus on acquiring editorial links from authoritative sources.', 'Create linkable assets (research, tools, guides) to attract natural links.'],
+    dataSources: 'Riviso site crawl engine - total links from external domains discovered in crawl.',
+    riskThresholds: 'Good: ≥100 | Warning: 10–99 | Needs improvement: <10.',
+    howToVerify: 'Run regular site crawls and compare backlink counts over time. Add referrer URLs for more comprehensive discovery.',
+    resources: BACKLINK_RESOURCES,
+  },
+  'Crawl Source': {
+    meaning: 'Information about the crawl that generated this data. Shows how many pages were analyzed.',
+    howMeasured: 'Riviso crawls your entire site starting from the homepage and following internal links. All pages on the same domain are analyzed.',
+    improvementTips: ['Ensure your site is crawlable (no robots.txt blocks).', 'Fix broken internal links to improve crawl coverage.', 'Use XML sitemaps to help discovery.'],
+    dataSources: 'Riviso site crawl engine - full site crawl results.',
+    riskThresholds: 'N/A - Informational metric.',
+    howToVerify: 'Check the pages crawled count. Higher numbers indicate better site coverage.',
     resources: BACKLINK_RESOURCES,
   },
   'Domain Authority (DA)': {
@@ -68,11 +85,29 @@ const METRIC_INFO: Record<string, MetricInfo> = {
   },
   'Follow vs Nofollow Ratio': {
     meaning: 'Balance of dofollow (link equity) vs nofollow links. Extreme skew may indicate manipulation.',
-    howMeasured: 'Backlink index stores rel per link. Counts of follow and nofollow are used to compute the ratio.',
-    improvementTips: ['Aim for a natural mix; no single ideal.', 'Avoid 100% dofollow or 100% nofollow.', 'Nofollow from strong sites still adds value.'],
-    dataSources: 'Backlink index with rel attribute (Ahrefs, Majestic, Moz).',
+    howMeasured: 'Riviso crawls your entire site and analyzes the rel attribute of all discovered backlinks. Counts of follow and nofollow are used to compute the ratio.',
+    improvementTips: ['Aim for a natural mix; no single ideal.', 'Avoid 100% dofollow or 100% nofollow.', 'Nofollow from strong sites still adds value.', 'Focus on acquiring editorial, dofollow links from authoritative sources.'],
+    dataSources: 'Riviso whole-site crawl engine - analyzes rel attributes of all discovered backlinks across your site.',
     riskThresholds: 'Good: 20–80% follow | Warning: 81–95% or 5–19% | Needs improvement: >95% or <5%.',
-    howToVerify: 'In Ahrefs or Moz, filter backlinks by dofollow vs nofollow and compare ratios.',
+    howToVerify: 'Run regular whole-site crawls and monitor follow ratio over time. Add referrer URLs from Google Search Console for more comprehensive data.',
+    resources: BACKLINK_RESOURCES,
+  },
+  'Anchor Text Analysis': {
+    meaning: 'Analysis of anchor text from discovered backlinks. Helps identify over-optimization risks and anchor diversity.',
+    howMeasured: 'Riviso crawls your entire site and analyzes anchor text from all discovered backlinks. Limited to backlinks found in crawl.',
+    improvementTips: ['Monitor for excessive exact-match keyword anchors.', 'Aim for natural anchor diversity (40-60% branded/generic).', 'Add referrer URLs from Google Search Console to analyze more anchors.'],
+    dataSources: 'Riviso whole-site crawl engine - anchor text from discovered backlinks.',
+    riskThresholds: 'N/A - Estimated metric with limited scope.',
+    howToVerify: 'Run regular whole-site crawls and review anchor text distribution. Add referrer URLs for more comprehensive analysis.',
+    resources: BACKLINK_RESOURCES,
+  },
+  'Over-Optimization Warning': {
+    meaning: 'Heuristic warning for potential anchor text over-optimization. High exact-match anchor concentration may trigger filters.',
+    howMeasured: 'Riviso analyzes anchor text patterns from discovered backlinks. Flags potential over-optimization based on anchor diversity.',
+    improvementTips: ['Diversify anchor text naturally.', 'Reduce exact-match anchor focus if detected.', 'Focus on branded and generic anchors for natural profile.'],
+    dataSources: 'Riviso whole-site crawl engine - heuristic analysis of discovered anchor text.',
+    riskThresholds: 'N/A - Estimated metric.',
+    howToVerify: 'Run regular whole-site crawls and review anchor text patterns. Monitor for excessive keyword concentration.',
     resources: BACKLINK_RESOURCES,
   },
   'High-Authority Backlink %': {
@@ -397,12 +432,12 @@ const METRIC_INFO: Record<string, MetricInfo> = {
 };
 
 const DEFAULT_INFO: MetricInfo = {
-  meaning: 'This off-page metric reflects link-based authority, risk, or brand signals. Values require backlink or mention data from providers like Majestic, Ahrefs, or Moz.',
-  howMeasured: 'Backlink index, mention APIs, or competitive data. "N/A" or "—" indicate data is not yet available; integrate APIs to populate.',
-  improvementTips: ['Integrate a backlink API (Majestic, Ahrefs, Moz) to enable this metric.', 'Review the audit framework for extraction details.', 'Once data is available, act on recommendations.'],
-  dataSources: 'Majestic, Ahrefs, Moz Link Explorer; mention/brand APIs where applicable.',
+  meaning: 'This link signal metric reflects link-based authority, risk, or brand signals. Values are computed from site crawl data and discovered backlinks.',
+  howMeasured: 'Riviso crawls your site and analyzes discovered links. Data comes from site crawl, Google Search Console referrers, and server logs.',
+  improvementTips: ['Add referrer URLs from Google Search Console to discover more backlinks.', 'Focus on acquiring editorial links from topical, authoritative sources.', 'Monitor link hygiene and fix broken outbound links.'],
+  dataSources: 'Riviso site crawl engine - analyzes your site and discovered backlinks.',
   riskThresholds: 'Good / Warning / Needs improvement thresholds depend on metric; see framework.',
-  howToVerify: 'Compare this metric in Ahrefs Backlink Checker, Moz Link Explorer, or Majestic Site Explorer for the same domain.',
+  howToVerify: 'Run regular site crawls and compare results over time. Add referrer URLs from Google Search Console for more comprehensive data.',
   resources: BACKLINK_RESOURCES,
 };
 

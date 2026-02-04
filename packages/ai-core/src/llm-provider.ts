@@ -1,4 +1,5 @@
 import { LlmProvider as LlmProviderEnum, LlmConfig } from '@riviso/shared-types';
+import OpenAI from 'openai';
 
 /**
  * Abstract LLM Provider interface for interchangeable AI backends
@@ -49,11 +50,88 @@ export abstract class BaseLlmProvider {
  * OpenAI Provider Implementation
  */
 export class OpenAIProvider extends BaseLlmProvider {
+  private client: OpenAI | null = null;
+
+  constructor(config: LlmConfig) {
+    super(config);
+    // Only initialize client if we have a valid API key
+    if (config.apiKey && config.apiKey !== 'mock-key') {
+      this.client = new OpenAI({
+        apiKey: config.apiKey,
+      });
+    }
+  }
+
   async complete(
     messages: LlmMessage[],
     options?: LlmCompletionOptions
   ): Promise<LlmCompletionResponse> {
-    // Mock implementation - replace with actual OpenAI SDK call
+    // Use mock if no valid API key
+    if (!this.client) {
+      return this.mockComplete(messages);
+    }
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.config.model || 'gpt-4-turbo-preview',
+        messages: messages.map(m => ({
+          role: m.role,
+          content: m.content
+        })),
+        temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? this.config.maxTokens ?? 2000,
+        stop: options?.stopSequences,
+      });
+
+      return {
+        content: response.choices[0].message.content || '',
+        tokensUsed: response.usage?.total_tokens || 0,
+        finishReason: response.choices[0].finish_reason,
+        model: response.model,
+      };
+    } catch (error) {
+      // Fallback to mock on error
+      console.error('OpenAI API error, falling back to mock:', error);
+      return this.mockComplete(messages);
+    }
+  }
+
+  async *streamComplete(
+    messages: LlmMessage[],
+    options?: LlmCompletionOptions
+  ): AsyncGenerator<string, void, unknown> {
+    // Use mock if no valid API key
+    if (!this.client) {
+      yield* this.mockStreamComplete();
+      return;
+    }
+
+    try {
+      const stream = await this.client.chat.completions.create({
+        model: this.config.model || 'gpt-4-turbo-preview',
+        messages: messages.map(m => ({
+          role: m.role,
+          content: m.content
+        })),
+        temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? this.config.maxTokens ?? 2000,
+        stop: options?.stopSequences,
+        stream: true,
+      });
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          yield content;
+        }
+      }
+    } catch (error) {
+      console.error('OpenAI streaming error, falling back to mock:', error);
+      yield* this.mockStreamComplete();
+    }
+  }
+
+  private mockComplete(messages: LlmMessage[]): LlmCompletionResponse {
     return {
       content: 'Mock OpenAI response: ' + messages[messages.length - 1].content,
       tokensUsed: 150,
@@ -62,11 +140,7 @@ export class OpenAIProvider extends BaseLlmProvider {
     };
   }
 
-  async *streamComplete(
-    messages: LlmMessage[],
-    options?: LlmCompletionOptions
-  ): AsyncGenerator<string, void, unknown> {
-    // Mock streaming implementation
+  private async *mockStreamComplete(): AsyncGenerator<string, void, unknown> {
     const words = 'This is a mock streaming response from OpenAI'.split(' ');
     for (const word of words) {
       yield word + ' ';

@@ -5,6 +5,7 @@ import { AiService } from './ai.service';
 import { PromptMapperService } from './services/prompt-mapper.service';
 import { DataFetcherService } from './services/data-fetcher.service';
 import { ResponseGeneratorService } from './services/response-generator.service';
+import { ContentGeneratorService } from './services/content-generator.service';
 
 @Module({
   controllers: [AiController],
@@ -13,7 +14,8 @@ import { ResponseGeneratorService } from './services/response-generator.service'
     PromptMapperService,
     DataFetcherService,
     ResponseGeneratorService,
+    ContentGeneratorService,
   ],
-  exports: [AiService],
+  exports: [AiService, ContentGeneratorService],
 })
 export class AiModule {}

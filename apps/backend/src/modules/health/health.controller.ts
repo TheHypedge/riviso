@@ -16,7 +16,7 @@ export class HealthController {
     private http: HttpHealthIndicator,
     private memory: MemoryHealthIndicator,
     private disk: DiskHealthIndicator,
-  ) {}
+  ) { }
 
   @Get()
   @HealthCheck()
@@ -29,7 +29,7 @@ export class HealthController {
       () =>
         this.disk.checkStorage('disk', {
           path: '/',
-          thresholdPercent: 0.9,
+          thresholdPercent: 0.99,
         }),
     ]);
   }

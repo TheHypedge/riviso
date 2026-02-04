@@ -76,8 +76,10 @@ export default function InsightsPage() {
       setData(res);
       setRequestedRange({ start: new Date(res.startDate), end: new Date(res.endDate) });
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to load insights');
+      const errorMessage = e?.response?.data?.message || e?.message || 'Failed to load insights';
+      setError(errorMessage);
       setData(null);
+      console.error('Failed to load GSC insights:', errorMessage, e);
     } finally {
       setLoading(false);
     }

@@ -48,15 +48,39 @@ export class GscOAuthService {
   }
 
   private getRedirectUri(): string {
-    return (
-      this.config.get<string>('GOOGLE_REDIRECT_URI') ??
-      'http://localhost:4000/api/v1/integrations/gsc/oauth/callback'
-    );
+    // Check for explicit override first
+    const explicitUri = this.config.get<string>('GOOGLE_REDIRECT_URI');
+    if (explicitUri) {
+      return explicitUri;
+    }
+
+    // Construct from FRONTEND_URL - Google redirects to the frontend callback page
+    const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    const baseUrl = frontendUrl.replace(/\/$/, ''); // Remove trailing slash
+    const redirectUri = `${baseUrl}/dashboard/integrations/gsc/callback`;
+    this.logger.log(`GSC OAuth redirect URI: ${redirectUri}`);
+    return redirectUri;
   }
 
   private getEncryptionKey(): string {
     const k = this.config.get<string>('ENCRYPTION_KEY');
-    if (!k) throw new BadRequestException('ENCRYPTION_KEY not set. Generate with: openssl rand -base64 32');
+    if (!k) {
+      // In development, use a derived key from JWT_SECRET as fallback
+      const jwtSecret = this.config.get<string>('JWT_SECRET');
+      const nodeEnv = this.config.get<string>('NODE_ENV', 'development');
+
+      if (nodeEnv === 'development' && jwtSecret) {
+        this.logger.warn('ENCRYPTION_KEY not set. Using derived key in development mode. Set ENCRYPTION_KEY for production.');
+        // Create a base64 key from JWT_SECRET (padded to 32 bytes)
+        const paddedKey = (jwtSecret + '0'.repeat(32)).slice(0, 32);
+        return Buffer.from(paddedKey).toString('base64');
+      }
+
+      this.logger.error('ENCRYPTION_KEY environment variable is required. Generate with: openssl rand -base64 32');
+      throw new BadRequestException(
+        'Server configuration error. Please contact support or check server logs.',
+      );
+    }
     return k;
   }
 
@@ -100,7 +124,9 @@ export class GscOAuthService {
     const verified = verifyGscState(state, this.getStateSecret());
     if (!verified) {
       this.logger.warn('Invalid or expired GSC OAuth state');
-      throw new UnauthorizedException('Invalid or expired OAuth state. Please try connecting again.');
+      throw new UnauthorizedException(
+        'Your connection request has expired. Please go back to Settings and try connecting again.',
+      );
     }
     const { userId, websiteUrl } = verified;
 
@@ -108,11 +134,28 @@ export class GscOAuthService {
     try {
       tokens = await this.exchangeCodeForToken(code);
     } catch (e: any) {
-      this.logger.warn(`Token exchange failed: ${e?.response?.data?.error_description ?? e?.message}`);
-      if (e?.response?.data?.error === 'access_denied') {
-        throw new BadRequestException('Google access was denied. Please grant permission and try again.');
+      const errorCode = e?.response?.data?.error;
+      const errorDesc = e?.response?.data?.error_description ?? e?.message;
+      this.logger.warn(`Token exchange failed: ${errorDesc}`);
+
+      if (errorCode === 'access_denied') {
+        throw new BadRequestException(
+          'You declined the permission request. Please try again and click "Allow" to grant access to Google Search Console.',
+        );
       }
-      throw new BadRequestException('Failed to exchange authorization code. Please try connecting again.');
+      if (errorCode === 'invalid_grant') {
+        throw new BadRequestException(
+          'The authorization code has expired or was already used. Please try connecting again.',
+        );
+      }
+      if (errorCode === 'redirect_uri_mismatch') {
+        throw new BadRequestException(
+          'Configuration error: The redirect URI does not match. Please contact support.',
+        );
+      }
+      throw new BadRequestException(
+        'Unable to complete the connection with Google. Please try again. If the problem persists, try clearing your browser cache.',
+      );
     }
 
     const encryptionKey = this.getEncryptionKey();
@@ -146,13 +189,15 @@ export class GscOAuthService {
       sites = await this.gscApiClient.listSites(tokens.access_token);
     } catch (e: any) {
       this.logger.warn(`listSites after OAuth failed: ${e?.message}`);
-      throw new BadRequestException('Connected, but failed to fetch GSC properties. Please try again.');
+      throw new BadRequestException(
+        'Successfully authenticated with Google, but we couldn\'t retrieve your Search Console properties. Please ensure you have access to at least one property and try again.',
+      );
     }
 
     const verifiedSites = sites.filter((s) => s.permissionLevel && s.siteUrl);
     if (verifiedSites.length === 0) {
       throw new BadRequestException(
-        'No verified Google Search Console properties found. Add and verify a property first.',
+        'No Google Search Console properties found for your account. Please add and verify a website in Google Search Console first, then try connecting again.',
       );
     }
 
@@ -197,7 +242,11 @@ export class GscOAuthService {
    */
   async getValidAccessToken(googleAccountId: string): Promise<string> {
     const tokenRow = await this.googleTokenRepo.findByGoogleAccountId(googleAccountId);
-    if (!tokenRow) throw new UnauthorizedException('Google account not linked or tokens missing.');
+    if (!tokenRow) {
+      throw new UnauthorizedException(
+        'Google Search Console is not connected. Please go to Settings > Integrations to connect your account.',
+      );
+    }
 
     const encryptionKey = this.getEncryptionKey();
     const now = new Date();
@@ -224,8 +273,17 @@ export class GscOAuthService {
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15_000 },
       );
     } catch (e: any) {
+      const errorCode = e?.response?.data?.error;
       this.logger.warn(`Token refresh failed for account ${googleAccountId}: ${e?.message}`);
-      throw new UnauthorizedException('Google tokens expired and refresh failed. Please reconnect GSC.');
+
+      if (errorCode === 'invalid_grant') {
+        throw new UnauthorizedException(
+          'Your Google Search Console connection has expired or been revoked. Please reconnect in Settings > Integrations.',
+        );
+      }
+      throw new UnauthorizedException(
+        'Unable to refresh your Google connection. Please try again or reconnect Google Search Console in Settings.',
+      );
     }
 
     const data = res.data;

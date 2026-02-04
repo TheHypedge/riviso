@@ -1,29 +1,37 @@
 /**
- * Off-Page SEO report types — 10 categories per audit framework.
- * Used by analyze-url response and Website Analyzer Off-Page SEO tab.
+ * Link Signals report types (formerly Off-Page SEO).
+ * Only includes verified metrics from site crawl and link analysis.
+ * No fake metrics, no misleading scores, enterprise-grade accuracy.
  */
 
-export type OffPageSeoMetricStatus = 'pass' | 'warn' | 'fail' | 'info';
+export type LinkSignalMetricStatus = 'pass' | 'warn' | 'fail' | 'info';
 
-export interface OffPageSeoMetric {
+export type MetricVerification = 'verified' | 'estimated' | 'unavailable';
+
+export interface LinkSignalMetric {
   name: string;
+  key?: string;
   value: string | number;
   unit?: string;
-  status?: OffPageSeoMetricStatus;
+  status?: LinkSignalMetricStatus;
   description?: string;
-  /** When true, value requires backlink data (e.g. Majestic, Ahrefs). */
-  requiresBacklinkData?: boolean;
+  message?: string;
+  /** Verification level: verified (from crawl), estimated (heuristic), unavailable (requires global index) */
+  verification?: MetricVerification;
+  /** Explanation of data source and limitations */
+  dataSource?: string;
 }
 
-export interface OffPageSeoCategory {
+export interface LinkSignalCategory {
   id: string;
   title: string;
   subtitle?: string;
-  metrics: OffPageSeoMetric[];
+  description?: string;
+  metrics: LinkSignalMetric[];
 }
 
-export interface OffPageSeoReport {
-  categories: OffPageSeoCategory[];
+export interface LinkSignalReport {
+  categories: LinkSignalCategory[];
   summaryScores?: Array<{ name: string; score: number; max: number }>;
   /** When true, values are sample/demo data. Connect backlink APIs for live metrics. */
   demoData?: boolean;
@@ -33,4 +41,23 @@ export interface OffPageSeoReport {
     referringDomains: number;
     totalBacklinks: number;
   };
+  /** Link summary for quick stats display */
+  summary?: {
+    totalLinks: number;
+    internalLinks: number;
+    externalLinks: number;
+    uniqueDomains: number;
+  };
+  /** Data coverage explanation - always visible to users */
+  dataCoverage?: {
+    scope: string;
+    limitations: string[];
+    futureRoadmap?: string[];
+  };
 }
+
+// Legacy type aliases for backward compatibility during migration
+export type OffPageSeoMetricStatus = LinkSignalMetricStatus;
+export type OffPageSeoMetric = LinkSignalMetric;
+export type OffPageSeoCategory = LinkSignalCategory;
+export type OffPageSeoReport = LinkSignalReport;

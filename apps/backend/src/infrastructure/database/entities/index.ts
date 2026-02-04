@@ -21,3 +21,11 @@ export { GoogleTokenEntity } from './google-token.entity';
 export { GSCPropertyEntity } from './gsc-property.entity';
 export { GSCSyncLogEntity, type GSCSyncStatus } from './gsc-sync-log.entity';
 export { GuestAuditEntity } from './guest-audit.entity';
+
+/* Plan & Entitlement */
+export { PlanEntity } from './plan.entity';
+export { UserPlanEntity } from './user-plan.entity';
+
+/* Website Analysis & Crawling */
+export { WebsiteAnalysisEntity } from './website-analysis.entity';
+export { CrawlJobEntity } from './crawl-job.entity';

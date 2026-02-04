@@ -67,27 +67,56 @@ def extract(html: str, page_url: str, target_domain: str) -> ExtractedPage:
     # Headings
     h1 = [t.get_text(strip=True) for t in soup.find_all("h1") if t.get_text(strip=True)]
 
-    # Links
+    # Links - extract all links including those in nav, footer, etc.
     links: list[ExtractedLink] = []
+    # Normalize target domain - handle both URL and domain string formats
+    if target_domain:
+        # If it looks like a URL, extract domain; otherwise use as-is
+        if target_domain.startswith(("http://", "https://")):
+            target_d = _normalize_domain(target_domain)
+        else:
+            # It's already a domain string, just normalize it
+            target_d = target_domain.lower().strip().replace("www.", "")
+    else:
+        target_d = base_domain
+    
     for a in soup.find_all("a", href=True):
         href = (a["href"] or "").strip()
-        if not href or href.startswith("#") or href.lower().startswith("javascript:"):
+        # Skip anchors, javascript, mailto, tel, etc.
+        if not href or href.startswith("#") or href.lower().startswith(("javascript:", "mailto:", "tel:", "data:")):
             continue
-        abs_href = urljoin(page_url, href)
+        
+        # Convert to absolute URL
         try:
+            abs_href = urljoin(page_url, href)
             parsed = urlparse(abs_href)
             if parsed.scheme not in ("http", "https"):
                 continue
-        except Exception:
+        except Exception as e:
             continue
+        
         anchor = (a.get_text() or "").strip()[:500]
         rel = (a.get("rel") or [])
         if isinstance(rel, str):
             rel = [rel]
         rel_str = " ".join(r.lower() for r in rel)
         is_nofollow = "nofollow" in rel_str
-        target_d = _normalize_domain(target_domain) if target_domain else base_domain
-        is_internal = _same_domain(abs_href, target_d)
+        
+        # Check if internal - compare normalized domains (including subdomains)
+        # target_d is already a normalized domain string (e.g., "thelawcodes.com")
+        # abs_href is a full URL (e.g., "https://thelawcodes.com/about")
+        url_domain = _normalize_domain(abs_href)  # Extract domain from full URL
+        target_domain_normalized = target_d.lower().strip()  # target_d is already normalized
+        
+        # Exact match
+        if url_domain == target_domain_normalized:
+            is_internal = True
+        # Subdomain check: blog.thelawcodes.com matches thelawcodes.com
+        elif url_domain.endswith('.' + target_domain_normalized):
+            is_internal = True
+        # Reverse: thelawcodes.com matches www.thelawcodes.com (already handled by normalize)
+        else:
+            is_internal = False
 
         links.append(
             ExtractedLink(

@@ -11,3 +11,5 @@ export * from './google-token.repository';
 export * from './gsc-property.repository';
 export * from './gsc-sync-log.repository';
 export * from './guest-audit.repository';
+// Custom repositories for website analysis - using TypeORM repositories directly instead
+// Files renamed to .bak to prevent auto-discovery

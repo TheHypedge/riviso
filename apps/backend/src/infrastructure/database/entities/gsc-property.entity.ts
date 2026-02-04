@@ -18,7 +18,7 @@ export class GSCPropertyEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'text' })
   userId: string;
 
   @Column({ type: 'uuid', nullable: true })

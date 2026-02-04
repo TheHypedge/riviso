@@ -53,12 +53,26 @@ pip install -r requirements.txt
 
 ## Run the API
 
+**Option A – from repo root (recommended):**
+
 ```bash
-# From tools/scraper-engine (with venv active)
-uvicorn scraper_engine.api:app --reload --host 0.0.0.0 --port 8000
+npm run scraper:start
+```
+
+**Option B – from this directory:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt && pip install -e .
+python run.py
+# Or: uvicorn scraper_engine.api:app --reload --host 0.0.0.0 --port 8000
 ```
 
 - **Health:** `GET http://localhost:8000/health`
+- **Off-Page analyze (Riviso Off Page tab):** `POST http://localhost:8000/off-page-analyze`  
+  Body: `{ "url": "https://example.com/", "domain": "example.com" }`  
+  Sync crawl + link graph; returns referring domains, follow %, estimated DA, etc. Used when user clicks **Off Page** in Website Analyzer.
 - **Crawl:** `POST http://localhost:8000/crawl`  
   Body: `{ "seed_urls": ["https://example.com/"], "target_domain": "example.com", "max_pages": 500 }`  
   Returns `{ "job_id", "status": "queued", "target_domain" }`. Crawl runs in background.
@@ -109,6 +123,8 @@ Then `POST /crawl` with `seed_urls = [your homepage] + [referrer URLs]` and `tar
 | Variable | Description |
 |----------|-------------|
 | `SCRAPER_ENGINE_DB` | SQLite DB path (default: `scraper_engine.db` in cwd). |
+
+**Backend (NestJS):** Set `SCRAPER_ENGINE_URL=http://localhost:8000` in `apps/backend/.env` (or your env) so the Off-Page tab can call the engine. Default is `http://localhost:8000` if unset.
 
 ---
 

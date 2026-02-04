@@ -18,7 +18,7 @@ export class GoogleAccountEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'text' })
   userId: string;
 
   @Column({ type: 'varchar', length: 255 })

@@ -1,0 +1,86 @@
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CrawlJobEntity } from '../entities/crawl-job.entity';
+import { BaseRepository } from './base.repository';
+
+// Note: This repository is not used as a NestJS provider.
+// We use TypeORM repositories directly via @InjectRepository in services.
+export class CrawlJobRepository extends BaseRepository<CrawlJobEntity> {
+  constructor(
+    @InjectRepository(CrawlJobEntity)
+    repository: Repository<CrawlJobEntity>,
+  ) {
+    super(repository);
+  }
+
+  /**
+   * Find active crawl job for a website
+   */
+  async findActiveByUrl(websiteUrl: string): Promise<CrawlJobEntity | null> {
+    return this.repository.findOne({
+      where: {
+        websiteUrl,
+        status: ['queued', 'crawling', 'processing'] as any,
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Find job by ID
+   */
+  async findById(id: string): Promise<CrawlJobEntity | null> {
+    return this.repository.findOne({ where: { id } });
+  }
+
+  /**
+   * Update job progress
+   */
+  async updateProgress(
+    id: string,
+    progress: number,
+    currentStep?: string,
+    metadata?: any,
+  ): Promise<void> {
+    const updateData: any = { progress };
+    if (currentStep) updateData.currentStep = currentStep;
+    if (metadata) updateData.metadata = metadata;
+    await this.repository.update(id, updateData);
+  }
+
+  /**
+   * Mark job as started
+   */
+  async markStarted(id: string): Promise<void> {
+    await this.repository.update(id, {
+      status: 'crawling',
+      startedAt: new Date(),
+    });
+  }
+
+  /**
+   * Mark job as completed
+   */
+  async markCompleted(id: string, analysisId: string | null): Promise<void> {
+    const updateData: any = {
+      status: 'completed',
+      progress: 100,
+      completedAt: new Date(),
+    };
+    if (analysisId) {
+      updateData.analysisId = analysisId;
+    }
+    await this.repository.update(id, updateData);
+  }
+
+  /**
+   * Mark job as failed
+   */
+  async markFailed(id: string, errorMessage: string): Promise<void> {
+    await this.repository.update(id, {
+      status: 'failed',
+      errorMessage,
+      completedAt: new Date(),
+    });
+  }
+}

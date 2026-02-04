@@ -13,6 +13,8 @@ import {
 import { AnalyzeUrlDto } from './dto/analyze-url.dto';
 import { WebScraperService, ScrapedSEOData } from './services/web-scraper.service';
 import { buildTechnicalSeoReport } from './services/technical-seo-report.builder';
+import { buildTechnicalSeoSummary } from './services/technical-seo-summary.builder';
+import { buildTechnicalSeoAdvanced } from './services/technical-seo-advanced.builder';
 import { mapEngineResponseToOffPageReport } from './services/off-page-engine-mapper';
 import type { EngineOffPageResponse } from './services/off-page-engine-mapper';
 
@@ -24,7 +26,7 @@ export class SeoService {
     private readonly webScraperService: WebScraperService,
     private readonly httpService: HttpService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
 
   /**
    * Run a comprehensive SEO audit using REAL web scraping
@@ -32,10 +34,10 @@ export class SeoService {
   async runAudit(url: string, projectId: string): Promise<SeoAudit> {
     try {
       this.logger.log(`Running SEO audit for: ${url}`);
-      
+
       // Scrape the page
       const scrapedData = await this.webScraperService.scrapePage(url);
-      
+
       // Convert scraped data to audit format
       const issues = this.convertToIssues(scrapedData);
       const score = this.calculateSEOScore(scrapedData);
@@ -76,13 +78,13 @@ export class SeoService {
   async analyzeUrl(dto: AnalyzeUrlDto): Promise<any> {
     try {
       this.logger.log(`Analyzing URL: ${dto.url}`);
-      
+
       // Scrape the page
       const scrapedData = await this.webScraperService.scrapePage(dto.url);
-      
+
       // Calculate overall score
       const score = this.calculateSEOScore(scrapedData);
-      
+
       // Extract domain from URL
       let domain = '';
       try {
@@ -91,13 +93,13 @@ export class SeoService {
       } catch (e) {
         domain = scrapedData.technical?.url?.original || dto.url;
       }
-      
+
       // Build comprehensive analysis result
       return {
         url: dto.url,
         domain,
         score,
-        
+
         // On-Page SEO Details
         onPageSEO: {
           title: scrapedData.onPageSEO.titleTag, // Map titleTag to title for frontend
@@ -109,54 +111,59 @@ export class SeoService {
           externalLinks: scrapedData.onPageSEO.links.external, // Map links.external to externalLinks
           brokenLinks: scrapedData.onPageSEO.links.broken, // Map links.broken to brokenLinks
           crawledUrls: scrapedData.onPageSEO.crawledUrls, // All crawled URLs with status codes
+          serpPreview: scrapedData.onPageSEO.serpPreview, // Google SERP preview (desktop/mobile)
         },
-        
+
         // Performance Metrics
         performance: {
           ...scrapedData.performance,
           score: this.calculatePerformanceScore(scrapedData.performance),
         },
-        
+
         // Mobile Optimization
         mobile: {
           ...scrapedData.mobile,
           score: this.calculateMobileScore(scrapedData.mobile),
         },
-        
+
         // Technical SEO
         technical: {
           ...scrapedData.technical,
           score: this.calculateTechnicalScore(scrapedData.technical),
         },
-        
+
         // Structured Data
         structuredData: scrapedData.structuredData,
-        
+
         // Security & Compliance
         security: {
           ...scrapedData.security,
           score: this.calculateSecurityScore(scrapedData.security),
         },
-        
+
         // Integration Tags
         integrations: scrapedData.integrations,
-        
+
         // Issues (for quick view)
         issues: this.convertToIssues(scrapedData),
-        
+
         // Recommendations (prioritized)
         recommendations: this.generateRecommendations(scrapedData),
-        
+
         // Raw stats
         stats: {
           htmlSize: `${(scrapedData.rawData.htmlLength / 1024).toFixed(2)} KB`,
           scriptsCount: scrapedData.rawData.scriptsCount,
           stylesheetsCount: scrapedData.rawData.stylesheetsCount,
           totalResources: scrapedData.rawData.scriptsCount + scrapedData.rawData.stylesheetsCount,
+          domNodeCount: scrapedData.rawData.domNodeCount,
         },
 
-        // Technical SEO report (15 categories, tool-ready)
-        technicalSeo: buildTechnicalSeoReport(scrapedData, dto.url),
+        // Technical SEO summary (6 decision-critical pillars)
+        technicalSeo: buildTechnicalSeoSummary(scrapedData, dto.url),
+
+        // Technical SEO advanced (hidden by default, available on request)
+        technicalSeoAdvanced: buildTechnicalSeoAdvanced(scrapedData, dto.url),
 
         // Off-Page SEO: not included here. Fetched only when user clicks Off Page tab (POST /seo/off-page-crawl).
 
@@ -169,74 +176,89 @@ export class SeoService {
   }
 
   /**
-   * Trigger Off-Page analysis via scraper engine. Called only when user clicks Off Page tab.
+   * Trigger Link Signals analysis via scraper engine. Called only when user clicks Link Signals tab.
    * Returns live data (no sample). Requires SCRAPER_ENGINE_URL (default http://localhost:8000).
+   * Crawls the ENTIRE SITE starting from the provided URL (typically homepage).
    */
   async offPageCrawl(url: string) {
     let domain = '';
+    let homepageUrl = url;
+
     try {
       const u = new URL(url);
       domain = u.hostname.replace(/^www\./, '');
+
+      // Ensure we start from homepage for whole-site crawl
+      // If user provided a subpage, use homepage as seed URL
+      if (u.pathname !== '/' && u.pathname !== '') {
+        homepageUrl = `${u.protocol}//${u.hostname}/`;
+        this.logger.log(`Starting whole-site crawl from homepage: ${homepageUrl} (original URL: ${url})`);
+      } else {
+        this.logger.log(`Starting whole-site crawl from homepage: ${homepageUrl}`);
+      }
     } catch {
       throw new BadRequestException('Invalid URL');
     }
+
     const base = this.config.get<string>('SCRAPER_ENGINE_URL') || 'http://localhost:8000';
     const endpoint = `${base.replace(/\/$/, '')}/off-page-analyze`;
-    this.logger.log(`Off-page crawl: ${url} via ${endpoint}`);
+    this.logger.log(`Link signals analysis: whole-site crawl for ${domain} starting from ${homepageUrl}`);
+
     try {
       const { data } = await firstValueFrom(
-        this.httpService.post<EngineOffPageResponse>(endpoint, { url, domain }, {
-          timeout: 120_000,
+        this.httpService.post<EngineOffPageResponse>(endpoint, { url: homepageUrl, domain }, {
+          timeout: 300_000, // 5 minutes for whole-site crawl (500 pages can take time)
           validateStatus: (s) => s >= 200 && s < 300,
         }),
       );
+      this.logger.log(`Whole-site crawl completed: ${data.pages_crawled} pages, ${data.referring_domains} referring domains, ${data.total_backlinks} backlinks`);
       const offPageSeo = mapEngineResponseToOffPageReport(data);
       return { offPageSeo };
     } catch (e: any) {
-      this.logger.warn(`Off-page engine unavailable: ${e?.message || e}`);
+      this.logger.warn(`Link signals engine unavailable: ${e?.message || e}`);
       throw new ServiceUnavailableException(
-        'Off-page engine unavailable. Start the scraper engine (tools/scraper-engine) or set SCRAPER_ENGINE_URL.',
+        'Link signals engine unavailable. Start the scraper engine (tools/scraper-engine) or set SCRAPER_ENGINE_URL.',
       );
     }
   }
 
   private calculateSEOScore(data: ScrapedSEOData): number {
     let score = 100;
-    
+
     // Title tag (10 points)
     if (!data.onPageSEO.titleTag.isOptimal) score -= 10;
-    
+
     // Meta description (10 points)
     if (!data.onPageSEO.metaDescription.isOptimal) score -= 10;
-    
+
     // H1 tags (15 points)
     if (data.onPageSEO.headings.h1.length === 0) score -= 15;
     else if (data.onPageSEO.headings.h1.length > 1) score -= 8;
-    
+
     // Images alt text (10 points)
     const altTextPercentage = (data.onPageSEO.images.withAlt / data.onPageSEO.images.total) * 100;
     if (altTextPercentage < 50) score -= 10;
     else if (altTextPercentage < 80) score -= 5;
-    
+
     // Performance (20 points)
     if (data.performance.loadTime > 3000) score -= 20;
     else if (data.performance.loadTime > 2000) score -= 10;
-    
+
     // HTTPS (10 points)
     if (!data.security.https.isSecure) score -= 10;
-    
+
     // Mobile viewport (10 points)
     if (!data.mobile.viewport.hasViewportTag) score -= 10;
-    
+
     // Canonical tag (5 points)
     if (!data.technical.canonicalTag.exists) score -= 5;
-    
+
     // Favicon (5 points)
     if (!data.technical.favicon.exists) score -= 5;
-    
+
     // Structured data (5 points)
     if (!data.structuredData.hasSchema) score -= 5;
-    
+
     return Math.max(0, Math.min(100, score));
   }
 

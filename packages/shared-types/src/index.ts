@@ -10,3 +10,4 @@ export * from './ai';
 export * from './cro';
 export * from './common';
 export * from './gsc';
+export * from './keyword-intelligence';

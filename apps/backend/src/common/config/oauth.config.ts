@@ -43,11 +43,18 @@ export class OAuthConfig {
    * No hardcoded URLs - all from environment variables.
    */
   getRedirectUri(): string {
+    // Check for explicit override first
+    const explicitUri = this.configService.get<string>('GOOGLE_REDIRECT_URI');
+    if (explicitUri) {
+      this.logger.log(`OAuth Redirect URI (explicit): ${explicitUri}`);
+      return explicitUri;
+    }
+
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
     const baseUrl = frontendUrl.replace(/\/$/, ''); // Remove trailing slash
-    
-    // Standardized callback path
-    const callbackPath = '/api/auth/callback/google';
+
+    // GSC callback path - matches the frontend callback page
+    const callbackPath = '/dashboard/integrations/gsc/callback';
     const redirectUri = `${baseUrl}${callbackPath}`;
 
     this.logger.log(`OAuth Redirect URI: ${redirectUri}`);

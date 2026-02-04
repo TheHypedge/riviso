@@ -76,7 +76,7 @@ function PerformancePageContent() {
           websiteId: selectedWebsite.url,
           startDate,
           endDate,
-          dimensions: ['date', 'query'],
+          // Don't send dimensions array as query param - backend will use defaults
         },
       });
 
@@ -86,8 +86,10 @@ function PerformancePageContent() {
         end: new Date(responseData.endDate),
       });
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Failed to fetch performance data');
+      const errorMessage = e?.response?.data?.message || e?.message || 'Failed to fetch performance data';
+      setError(errorMessage);
       setData(null);
+      console.error('Failed to fetch GSC performance data:', errorMessage, e);
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ function PerformancePageContent() {
     if (selectedWebsite?.url) {
       fetchData();
     }
-  }, [selectedWebsite?.url]);
+  }, [selectedWebsite?.url, dateRange]);
 
   const handleDateChange = (start: Date, end: Date) => {
     setDateRange({ start, end });
@@ -139,9 +141,21 @@ function PerformancePageContent() {
         <GscTabs />
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 flex items-center gap-3 text-red-800">
-            <AlertCircle className="w-6 h-6 shrink-0" />
-            <p className="font-medium">{error}</p>
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <div className="flex items-start gap-3 text-red-800">
+              <AlertCircle className="w-6 h-6 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium mb-1">{error}</p>
+                {error.includes('not connected') || error.includes('Google Search Console') ? (
+                  <p className="text-sm text-red-700 mt-2">
+                    Please connect Google Search Console in{' '}
+                    <a href="/dashboard/settings" className="underline font-medium hover:text-red-900">
+                      Settings → Integrations
+                    </a>
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </div>
         )}
 

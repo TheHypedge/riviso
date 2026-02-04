@@ -56,4 +56,20 @@ export class UserService {
   isIntegrationConnected(userId: string, provider: IntegrationProvider): boolean {
     return this.integrationsStore.isConnected(userId, provider);
   }
+
+  async completeOnboarding(userId: string): Promise<void> {
+    await this.authService.completeOnboarding(userId);
+  }
+
+  canAddWebsite(userId: string): { canAdd: boolean; reason?: string; currentCount: number; maxAllowed: number } {
+    return this.authService.canAddWebsite(userId);
+  }
+
+  addWebsiteToUser(userId: string, websiteId: string): void {
+    this.authService.addWebsiteToUser(userId, websiteId);
+  }
+
+  removeWebsiteFromUser(userId: string, websiteId: string): void {
+    this.authService.removeWebsiteFromUser(userId, websiteId);
+  }
 }

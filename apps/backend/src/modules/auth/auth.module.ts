@@ -8,6 +8,7 @@ import { DEFAULT_JWT_SECRET } from '../../common/constants/auth';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { NotificationsModule } from '../notifications/notifications.module';
 // import { UserEntity } from '../user/entities/user.entity';
 
 @Module({
@@ -22,6 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         },
       }),
     }),
+    NotificationsModule, // For ResendEmailService
     // TypeOrmModule.forFeature([UserEntity]), // Commented out for demo
   ],
   controllers: [AuthController],
