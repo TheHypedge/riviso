@@ -15,6 +15,8 @@ import type { TechnicalSeoReport, LinkSignalReport } from '@riviso/shared-types'
 @Entity('website_analyses')
 @Index(['websiteUrl', 'createdAt'])
 @Index(['websiteUrl', 'status'])
+@Index(['status', 'createdAt']) // For cleanup queries
+@Index(['seoScore']) // For scoring queries
 export class WebsiteAnalysisEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

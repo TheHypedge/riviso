@@ -1,6 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { createHash } from 'crypto';
+import { RedisService } from '../../../infrastructure/redis/redis.service';
+import { HybridRendererService } from './hybrid-renderer.service';
 
 export interface ScrapedSEOData {
   // 1. On-Page SEO Analysis
@@ -244,8 +247,39 @@ export interface ScrapedSEOData {
 export class WebScraperService {
   private readonly logger = new Logger(WebScraperService.name);
 
-  async scrapePage(url: string): Promise<ScrapedSEOData> {
+  // Cache TTLs in seconds
+  private readonly ANALYSIS_CACHE_TTL = 6 * 60 * 60; // 6 hours
+  private readonly PAGE_CACHE_TTL = 60 * 60; // 1 hour
+  private readonly LINK_STATUS_CACHE_TTL = 24 * 60 * 60; // 24 hours for 200 OK
+  private readonly LINK_STATUS_ERROR_TTL = 60 * 60; // 1 hour for errors
+
+  constructor(
+    @Optional() private readonly redisService: RedisService | null,
+    @Optional() private readonly hybridRenderer: HybridRendererService | null,
+  ) {}
+
+  private generateCacheKey(url: string, type: 'analysis' | 'page'): string {
+    const hash = createHash('sha256').update(url).digest('hex').substring(0, 16);
+    return `${type}:${hash}:v2`;
+  }
+
+  async scrapePage(url: string, forceRefresh = false): Promise<ScrapedSEOData> {
     try {
+      // Check cache first unless force refresh (only if Redis is available)
+      if (!forceRefresh && this.redisService) {
+        const cacheKey = this.generateCacheKey(url, 'analysis');
+        const cached = await this.redisService.getCached<ScrapedSEOData>(cacheKey);
+        if (cached) {
+          this.logger.log(`[CACHE HIT] ${url} - Returning cached analysis`);
+          return cached;
+        }
+        this.logger.log(`[CACHE MISS] ${url} - Performing fresh analysis`);
+      } else if (forceRefresh) {
+        this.logger.log(`[FORCE REFRESH] ${url} - Bypassing cache`);
+      } else {
+        this.logger.log(`[NO REDIS] ${url} - Caching disabled, performing fresh analysis`);
+      }
+
       this.logger.log(`Starting to scrape: ${url}`);
 
       // Fetch the page
@@ -257,11 +291,22 @@ export class WebScraperService {
         maxRedirects: 5,
         timeout: 15000,
       });
-      const loadTime = Date.now() - startTime;
-      const html = response.data;
+      let loadTime = Date.now() - startTime;
+      let html = response.data;
+
+      // Use hybrid renderer for JavaScript-heavy sites
+      if (this.hybridRenderer) {
+        const rendered = await this.hybridRenderer.renderPage(url, html, forceRefresh);
+        html = rendered.html;
+        loadTime = rendered.loadTime;
+        this.logger.log(`Page rendered using ${rendered.strategy} in ${loadTime}ms`);
+      } else {
+        this.logger.log(`Page loaded in ${loadTime}ms (static HTML only)`);
+      }
+
       const $ = cheerio.load(html);
 
-      this.logger.log(`Page loaded in ${loadTime}ms, analyzing...`);
+      this.logger.log(`Analyzing content...`);
 
       // Extract all SEO data
       const onPageData = await this.analyzeOnPageSEO($, html, url);
@@ -278,6 +323,14 @@ export class WebScraperService {
       };
 
       this.logger.log(`Scraping completed for: ${url}`);
+
+      // Cache the result (only if Redis is available)
+      if (this.redisService) {
+        const cacheKey = this.generateCacheKey(url, 'analysis');
+        await this.redisService.setCached(cacheKey, scrapedData, this.ANALYSIS_CACHE_TTL);
+        this.logger.log(`[CACHE SET] ${url} - Analysis cached for ${this.ANALYSIS_CACHE_TTL}s`);
+      }
+
       return scrapedData;
     } catch (error) {
       this.logger.error(`Error scraping ${url}: ${error.message}`);
@@ -341,8 +394,17 @@ export class WebScraperService {
     const externalLinks: Array<{ url: string; anchorText: string }> = [];
     const brokenLinks: Array<{ url: string; href?: string; anchorText: string; statusCode: number; element?: any }> = [];
 
-    // Function to check if a link is broken (404 or other error status)
+    // Function to check if a link is broken (404 or other error status) with caching
     const checkLinkStatus = async (linkUrl: string): Promise<number | null> => {
+      // Check cache first (only if Redis is available)
+      if (this.redisService) {
+        const cacheKey = `link:${createHash('sha256').update(linkUrl).digest('hex').substring(0, 16)}`;
+        const cached = await this.redisService.getCached<number>(cacheKey);
+        if (cached !== null && cached !== -1) {
+          return cached;
+        }
+      }
+
       try {
         const response = await axios.head(linkUrl, {
           headers: {
@@ -352,6 +414,16 @@ export class WebScraperService {
           timeout: 5000,
           validateStatus: () => true, // Don't throw on any status
         });
+
+        // Cache the result based on status code (only if Redis is available)
+        if (this.redisService) {
+          const cacheKey = `link:${createHash('sha256').update(linkUrl).digest('hex').substring(0, 16)}`;
+          const ttl = response.status >= 200 && response.status < 300
+            ? this.LINK_STATUS_CACHE_TTL
+            : this.LINK_STATUS_ERROR_TTL;
+          await this.redisService.setCached(cacheKey, response.status, ttl);
+        }
+
         return response.status;
       } catch (error) {
         // If HEAD fails, try GET
@@ -364,8 +436,23 @@ export class WebScraperService {
             timeout: 5000,
             validateStatus: () => true,
           });
+
+          // Cache the result (only if Redis is available)
+          if (this.redisService) {
+            const cacheKey = `link:${createHash('sha256').update(linkUrl).digest('hex').substring(0, 16)}`;
+            const ttl = response.status >= 200 && response.status < 300
+              ? this.LINK_STATUS_CACHE_TTL
+              : this.LINK_STATUS_ERROR_TTL;
+            await this.redisService.setCached(cacheKey, response.status, ttl);
+          }
+
           return response.status;
         } catch (e) {
+          // Cache null result for short period to avoid repeated failures (only if Redis is available)
+          if (this.redisService) {
+            const cacheKey = `link:${createHash('sha256').update(linkUrl).digest('hex').substring(0, 16)}`;
+            await this.redisService.setCached(cacheKey, -1, this.LINK_STATUS_ERROR_TTL);
+          }
           return null; // Could not check
         }
       }
@@ -506,41 +593,37 @@ export class WebScraperService {
     // Initialize array for all crawled URLs
     const allUrls: Array<{ url: string; statusCode: number | null }> = [];
 
-    // Check links in parallel batches (max 10 concurrent)
-    const batchSize = 10;
-    for (let i = 0; i < linksToCheck.length; i += batchSize) {
-      const batch = linksToCheck.slice(i, i + batchSize);
-      const batchPromises = batch.map(({ fullUrl, href, anchorText, element }) =>
-        checkLinkStatus(fullUrl).then((statusCode) => {
-          // Only include 404 Not Found errors and other 4xx/5xx errors
-          if (statusCode && statusCode >= 400 && statusCode < 600) {
-            brokenLinks.push({ url: fullUrl, href, anchorText, statusCode, element: element });
-          }
-        }).catch(() => {
-          // Don't add to broken links if check fails - only 404s are considered broken
-        })
-      );
-      await Promise.allSettled(batchPromises);
-    }
+    // Check links in parallel batches (max 50 concurrent)
+    const batchSize = 50;
+    const linkCheckPromises = linksToCheck.map(async ({ fullUrl, href, anchorText, element }) => {
+      try {
+        const statusCode = await checkLinkStatus(fullUrl);
+        // Only include 404 Not Found errors and other 4xx/5xx errors
+        if (statusCode && statusCode >= 400 && statusCode < 600) {
+          brokenLinks.push({ url: fullUrl, href, anchorText, statusCode, element: element });
+        }
+      } catch (error) {
+        // Don't add to broken links if check fails - only 404s are considered broken
+      }
+    });
+    await Promise.allSettled(linkCheckPromises);
 
-    // Check all URLs for status codes (for crawled pages view)
-    for (let i = 0; i < urlsToCheck.length; i += batchSize) {
-      const batch = urlsToCheck.slice(i, i + batchSize);
-      const batchPromises = batch.map((urlToCheck) => {
+    // Check all URLs for status codes (for crawled pages view) in parallel
+    const urlCheckPromises = urlsToCheck.map(async (urlToCheck) => {
+      try {
         // Main page URL is always 200
         if (url && urlToCheck === url) {
           allUrls.push({ url: urlToCheck, statusCode: 200 });
-          return Promise.resolve();
+          return;
         }
 
-        return checkLinkStatus(urlToCheck).then((statusCode) => {
-          allUrls.push({ url: urlToCheck, statusCode: statusCode || null });
-        }).catch(() => {
-          allUrls.push({ url: urlToCheck, statusCode: null });
-        });
-      });
-      await Promise.allSettled(batchPromises);
-    }
+        const statusCode = await checkLinkStatus(urlToCheck);
+        allUrls.push({ url: urlToCheck, statusCode: statusCode || null });
+      } catch (error) {
+        allUrls.push({ url: urlToCheck, statusCode: null });
+      }
+    });
+    await Promise.allSettled(urlCheckPromises);
 
     // Images Analysis (with title attribute)
     const images = $('img');

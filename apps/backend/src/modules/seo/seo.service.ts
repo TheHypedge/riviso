@@ -77,10 +77,10 @@ export class SeoService {
    */
   async analyzeUrl(dto: AnalyzeUrlDto): Promise<any> {
     try {
-      this.logger.log(`Analyzing URL: ${dto.url}`);
+      this.logger.log(`Analyzing URL: ${dto.url}${dto.forceRefresh ? ' (force refresh)' : ''}`);
 
       // Scrape the page
-      const scrapedData = await this.webScraperService.scrapePage(dto.url);
+      const scrapedData = await this.webScraperService.scrapePage(dto.url, dto.forceRefresh);
 
       // Calculate overall score
       const score = this.calculateSEOScore(scrapedData);

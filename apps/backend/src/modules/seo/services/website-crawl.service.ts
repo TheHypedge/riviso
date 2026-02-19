@@ -183,8 +183,17 @@ export class WebsiteCrawlService {
     if (!this.analysisRepo) {
       throw new Error('Database not configured');
     }
-    const current = await this.analysisRepo.findOne({ where: { id: currentAnalysisId } });
-    const previous = await this.analysisRepo.findOne({ where: { id: previousAnalysisId } });
+    // Fetch both analyses in parallel with selective fields
+    const [current, previous] = await Promise.all([
+      this.analysisRepo.findOne({
+        where: { id: currentAnalysisId },
+        select: ['id', 'seoScore', 'onPageSeo', 'technicalSeo'],
+      }),
+      this.analysisRepo.findOne({
+        where: { id: previousAnalysisId },
+        select: ['id', 'seoScore', 'onPageSeo', 'technicalSeo'],
+      }),
+    ]);
 
     if (!current || !previous) {
       throw new Error('One or both analyses not found');

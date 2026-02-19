@@ -42,6 +42,58 @@ export class RedisService implements OnModuleDestroy {
     return data ? JSON.parse(data) : null;
   }
 
+  // Enhanced caching methods
+  async getCached<T>(key: string): Promise<T | null> {
+    return this.getJson<T>(key);
+  }
+
+  async setCached<T>(key: string, value: T, ttl?: number): Promise<void> {
+    await this.setJson(key, value, ttl);
+  }
+
+  async deleteCached(pattern: string): Promise<number> {
+    const keys = await this.client.keys(pattern);
+    if (keys.length === 0) {
+      return 0;
+    }
+    return this.client.del(...keys);
+  }
+
+  async existsCached(key: string): Promise<boolean> {
+    return this.exists(key);
+  }
+
+  async deleteByKeys(keys: string[]): Promise<number> {
+    if (keys.length === 0) {
+      return 0;
+    }
+    return this.client.del(...keys);
+  }
+
+  async getMultiple<T>(keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) {
+      return [];
+    }
+    const values = await this.client.mget(...keys);
+    return values.map((val) => (val ? JSON.parse(val) : null));
+  }
+
+  async setMultiple<T>(items: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
+    const pipeline = this.client.pipeline();
+    for (const item of items) {
+      if (item.ttl) {
+        pipeline.set(item.key, JSON.stringify(item.value), 'EX', item.ttl);
+      } else {
+        pipeline.set(item.key, JSON.stringify(item.value));
+      }
+    }
+    await pipeline.exec();
+  }
+
+  getClient(): Redis {
+    return this.client;
+  }
+
   onModuleDestroy() {
     this.client.disconnect();
   }

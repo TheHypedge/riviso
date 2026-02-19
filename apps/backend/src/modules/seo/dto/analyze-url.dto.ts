@@ -15,6 +15,10 @@ export class AnalyzeUrlDto {
   @IsOptional()
   @IsBoolean()
   includeKeywords?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  forceRefresh?: boolean;
 }
 
 export interface UrlAnalysisResult {

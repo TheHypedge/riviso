@@ -7,6 +7,8 @@ import { SeoController } from './seo.controller';
 import { SeoService } from './seo.service';
 import { WebScraperService } from './services/web-scraper.service';
 import { WebsiteCrawlService } from './services/website-crawl.service';
+import { SiteDetectorService } from './services/site-detector.service';
+import { HybridRendererService } from './services/hybrid-renderer.service';
 import { WebsiteAnalysisEntity } from '../../infrastructure/database/entities/website-analysis.entity';
 import { CrawlJobEntity } from '../../infrastructure/database/entities/crawl-job.entity';
 
@@ -25,8 +27,10 @@ const useDb = !!process.env.DATABASE_URL;
   providers: [
     SeoService,
     WebScraperService,
+    SiteDetectorService,
+    HybridRendererService,
     ...(useDb ? [WebsiteCrawlService] : []),
   ],
-  exports: [SeoService, WebScraperService, ...(useDb ? [WebsiteCrawlService] : [])],
+  exports: [SeoService, WebScraperService, SiteDetectorService, HybridRendererService, ...(useDb ? [WebsiteCrawlService] : [])],
 })
 export class SeoModule { }

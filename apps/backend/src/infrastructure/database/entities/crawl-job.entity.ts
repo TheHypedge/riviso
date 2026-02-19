@@ -13,6 +13,7 @@ import {
 @Entity('crawl_jobs')
 @Index(['websiteUrl', 'status'])
 @Index(['createdAt'])
+@Index(['status', 'createdAt']) // For cleanup queries
 export class CrawlJobEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
